@@ -107,6 +107,7 @@
             }
 
             /* HINDARI PAGE BREAK DI TENGAH BARIS/KRITERIA/BOX */
+            /* Tambahkan properti khusus untuk setiap section */
             .criteria-row, 
             #special-requirements > div,
             section {
@@ -581,6 +582,8 @@
          * Mengubah formulir HTML menjadi PDF menggunakan html2pdf.js.
          */
         function exportToPDF() {
+            // Ambil elemen body untuk cloning. Kita akan menghilangkan margin/padding pada body yang di-clone.
+            const originalBody = document.body;
             const element = document.getElementById('form-content');
             
             // 1. Tentukan nama file
@@ -591,7 +594,7 @@
             // 2. Konfigurasi html2pdf
             const opt = {
                 // MENGECILKAN MARGIN untuk memaksimalkan konten di halaman A4
-                margin: 0.25, // Diperkecil lagi dari 0.3 ke 0.25
+                margin: 0.25, 
                 filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
                 // MENINGKATKAN SKALA untuk ketajaman, namun mengandalkan CSS kustom untuk kerapatan.
@@ -599,8 +602,9 @@
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
-            // Cloning elemen untuk menghilangkan fitur interaktif 
-            const clonedElement = element.cloneNode(true);
+            // Mengambil seluruh konten body dan mengkloningnya
+            const clonedBody = originalBody.cloneNode(true);
+            const clonedElement = clonedBody.querySelector('#form-content');
 
             // 3. Terapkan posisi statis pada header tabel (penting untuk layout PDF)
             const fixedHeader = clonedElement.querySelector('.fixed-header');
@@ -611,6 +615,18 @@
             // 4. Menambahkan style untuk mengecilkan jarak antar baris dan font di PDF
             const style = document.createElement('style');
             style.textContent = `
+                /* HILANGKAN MARGIN PADA BODY DOKUMEN YANG DI-CLONE */
+                body {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+                /* MEMAKSA CONTAINER UTAMA JADI BLOCK */
+                #form-content {
+                    display: block !important;
+                    padding-top: 0.5rem !important;
+                    padding-bottom: 0.5rem !important;
+                }
+
                 /* CSS Umum untuk mengurangi padding/margin pada PDF */
                 .pdf-text {
                     line-height: 1.1;
@@ -621,30 +637,44 @@
                 /* Mengatur ukuran font untuk Kriteria/Persyaratan Khusus (Teks Panjang) */
                 #inspection-body td:nth-child(2), 
                 #special-requirements .flex-grow {
-                    font-size: 10.5px !important; /* Dikecilkan sedikit */
+                    font-size: 10.5px !important; 
                     line-height: 1.1 !important;
-                    padding-top: 2px !important; /* Dikecilkan */
-                    padding-bottom: 2px !important; /* Dikecilkan */
+                    padding-top: 2px !important; 
+                    padding-bottom: 2px !important; 
+                    padding-left: 2px !important; 
+                    padding-right: 2px !important;
+                }
+                
+                /* Memastikan kolom Persyaratan (child 2) mengambil lebar penuh yang dialokasikan */
+                #inspection-body td:nth-child(2) {
+                    width: 40% !important; /* Alokasi lebar yang jelas untuk kolom deskripsi */
                 }
 
                 /* Mengatur ukuran font untuk Kolom Skor dan Kolom Nomor */
                 #inspection-body td:nth-child(1),
                 #inspection-body td:nth-child(n+3) span {
-                    font-size: 9.5px !important; /* Dikecilkan lagi */
+                    font-size: 9.5px !important; 
                     line-height: 1.0 !important;
                     padding-top: 0.5px !important;
                     padding-bottom: 0.5px !important;
                 }
                 
                 /* Mengatur ukuran font untuk input yang diganti (Data Umum) */
-                .font-normal.text-xs {
+                .input-replacement {
                     font-size: 11px !important; 
                     line-height: 1.1 !important;
+                    color: #1f2937 !important; /* Mengubah warna teks input menjadi gelap (text-gray-800) */
+                    border-bottom: 1px solid #d1d5db !important;
+                    display: block !important;
+                    padding-left: 0 !important;
+                    padding-right: 0 !important;
+                    padding-top: 2px !important;
+                    padding-bottom: 2px !important;
                 }
                 
                 /* TTD Area Spacing */
                 .border-b.border-dashed.pt-12 {
-                    padding-top: 25px !important; /* Dikecilkan sedikit */
+                    padding-top: 25px !important; 
                 }
                 
                 /* Pastikan sel tabel memiliki padding minimal */
@@ -661,10 +691,16 @@
                     border-bottom: 1px solid #e5e7eb;
                 }
 
-                /* Mengatasi page break yang tersisa */
-                section, .criteria-row, #special-requirements > div {
+                /* PENTING: Mencegah pemotongan antar bagian utama dan elemen penting */
+                section, .criteria-row, #special-requirements > div, .grid.grid-cols-1.md\:grid-cols-2.gap-6 {
                     page-break-inside: avoid !important;
+                    page-break-after: auto !important;
                 }
+                /* PENTING: Mencegah page-break sebelum elemen, yang bisa menyebabkan halaman kosong */
+                section:first-child { 
+                    page-break-before: auto !important;
+                }
+
 
                 /* Pastikan thead diulang di setiap halaman */
                 @page { 
@@ -682,8 +718,16 @@
                 /* Mengurangi padding/margin pada kotak section */
                 .mb-8 { margin-bottom: 1rem !important; }
                 .p-4 { padding: 0.5rem !important; }
+
+                /* Hapus Fixed Score Bar dari clone */
+                #fixed-score-bar {
+                    display: none !important;
+                }
+                header {
+                    margin-bottom: 1rem !important;
+                }
             `;
-            clonedElement.appendChild(style);
+            clonedBody.appendChild(style);
 
 
             // Fungsi helper untuk mendapatkan label yang terpilih dari radio group
@@ -705,11 +749,14 @@
                 }
                 
                 const span = document.createElement('span');
-                // Menggunakan kelas `pdf-text` dan `text-xs` yang akan di-override oleh CSS injection
-                span.className = 'font-normal text-xs text-gray-800 block border-b border-gray-300 px-1 pdf-text'; 
+                // Menggunakan kelas CSS baru yang diinjeksikan untuk styling statis
+                span.className = 'input-replacement'; 
                 span.textContent = input.value || '—';
                 
-                input.parentNode.replaceChild(span, input);
+                // Pastikan input memiliki parent sebelum diganti
+                if (input.parentNode) {
+                    input.parentNode.replaceChild(span, input);
+                }
             });
 
             // Mengganti grup radio dengan nilai teks statis untuk Kriteria Inspeksi
@@ -730,18 +777,20 @@
                             const checkedLabel = cell.querySelector('input[type="radio"]:checked + .score-label');
                             if (checkedLabel) {
                                 // Menganalisis kelas background yang ditambahkan oleh JS (bg-score-red/green)
+                                // Menggunakan style langsung pada span statis agar terbaca oleh html2canvas
                                 if (checkedLabel.classList.contains('bg-score-red')) {
                                     staticSpan.style.backgroundColor = '#cc3333';
-                                    staticSpan.style.color = 'white'; // Teks putih agar kontras di PDF
+                                    staticSpan.style.color = 'white'; 
                                     staticSpan.style.fontWeight = '600'; 
                                 } else if (checkedLabel.classList.contains('bg-score-green')) {
                                     staticSpan.style.backgroundColor = '#457A57';
-                                    staticSpan.style.color = 'white'; // Teks putih agar kontras di PDF
+                                    staticSpan.style.color = 'white'; 
                                     staticSpan.style.fontWeight = '600';
                                 }
                             }
-
-                            cell.removeChild(radioDiv);
+                            
+                            // Hapus seluruh div yang berisi radio button
+                            cell.innerHTML = '';
                         }
                         
                         cell.appendChild(staticSpan);
@@ -779,6 +828,7 @@
                         // Kelas ini akan diatur ukurannya oleh CSS injection
                         staticSpan.className = 'text-xs font-medium pdf-text';
                         
+                        // Hapus konten dinamis dan ganti dengan teks statis
                         resultDiv.innerHTML = '';
                         resultDiv.appendChild(staticSpan);
                     }
@@ -808,16 +858,22 @@
             });
 
             // --- Menambahkan output AI ke PDF ---
+            // Cari elemen output AI yang asli di DOM
             const aiOutputElement = document.getElementById('ai-report-output');
+            
             if (aiOutputElement && aiOutputElement.textContent.trim() !== "Tekan tombol di atas untuk menghasilkan ringkasan temuan kritis dan langkah perbaikan yang direkomendasikan oleh Gemini AI.") {
-                const aiReportDiv = document.createElement('div');
-                aiReportDiv.className = 'mt-6 p-4 rounded-lg border-2 border-dashed bg-gray-50';
-                aiReportDiv.style.borderColor = 'var(--tw-colors-kitchen-accent)'; // Terracotta border
-                aiReportDiv.innerHTML = `
-                    <h4 class="text-lg font-bold text-kitchen-accent pdf-heading mb-2">F. Rekomendasi</h4>
-                    <pre class="text-xs text-gray-700 whitespace-pre-wrap">${aiOutputElement.textContent}</pre>
+                // Buat bagian F (Rekomendasi) di dalam konten yang di-clone
+                const aiReportSection = document.createElement('section');
+                aiReportSection.className = 'mt-8 p-4 bg-kitchen-cream rounded-lg border border-kitchen-main/50';
+                aiReportSection.style.pageBreakInside = 'avoid'; // Penting!
+                
+                aiReportSection.innerHTML = `
+                    <h3 class="text-lg font-bold text-gray-700 mb-4 border-b border-kitchen-accent/50 pb-2">F. Rekomendasi</h3>
+                    <div class="p-4 rounded-lg border-2 border-dashed bg-gray-50" style="border-color: #C76E57;">
+                        <pre class="text-xs text-gray-700 whitespace-pre-wrap">${aiOutputElement.textContent}</pre>
+                    </div>
                 `;
-                clonedElement.appendChild(aiReportDiv);
+                clonedElement.appendChild(aiReportSection);
             }
             // --- Akhir penambahan output AI ke PDF ---
 
@@ -828,6 +884,7 @@
             
             const scoreValue = finalScoreElement.textContent;
             const statusText = iklStatusElement.textContent; 
+            // Ambil warna dari elemen aslinya
             const resolvedScoreColor = finalScoreElement.style.color;
             
             // Menggunakan hardcoded hex dari config untuk keamanan PDF
@@ -838,6 +895,7 @@
             const scoreResultDiv = document.createElement('div');
             scoreResultDiv.className = 'mt-6 p-4 rounded-lg border-2 border-dashed bg-gray-50';
             scoreResultDiv.style.borderColor = resolvedScoreColor;
+            scoreResultDiv.style.pageBreakInside = 'avoid'; // Penting!
             
             scoreResultDiv.innerHTML = `
                 <h4 class="text-sm font-semibold text-gray-700 pdf-heading border-b border-gray-300 pb-1 mb-2">Hasil Akhir Inspeksi</h4>
@@ -859,8 +917,8 @@
             const originalHtml = exportBtn.innerHTML;
             exportBtn.innerHTML = '<svg class="animate-spin mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Mempersiapkan & Mengunduh...';
 
-
-            html2pdf().set(opt).from(clonedElement).save().then(() => {
+            // PENTING: Menggunakan clonedBody sebagai sumber, bukan clonedElement
+            html2pdf().set(opt).from(clonedBody).save().then(() => {
                 exportBtn.disabled = false;
                 exportBtn.innerHTML = originalHtml;
             }).catch(error => {
