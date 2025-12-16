@@ -590,35 +590,102 @@
             
             // 2. Konfigurasi html2pdf
             const opt = {
-                // MENGECILKAN MARGIN (dari 0.5 ke 0.3)
-                margin: 0.3, 
+                // MENGECILKAN MARGIN untuk memaksimalkan konten di halaman A4
+                margin: 0.25, // Diperkecil lagi dari 0.3 ke 0.25
                 filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
-                // MENGECILKAN SKALA FONT/KONTEN (dari 2 ke 1.5)
-                html2canvas: { scale: 1.5, logging: false, dpi: 192, letterRendering: true }, 
+                // MENINGKATKAN SKALA untuk ketajaman, namun mengandalkan CSS kustom untuk kerapatan.
+                html2canvas: { scale: 2, logging: false, dpi: 300, letterRendering: true }, 
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
             // Cloning elemen untuk menghilangkan fitur interaktif 
             const clonedElement = element.cloneNode(true);
 
-            // Menambahkan style untuk mengecilkan jarak antar baris di PDF
+            // 3. Terapkan posisi statis pada header tabel (penting untuk layout PDF)
+            const fixedHeader = clonedElement.querySelector('.fixed-header');
+            if (fixedHeader) {
+                fixedHeader.style.position = 'static';
+            }
+
+            // 4. Menambahkan style untuk mengecilkan jarak antar baris dan font di PDF
             const style = document.createElement('style');
             style.textContent = `
+                /* CSS Umum untuk mengurangi padding/margin pada PDF */
                 .pdf-text {
-                    line-height: 1.1; /* Mengurangi spasi baris */
+                    line-height: 1.1;
+                    padding-top: 1px !important; 
+                    padding-bottom: 1px !important; 
+                }
+                
+                /* Mengatur ukuran font untuk Kriteria/Persyaratan Khusus (Teks Panjang) */
+                #inspection-body td:nth-child(2), 
+                #special-requirements .flex-grow {
+                    font-size: 10.5px !important; /* Dikecilkan sedikit */
+                    line-height: 1.1 !important;
+                    padding-top: 2px !important; /* Dikecilkan */
+                    padding-bottom: 2px !important; /* Dikecilkan */
+                }
+
+                /* Mengatur ukuran font untuk Kolom Skor dan Kolom Nomor */
+                #inspection-body td:nth-child(1),
+                #inspection-body td:nth-child(n+3) span {
+                    font-size: 9.5px !important; /* Dikecilkan lagi */
+                    line-height: 1.0 !important;
+                    padding-top: 0.5px !important;
+                    padding-bottom: 0.5px !important;
+                }
+                
+                /* Mengatur ukuran font untuk input yang diganti (Data Umum) */
+                .font-normal.text-xs {
+                    font-size: 11px !important; 
+                    line-height: 1.1 !important;
+                }
+                
+                /* TTD Area Spacing */
+                .border-b.border-dashed.pt-12 {
+                    padding-top: 25px !important; /* Dikecilkan sedikit */
+                }
+                
+                /* Pastikan sel tabel memiliki padding minimal */
+                #inspection-body td {
                     padding-top: 2px !important;
                     padding-bottom: 2px !important;
                 }
-                .pdf-text-small {
-                    line-height: 1.05; /* Lebih kecil lagi untuk tabel */
+                
+                /* Atur border agar terlihat jelas */
+                table, th, td {
+                    border-collapse: collapse;
                 }
-                .pdf-heading {
-                    line-height: 1.2;
+                #inspection-body tr {
+                    border-bottom: 1px solid #e5e7eb;
                 }
+
+                /* Mengatasi page break yang tersisa */
+                section, .criteria-row, #special-requirements > div {
+                    page-break-inside: avoid !important;
+                }
+
+                /* Pastikan thead diulang di setiap halaman */
+                @page { 
+                    /* Mencegah footer/header default PDF tool */
+                    margin: 0.25in;
+                }
+                thead {
+                    display: table-header-group;
+                }
+                
+                /* Mengurangi padding pada elemen section utama */
+                .p-6 { padding: 0.5rem !important; }
+                .p-8 { padding: 0.5rem !important; }
+
+                /* Mengurangi padding/margin pada kotak section */
+                .mb-8 { margin-bottom: 1rem !important; }
+                .p-4 { padding: 0.5rem !important; }
             `;
             clonedElement.appendChild(style);
-            
+
+
             // Fungsi helper untuk mendapatkan label yang terpilih dari radio group
             const getSelectedLabelText = (inputName, clonedDoc) => {
                 const checkedInput = clonedDoc.querySelector(`input[name="${inputName}"]:checked`);
@@ -638,7 +705,7 @@
                 }
                 
                 const span = document.createElement('span');
-                // Mengecilkan font untuk output PDF & Menambahkan kelas line-height
+                // Menggunakan kelas `pdf-text` dan `text-xs` yang akan di-override oleh CSS injection
                 span.className = 'font-normal text-xs text-gray-800 block border-b border-gray-300 px-1 pdf-text'; 
                 span.textContent = input.value || '—';
                 
@@ -654,8 +721,8 @@
                         const selectedValue = getSelectedLabelText(inputName, clonedElement);
                         const staticSpan = document.createElement('span');
                         staticSpan.textContent = selectedValue;
-                        // Menggunakan text-xs font-medium di PDF
-                        staticSpan.className = 'text-xs font-medium block py-1 pdf-text-small';
+                        // Kelas ini akan diatur ukurannya oleh CSS injection
+                        staticSpan.className = 'text-xs font-medium block py-1 pdf-text';
                         
                         const radioDiv = cell.querySelector('div.flex.flex-col');
                         if(radioDiv) {
@@ -666,12 +733,10 @@
                                 if (checkedLabel.classList.contains('bg-score-red')) {
                                     staticSpan.style.backgroundColor = '#cc3333';
                                     staticSpan.style.color = 'white'; // Teks putih agar kontras di PDF
-                                    // Tambahkan font-semibold pada PDF agar konsisten dengan tampilan di UI
                                     staticSpan.style.fontWeight = '600'; 
                                 } else if (checkedLabel.classList.contains('bg-score-green')) {
                                     staticSpan.style.backgroundColor = '#457A57';
                                     staticSpan.style.color = 'white'; // Teks putih agar kontras di PDF
-                                    // Tambahkan font-semibold pada PDF agar konsisten dengan tampilan di UI
                                     staticSpan.style.fontWeight = '600';
                                 }
                             }
@@ -683,19 +748,19 @@
                     }
                 });
                 
-                // Mengubah ukuran font dan line-height pada teks kriteria di baris tabel
+                // Menghapus kelas font manual karena sudah diurus oleh style injection
                 const textCell = row.querySelector('td:nth-child(2)');
                 if (textCell) {
                     textCell.classList.remove('text-sm');
-                    textCell.classList.add('text-xs', 'pdf-text-small');
-                    textCell.style.lineHeight = '1.05'; 
+                    textCell.classList.remove('pdf-text-small');
+                    textCell.style.lineHeight = ''; 
                 }
             });
             
             // Mengubah ukuran font pada header tabel
             clonedElement.querySelectorAll('thead th.text-xs').forEach(th => {
                 th.classList.remove('text-xs');
-                th.classList.add('text-[10px]'); // Sedikit lebih kecil dari xs
+                th.classList.add('text-[10px]'); // Tetap 10px untuk header
             });
 
             // Mengganti grup radio dengan nilai teks statis untuk Persyaratan Khusus
@@ -711,7 +776,7 @@
                         const selectedValue = getSelectedLabelText(inputName, clonedElement);
                         const staticSpan = document.createElement('span');
                         staticSpan.textContent = selectedValue;
-                        // Menggunakan text-xs font-medium di PDF
+                        // Kelas ini akan diatur ukurannya oleh CSS injection
                         staticSpan.className = 'text-xs font-medium pdf-text';
                         
                         resultDiv.innerHTML = '';
@@ -719,11 +784,11 @@
                     }
                 }
                 
-                // Mengecilkan font pada teks persyaratan khusus
+                // Menghapus kelas font manual karena sudah diurus oleh style injection
                 const textDiv = div.querySelector('.flex-grow');
                 if (textDiv) {
                     textDiv.classList.remove('text-sm');
-                    textDiv.classList.add('text-xs', 'pdf-text');
+                    textDiv.classList.remove('pdf-text');
                 }
                 const noDiv = div.querySelector('.flex-shrink-0.w-12');
                 if (noDiv) {
@@ -732,7 +797,7 @@
                 }
             });
             
-            // Mengecilkan font pada keterangan skor
+            // Mengecilkan font pada keterangan skor dan area
             clonedElement.querySelectorAll('section .text-sm').forEach(el => {
                 el.classList.remove('text-sm');
                 el.classList.add('text-xs', 'pdf-text');
@@ -757,21 +822,35 @@
             // --- Akhir penambahan output AI ke PDF ---
 
 
-            // Menampilkan skor akhir di dalam konten PDF
+            // --- UPDATE: Menampilkan skor akhir di dalam konten PDF dengan format 3 baris yang lebih besar dan tebal ---
             const finalScoreElement = document.getElementById('final-ikl-score');
-            const scoreValue = finalScoreElement.textContent;
-            const scoreColor = finalScoreElement.style.color;
+            const iklStatusElement = document.getElementById('ikl-status');
             
+            const scoreValue = finalScoreElement.textContent;
+            const statusText = iklStatusElement.textContent; 
+            const resolvedScoreColor = finalScoreElement.style.color;
+            
+            // Menggunakan hardcoded hex dari config untuk keamanan PDF
+            const scoreGreenHex = '#457A57';
+            const scoreRedHex = '#cc3333';
+            const resolvedStatusColor = statusText.includes('MEMENUHI SYARAT') ? scoreGreenHex : scoreRedHex;
+
             const scoreResultDiv = document.createElement('div');
             scoreResultDiv.className = 'mt-6 p-4 rounded-lg border-2 border-dashed bg-gray-50';
-            scoreResultDiv.style.borderColor = scoreColor;
+            scoreResultDiv.style.borderColor = resolvedScoreColor;
+            
             scoreResultDiv.innerHTML = `
-                <h4 class="text-lg font-bold text-gray-700 pdf-heading">Hasil Akhir Inspeksi</h4>
-                <p class="text-sm font-semibold pdf-text">Skor IKL Akhir: 
-                    <span style="color: ${scoreColor}; font-weight: bold; font-size: 1.2em;">${scoreValue}</span>
-                </p>
+                <h4 class="text-sm font-semibold text-gray-700 pdf-heading border-b border-gray-300 pb-1 mb-2">Hasil Akhir Inspeksi</h4>
+                <div class="text-center py-2">
+                    <p class="text-sm font-semibold text-gray-800 mb-1">Nilai IKL Final</p>
+                    <!-- Nilai Skor: Besar (2.5em), Tebal (800), Berwarna -->
+                    <p style="color: ${resolvedScoreColor}; font-weight: 800; font-size: 2.5em; line-height: 1.1; margin-bottom: 5px;">${scoreValue}</p>
+                    <!-- Status: Sedang (1em), Tebal (700), Berwarna -->
+                    <p style="color: ${resolvedStatusColor}; font-weight: 700; font-size: 1em;">${statusText}</p>
+                </div>
             `;
             clonedElement.appendChild(scoreResultDiv);
+            // --- END UPDATE ---
 
 
             // Mulai proses ekspor (dengan spinner)
