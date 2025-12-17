@@ -25,8 +25,8 @@
                         'score-green': '#457A57',
                         
                         // Warna khusus Dark Mode
-                        'dark-bg': '#1a202c',       /* Latar sangat gelap */
-                        'dark-surface': '#2d3748',  /* Latar elemen/kartu */
+                        'dark-bg': '#121212',       /* Deep dark mode background */
+                        'dark-surface': '#212121',  /* Latar elemen/kartu gelap */
                         'dark-border': '#4a5568',   /* Border abu-abu */
                         'dark-text': '#e2e8f0',     /* Teks terang */
                     },
@@ -38,11 +38,58 @@
         }
     </script>
     <style>
+        /* Base body background subtle Material contrast */
         body {
+            background-color: #f1f3f4; /* Light surface background */
             font-family: 'Inter', sans-serif;
-            transition: background-color 0.3s, color 0.3s; /* Transisi halus */
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .dark body {
+            background-color: #121212; /* Deep dark mode background */
+            color: #e2e8f0;
         }
 
+        /* --- ANIMASI GLOBAL DAN INTERAKSI MATERIAL YOU --- */
+        /* General transition for smooth UI changes */
+        * {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 200ms;
+        }
+        
+        /* Button Press Effect (Material Ripple-like) */
+        button {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform, filter; /* Optimization */
+        }
+        button:active:not(#score-toggle-btn) {
+            transform: scale(0.98); 
+            filter: brightness(0.9);
+        }
+
+        /* Collapsible Content Animation (max-height) */
+        .collapsible-content {
+            transition: max-height 0.4s cubic-bezier(0.2, 0, 0, 1), opacity 0.4s ease-in-out;
+            overflow: hidden;
+            opacity: 1;
+        }
+        .collapsible-content.collapsed {
+            max-height: 0 !important; 
+            opacity: 0;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        /* Update main content container for elevated card look */
+        .app-container {
+            @apply shadow-xl rounded-3xl overflow-hidden; 
+        }
+
+        /* Update section cards for elevation */
+        section {
+            @apply shadow-lg rounded-2xl;
+        }
+        
         /* --- STYLING MODE GELAP & TERANG --- */
         
         /* Custom Radio Colors */
@@ -60,6 +107,7 @@
         .score-label {
             transition: all 0.15s ease-in-out;
             cursor: pointer;
+            /* Ukuran font disesuaikan agar pas di kolom sempit */
             @apply border border-gray-300 w-full text-center py-1 rounded-lg text-xs font-medium hover:bg-kitchen-cream text-gray-700; 
         }
 
@@ -75,40 +123,66 @@
         /* Sticky Elements */
         .fixed-header { position: sticky; top: 0; z-index: 10; }
         
+        /* Fixed Score Bar - Material Bottom App Bar/Prominent Bar */
         #fixed-score-bar {
+            /* Add pronounced shadow and more rounding on top */
+            border-top-left-radius: 28px;
+            border-top-right-radius: 28px;
+            box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.2); /* Stronger shadow */
+            background-color: #FBFBF9; /* Light surface color */
+            border-top: 4px solid #779D89; /* Material accent on top */
             position: fixed; 
             bottom: 0; 
             left: 0; 
             right: 0; 
             z-index: 20;
-            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(5px);
-            background-color: rgba(255, 255, 255, 0.95);
             transition: height 0.3s ease-in-out, padding 0.3s ease-in-out;
         }
-        
+
         /* Dark Mode Score Bar */
         .dark #fixed-score-bar {
-            background-color: rgba(26, 32, 44, 0.95); /* Dark bg */
+            background-color: #212121; /* Darker surface in dark mode */
             border-top-color: #457A57;
             color: #e2e8f0;
         }
 
-        /* Custom style for the score bar toggle button on mobile (Diperbarui untuk ikon bulat) */
+        /* FAB Toggle Button (Right Aligned Action Button) */
         #score-toggle-btn {
+            /* FAB appearance: larger, right aligned, highly elevated, circular */
             position: absolute;
-            top: -16px; 
-            right: 1rem; 
-            padding: 0.5rem; /* Diperbarui: 0.5rem 1rem -> 0.5rem */
-            border-radius: 9999px; 
-            z-index: 21; 
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            /* Tambahan untuk mobile view */
-            width: 3rem; /* Memastikan bentuk bulat yang bagus */
-            height: 3rem;
-            justify-content: center;
+            top: -32px; /* Pull it up higher */
+            right: 24px; /* Position from the right edge, matching p-6 padding */
+            left: auto; /* Remove left positioning */
+            transform: none; /* Remove centering translation */
+            width: 64px; /* Typical FAB size */
+            height: 64px;
+            padding: 0;
+            border-radius: 50%;
+            z-index: 30; /* Ensure it's above everything */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Stronger shadow for FAB */
+            @apply bg-kitchen-accent hover:bg-kitchen-accent/80 transition-transform duration-100 ease-in-out; 
+            /* Ganti warna FAB agar lebih menonjol */
+            background-color: #C76E57; /* kitchen-accent */
+        }
+        #score-toggle-btn:active {
+            transform: scale(0.9); /* Simulating press/ripple effect */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
         }
         
+        /* Input Material Style */
+        .autosave-input {
+            /* Remove standard border, use underline style */
+            @apply border-b border-gray-400 p-2 rounded-t-lg bg-gray-100 dark:bg-gray-700 shadow-none;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            transition: border-bottom-color 0.2s, background-color 0.2s;
+        }
+        .autosave-input:focus {
+            @apply ring-0 border-b-2 border-kitchen-dark dark:border-kitchen-main shadow-md;
+        }
+
+
         /* Collapse/Expand Transition for Sections */
         .section-header {
             cursor: pointer;
@@ -143,13 +217,6 @@
             }
         }
 
-        /* Style untuk container penilaian di mobile agar ada grid 2 kolom (4 baris) */
-        .mobile-score-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Diubah dari 4 ke 2 kolom */
-            gap: 0.5rem;
-        }
-
         /* Print Media Queries */
         @media print {
             #fixed-score-bar, #export-btn-container, .no-print, #theme-toggle, #score-toggle-btn { display: none !important; }
@@ -174,10 +241,10 @@
     </style>
 </head>
 <body class="p-4 md:p-8 bg-[#f7f9fb] dark:bg-gray-900 text-gray-800 dark:text-gray-200">
-    <div class="max-w-6xl mx-auto bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden mb-24 border dark:border-gray-700">
+    <div class="max-w-6xl mx-auto bg-white dark:bg-gray-800 app-container border dark:border-gray-700">
         
         <!-- Header Aplikasi -->
-        <header class="bg-kitchen-dark p-6 text-white text-center relative">
+        <header class="bg-kitchen-dark p-6 text-white text-center relative rounded-t-3xl">
             <h1 class="text-2xl md:text-3xl font-extrabold mb-1">INSTRUMEN INSPEKSI KESEHATAN LINGKUNGAN (IKL)</h1>
             <h2 class="text-lg md:text-xl font-medium">SATUAN PELAYANAN PEMENUHAN GIZI (SPPG)</h2>
             <div id="autosave-status" class="mt-2 text-xs font-light italic opacity-80 h-4"></div>
@@ -197,8 +264,8 @@
                 <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-a')">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white">A. Data Umum</h3>
                     <!-- Ikon Panah Bawah/Atas -->
-                    <!-- Stroke width diubah menjadi 3 -->
-                    <svg id="icon-content-a" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- Ikon default (Expanded/Terbuka) harus menunjuk KE BAWAH, jadi tambahkan rotate-180 -->
+                    <svg id="icon-content-a" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
                     </svg>
                 </div>
@@ -208,23 +275,23 @@
                         <!-- Input fields dengan styling dark mode -->
                         <label class="block">
                             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">1. Nama SPPG</span>
-                            <input type="text" id="nama_sppg" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800 focus:ring-kitchen-dark focus:border-kitchen-dark">
+                            <input type="text" id="nama_sppg" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white">
                         </label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">2. Alamat</span><input type="text" id="alamat_sppg" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">3. Nama Pengelola</span><input type="text" id="nama_pengelola" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">4. Kontak Pengelola</span><input type="text" id="kontak_pengelola" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">5. Jumlah Porsi</span><input type="number" id="jumlah_porsi" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">6. Distribusi Pangan</span><input type="text" id="distribusi_pangan" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">7. Jumlah Total Penjamah Pangan</span><input type="number" id="total_penjamah" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">8. Jumlah Penjamah Pangan Terlatih</span><input type="number" id="penjamah_bersertifikat" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">9. Nama Pemeriksa</span><input type="text" id="nama_pemeriksa" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">10. Tanggal Pemeriksaan</span><input type="date" id="tanggal_pemeriksaan" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">2. Alamat</span><input type="text" id="alamat_sppg" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">3. Nama Pengelola</span><input type="text" id="nama_pengelola" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">4. Kontak Pengelola</span><input type="text" id="kontak_pengelola" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">5. Jumlah Porsi</span><input type="number" id="jumlah_porsi" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">6. Distribusi Pangan</span><input type="text" id="distribusi_pangan" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">7. Jumlah Total Penjamah Pangan</span><input type="number" id="total_penjamah" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">8. Jumlah Penjamah Pangan Terlatih</span><input type="number" id="penjamah_bersertifikat" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">9. Nama Pemeriksa</span><input type="text" id="nama_pemeriksa" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">10. Tanggal Pemeriksaan</span><input type="date" id="tanggal_pemeriksaan" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
 
                         <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-kitchen-main/30 dark:border-gray-500 pt-4 mt-4">
-                            <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Lintang (Latitude)</span><input type="text" id="latitude" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800" placeholder="-6.2088" readonly></label>
-                            <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Bujur (Longitude)</span><input type="text" id="longitude" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800" placeholder="106.8456" readonly></label>
+                            <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Lintang (Latitude)</span><input type="text" id="latitude" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white" placeholder="-6.2088" readonly></label>
+                            <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Bujur (Longitude)</span><input type="text" id="longitude" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white" placeholder="106.8456" readonly></label>
                             <!-- Tombol Dapatkan Lokasi -->
-                            <button id="get-location-btn" class="mt-6 md:mt-1 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-2 px-4 rounded-md transition-colors shadow-md text-sm">
+                            <button id="get-location-btn" class="mt-6 md:mt-1 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md text-sm">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9a2 2 0 100-4 2 2 0 000 4z"/></svg>
                                 Dapatkan Lokasi
                             </button>
@@ -237,16 +304,15 @@
             <section class="mb-8">
                 <div class="flex justify-between items-center section-header border-b border-gray-300 dark:border-gray-600 pb-2 mb-4" onclick="toggleSection('content-b')">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white">B. Penilaian IKL</h3>
-                    <!-- Ikon Panah Bawah/Atas -->
-                    <!-- Stroke width diubah menjadi 3 -->
-                    <svg id="icon-content-b" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- Ikon default (Expanded/Terbuka) harus menunjuk KE BAWAH, jadi tambahkan rotate-180 -->
+                    <svg id="icon-content-b" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
                     </svg>
                 </div>
                 
                 <div id="content-b" class="collapsible-content">
                     <!-- Keterangan Nilai (Diperbarui) -->
-                    <div class="mb-4 p-4 bg-kitchen-main/20 dark:bg-green-900/30 text-kitchen-dark dark:text-green-300 rounded-lg border border-kitchen-dark/50 dark:border-green-700">
+                    <div class="mb-4 p-4 bg-kitchen-main/20 dark:bg-green-900/30 text-kitchen-dark dark:text-green-300 rounded-lg border border-kitchen-dark/50 dark:border-green-700 shadow-md">
                         <p class="font-bold text-sm">Keterangan Nilai:</p> 
                         <p class="text-xs"><span class="font-bold">NA</span> = Not Applicable (tidak berlaku)</p>
                         <p class="text-xs"><span class="font-bold">1</span> = Minor (perlu perbaikan wajar)</p>
@@ -255,7 +321,7 @@
                     </div>
                     
                     <!-- Keterangan Area - Disesuaikan untuk Responsif (Legenda Area UTUH) -->
-                    <div id="area-legend" class="mb-4 text-xs font-medium text-gray-600 dark:text-gray-300 grid grid-cols-2 md:grid-cols-4 gap-2 p-3 bg-kitchen-cream dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
+                    <div id="area-legend" class="mb-4 text-xs font-medium text-gray-600 dark:text-gray-300 grid grid-cols-2 md:grid-cols-4 gap-2 p-3 bg-kitchen-cream dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm">
                         <p><span class="font-bold">A</span> = Area luar bangunan</p>
                         <p><span class="font-bold">B</span> = Area fasilitas karyawan</p>
                         <p><span class="font-bold">C</span> = Area penerimaan bahan baku</p>
@@ -268,7 +334,7 @@
 
                     <!-- 1. Tampilan Desktop (Tabel Horizontal) - Hanya terlihat di md: ke atas -->
                     <div class="overflow-x-auto">
-                        <table id="inspection-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                        <table id="inspection-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600 rounded-lg overflow-hidden shadow-md">
                             <thead class="bg-kitchen-dark text-white fixed-header">
                                 <tr>
                                     <th class="w-10 px-2 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Nomor</th>
@@ -304,14 +370,13 @@
             <section class="mt-8 p-4 bg-kitchen-cream dark:bg-gray-700 rounded-lg border border-kitchen-main/50 dark:border-gray-600">
                 <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-d')">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white">D. Persyaratan Khusus</h3>
-                    <!-- Ikon Panah Bawah/Atas -->
-                    <!-- Stroke width diubah menjadi 3 -->
-                    <svg id="icon-content-d" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- Ikon default (Collapsed/Tertutup) harus menunjuk KE ATAS, jadi hapus rotate-180 -->
+                    <svg id="icon-content-d" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
                     </svg>
                 </div>
 
-                <div id="content-d" class="collapsible-content hidden">
+                <div id="content-d" class="collapsible-content collapsed">
                     <div id="special-requirements" class="space-y-3">
                         <!-- Persyaratan khusus akan dimasukkan di sini oleh JavaScript -->
                     </div>
@@ -322,27 +387,26 @@
             <section class="mt-8 p-4 bg-kitchen-cream dark:bg-gray-700 rounded-lg border border-kitchen-main/50 dark:border-gray-600">
                 <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-e')">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white">E. Catatan dan Saran</h3>
-                    <!-- Ikon Panah Bawah/Atas -->
-                    <!-- Stroke width diubah menjadi 3 -->
-                    <svg id="icon-content-e" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- Ikon default (Collapsed/Tertutup) harus menunjuk KE ATAS, jadi hapus rotate-180 -->
+                    <svg id="icon-content-e" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
                     </svg>
                 </div>
 
-                <div id="content-e" class="collapsible-content hidden">
+                <div id="content-e" class="collapsible-content collapsed">
                     <label class="block mb-4">
                         <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Catatan dan saran</span>
-                        <textarea id="catatan_akhir" rows="4" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></textarea>
+                        <textarea id="catatan_akhir" rows="4" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></textarea>
                     </label>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <p class="font-semibold text-gray-700 dark:text-gray-300 mb-2 text-sm">Petugas Pemeriksa</p>
-                            <input type="text" placeholder="" class="autosave-input block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 mb-4 text-sm text-gray-700 dark:text-white dark:bg-gray-800" id="ttd_pemeriksa_nama">
+                            <input type="text" placeholder="" class="autosave-input block w-full shadow-sm p-2 mb-4 text-sm text-gray-700 dark:text-white" id="ttd_pemeriksa_nama">
                             <div class="border-b border-dashed border-gray-400 pt-12"><span class="text-xs text-gray-500 dark:text-gray-400">Tanda tangan</span></div>
                         </div>
                         <div>
                             <p class="font-semibold text-gray-700 dark:text-gray-300 mb-2 text-sm">Pengelola SPPG</p>
-                            <input type="text" placeholder="" class="autosave-input block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 mb-4 text-sm text-gray-700 dark:text-white dark:bg-gray-800" id="ttd_pengelola_nama">
+                            <input type="text" placeholder="" class="autosave-input block w-full shadow-sm p-2 mb-4 text-sm text-gray-700 dark:text-white" id="ttd_pengelola_nama">
                             <div class="border-b border-dashed border-gray-400 pt-12"><span class="text-xs text-gray-500 dark:text-gray-400">Tanda tangan</span></div>
                         </div>
                     </div>
@@ -353,21 +417,20 @@
             <section class="mt-8 p-4 bg-kitchen-cream dark:bg-gray-700 rounded-lg border border-kitchen-main/50 dark:border-gray-600">
                 <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-f')">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white flex items-center">F. Rekomendasi</h3>
-                    <!-- Ikon Panah Bawah/Atas -->
-                    <!-- Stroke width diubah menjadi 3 -->
-                    <svg id="icon-content-f" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <!-- Ikon default (Collapsed/Tertutup) harus menunjuk KE ATAS, jadi hapus rotate-180 -->
+                    <svg id="icon-content-f" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
                     </svg>
                 </div>
 
-                <div id="content-f" class="collapsible-content hidden">
+                <div id="content-f" class="collapsible-content collapsed">
                     <div class="mb-4">
-                        <button id="generate-ai-report-btn" class="flex items-center justify-center bg-kitchen-accent hover:bg-kitchen-accent/90 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-md text-sm w-full md:w-auto">
+                        <button id="generate-ai-report-btn" class="flex items-center justify-center bg-kitchen-accent hover:bg-kitchen-accent/90 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg text-base w-full md:w-auto">
                             Buat Rekomendasi Menggunakan AI
                         </button>
                     </div>
                     
-                    <div id="ai-report-output" class="min-h-[100px] p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                    <div id="ai-report-output" class="min-h-[100px] p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap shadow-inner">
                         Tekan tombol di atas untuk menghasilkan ringkasan temuan kritis dan langkah perbaikan yang direkomendasikan oleh Gemini AI.
                     </div>
                     <div id="ai-loading" class="hidden mt-2 text-center text-sm font-medium text-kitchen-dark dark:text-green-400">
@@ -382,13 +445,15 @@
         </main>
     </div>
 
-    <!-- Bagian C: Total Skor dan Hasil (Fixed/Sticky Bottom) -->
-    <div id="fixed-score-bar" class="p-4 md:p-6 border-t border-kitchen-main dark:border-gray-600">
+    <!-- Bagian C: Total Skor dan Hasil (Fixed/Sticky Bottom - Material Bottom App Bar) -->
+    <div id="fixed-score-bar" class="p-4 md:p-6 border-t dark:border-gray-600">
         
-        <!-- Tombol Toggle yang Menonjol di Kanan (Diperbarui) -->
-        <button id="score-toggle-btn" onclick="toggleScoreBar()" class="bg-kitchen-dark hover:bg-kitchen-dark/90 text-white transition-colors focus:outline-none flex items-center justify-center">
-            <svg id="score-toggle-icon" class="w-6 h-6 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+        <!-- FAB Toggle Button (Central Action Button) -->
+        <button id="score-toggle-btn" onclick="toggleScoreBar()" class="text-white flex items-center justify-center">
+            <!-- Icon Panah (Stroke width 3 untuk tampilan yang lebih tebal dan Material-like) -->
+            <!-- Diberi rotate-180 agar default (visible) menjadi panah ke bawah -->
+            <svg id="score-toggle-icon" class="w-8 h-8 transition-transform duration-300 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path>
             </svg>
         </button>
 
@@ -396,11 +461,11 @@
             
             <!-- Tombol Aksi (Kiri/Bawah pada mobile) -->
             <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto order-3 md:order-1">
-                <button id="reset-form-btn" class="flex-shrink-0 flex items-center justify-center bg-score-red hover:bg-score-red/90 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md whitespace-nowrap w-full md:w-auto text-sm">
+                <button id="reset-form-btn" class="flex-shrink-0 flex items-center justify-center bg-score-red hover:bg-score-red/90 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md whitespace-nowrap w-full md:w-auto text-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     Reset
                 </button>
-                <button id="export-pdf-btn" class="flex-shrink-0 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg whitespace-nowrap w-full md:w-auto text-sm">
+                <button id="export-pdf-btn" class="flex-shrink-0 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg whitespace-nowrap w-full md:w-auto text-sm">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Unduh
                 </button>
@@ -615,14 +680,20 @@
                 div.classList.toggle('hidden', !isHidden);
             });
             
-            // 2. Toggle ICON (rotate 180 degrees when collapsed/hidden)
-            // If it was hidden (isHidden == true), it is now visible (remove rotate-180 -> arrow up).
-            // If it was visible (isHidden == false), it is now hidden (add rotate-180 -> arrow down).
+            // 2. Toggle ICON (Arrow logic: Hidden -> UP, Visible -> DOWN)
             if (tableIcon) {
-                tableIcon.classList.toggle('rotate-180', !isHidden); 
+                if (isHidden) { // Expanding (will be visible) -> Needs DOWN arrow (rotate-180)
+                    tableIcon.classList.add('rotate-180');
+                } else { // Collapsing (will be hidden) -> Needs UP arrow (no rotate-180)
+                    tableIcon.classList.remove('rotate-180');
+                }
             }
             if (cardIcon) {
-                cardIcon.classList.toggle('rotate-180', !isHidden); 
+                if (isHidden) { // Expanding (will be visible) -> Needs DOWN arrow (rotate-180)
+                    cardIcon.classList.add('rotate-180');
+                } else { // Collapsing (will be hidden) -> Needs UP arrow (no rotate-180)
+                    cardIcon.classList.remove('rotate-180');
+                }
             }
         }
         
@@ -689,10 +760,14 @@
                 // Apply initial green highlight for default selected state
                 const initialBgClass = isChecked ? 'bg-score-green text-white font-semibold' : ''; 
                 
-                return `<input type="radio" id="${inputId}" name="${inputName}" value="${numericValue}" class="score-input hidden"><label for="${inputId}" class="score-label ${isCard ? 'py-2' : ''} ${initialBgClass}">${val}</label>`;
+                // Menggunakan py-0.5 dan text-xs untuk kerapatan tinggi di tampilan mobile/kartu, konsisten dengan area label
+                const compactClasses = isCard ? 'py-0.5 text-xs' : '';
+
+                return `<input type="radio" id="${inputId}" name="${inputName}" value="${numericValue}" class="score-input hidden"><label for="${inputId}" class="score-label ${compactClasses} ${initialBgClass}">${val}</label>`;
             }).join('');
             
-            return isCard ? `<div class="grid grid-cols-4 gap-2 text-xs">${optionsHTML}</div>` : `<div class="flex flex-col space-y-1">${optionsHTML}</div>`;
+            // Menggunakan space-y-0.5 untuk merapatkan jarak vertikal antar opsi di kartu
+            return isCard ? `<div class="flex flex-col space-y-0.5">${optionsHTML}</div>` : `<div class="flex flex-col space-y-1">${optionsHTML}</div>`;
         }
         
         // Fungsi untuk mendapatkan HTML penilaian di tampilan kartu (mobile)
@@ -701,19 +776,20 @@
             AREAS.forEach(area => {
                 const maxScore = getMaxScore(crit.areas[area]);
                 if (maxScore > 0 || crit.areas[area] === 'NA') { 
-                    // Tampilkan kode area (A, B, C...) saja (sesuai permintaan user)
+                    // MENGHAPUS min-width dan flex-shrink-0. MENAMBAH flex-grow.
+                    // Ini memaksa kolom untuk berbagi ruang yang tersedia tanpa overflow horizontal.
                     html += `
-                        <div class="space-y-1">
-                            <p class="text-xs font-bold text-gray-600 dark:text-gray-400">
-                                ${area}. 
+                        <div class="flex flex-col space-y-1 text-center flex-grow">
+                            <p class="text-xs font-bold text-gray-700 dark:text-gray-300">
+                                ${area}
                             </p>
                             ${getRadioOptionsHTML(crit, area, true)}
                         </div>
                     `;
                 }
             });
-            // Mengembalikan grid 2 kolom (4 baris)
-            return `<div class="mobile-score-grid">${html}</div>`;
+            // Menggunakan justify-around dan space-x-0.5 untuk meratakan dan merapatkan elemen.
+            return `<div class="pt-3 pb-2"><div class="flex space-x-0.5 justify-around">${html}</div></div>`;
         }
 
 
@@ -727,7 +803,7 @@
             
             CRITERIA.forEach((crit) => {
                 const isCollapsibleGroup = ['8', '9', '10', '13', '16', '17', '18', '19', '20', '21', '22', '23'].includes(crit.no);
-                let groupClass = ''; // Dideklarasikan di sini untuk mengatasi ReferenceError
+                let groupClass = ''; 
                 let initialRotation = '';
                 
                 // === TABLE ROW RENDERING (Desktop View) ===
@@ -736,13 +812,13 @@
 
                 // Handle Header Row
                 if (crit.isHeader) {
-                    groupClass = crit.group ? `req-header-group-${crit.group}` : ''; // Tentukan groupClass di sini
+                    groupClass = crit.group ? `req-header-group-${crit.group}` : ''; 
                     tableRow.classList.add('bg-kitchen-main/10', 'dark:bg-gray-600', 'criteria-header-row'); 
                     
                     if (isCollapsibleGroup) {
                          tableRow.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
-                         // Initial state is hidden (collapsed), so apply rotate-180 for arrow down
-                         initialRotation = 'rotate-180'; 
+                         // Default Collapsed -> Needs UP arrow (no rotate-180)
+                         initialRotation = ''; 
                          // Menggunakan class w-6 h-6 dan stroke-width="3" untuk konsistensi ukuran ikon
                          const iconSvg = `<svg id="icon-group-table-${crit.no}" class="w-6 h-6 ml-2 transition-transform duration-200 ${initialRotation}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
                          tableRow.innerHTML = `
@@ -760,10 +836,9 @@
                     
                     // === CARD VIEW HEADER ===
                     const cardHeader = document.createElement('div');
-                    // Perbaikan: groupClass dan initialRotation harus tersedia di sini
                     if (crit.group) {
                          groupClass = `req-header-group-${crit.group}`;
-                         initialRotation = 'rotate-180';
+                         initialRotation = '';
                     }
                     cardHeader.className = `p-3 bg-kitchen-main/10 dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 font-bold mt-4 criteria-header-row ${groupClass}`;
                     cardHeader.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
@@ -800,7 +875,6 @@
                     }
                     
                     // Teks Persyaratan dan Nomor
-                    // Dihapus wrapper <div class="space-y-2"> dari sini untuk merapikan layout mobile.
                     cardItem.innerHTML = `
                         <div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700">
                             <div class="flex-shrink-0 w-8 text-sm font-bold text-kitchen-dark dark:text-kitchen-main">${displayNo}.</div>
@@ -923,48 +997,90 @@
             const content = document.getElementById(sectionId);
             const icon = document.getElementById('icon-' + sectionId);
             
-            if (content.classList.contains('hidden')) {
-                // Expand: Konten ditampilkan, panah mengarah ke atas (tidak ada rotate)
-                content.classList.remove('hidden');
-                icon.classList.remove('rotate-180');
+            if (content.classList.contains('collapsed')) {
+                // EXPAND (Hidden -> Visible)
+                // Desired Icon: DOWN Arrow (needs rotate-180)
+                content.classList.remove('collapsed');
+                // Set max-height ke scrollHeight untuk transisi yang mulus
+                content.style.maxHeight = content.scrollHeight + "px"; 
+                icon.classList.add('rotate-180'); // <--- Logic reversed
+                
+                // Setelah transisi selesai, hapus max-height eksplisit agar konten dapat menyesuaikan secara dinamis
+                setTimeout(() => {
+                    content.style.maxHeight = 'none'; 
+                }, 400); // Sesuai durasi transisi CSS
+                
             } else {
-                // Collapse: Konten disembunyikan, panah mengarah ke bawah (rotate-180)
-                content.classList.add('hidden');
-                icon.classList.add('rotate-180');
+                // COLLAPSE (Visible -> Hidden)
+                // Desired Icon: UP Arrow (needs no rotation)
+                // Tetapkan max-height ke nilai saat ini sebelum memulai transisi
+                content.style.maxHeight = content.scrollHeight + "px"; 
+                
+                // Gunakan requestAnimationFrame untuk memastikan browser mendaftarkan perubahan height
+                requestAnimationFrame(() => {
+                    content.classList.add('collapsed');
+                    content.style.maxHeight = '0'; // Transisi ke 0
+                });
+                icon.classList.remove('rotate-180'); // <--- Logic reversed
+            }
+        }
+
+        function initSectionState(sectionId) {
+            const content = document.getElementById(sectionId);
+            // Jika elemen memiliki kelas 'collapsed' (default hidden), atur max-height ke 0
+            if (content.classList.contains('collapsed')) {
+                content.style.maxHeight = '0';
+            } else {
+                // Jika elemen terbuka, atur max-height ke nilai yang cukup besar atau hitung scrollHeight
+                // Untuk memastikan transisi yang mulus saat collapse pertama kali, hitung scrollHeight
+                // dan hapus setelah inisialisasi agar konten dapat tumbuh bebas.
+                const initialHeight = content.scrollHeight;
+                content.style.maxHeight = initialHeight + "px"; 
+                setTimeout(() => {
+                    content.style.maxHeight = 'none'; 
+                }, 50);
             }
         }
 
         function toggleScoreBar() {
             const content = document.getElementById('score-content');
-            const icon = document.getElementById('score-toggle-icon');
+            const icon = document.getElementById('score-toggle-icon'); // Define icon here
             const isHidden = content.classList.contains('hidden');
+            
+            // Atur margin bottom body agar konten tidak tertutup fixed bar
+            const bodyStyle = document.body.style;
 
             if (isHidden) {
+                // EXPANDING: Content becomes visible, Icon should point DOWN (v)
                 content.classList.remove('hidden');
-                icon.classList.remove('rotate-180');
+                icon.classList.add('rotate-180'); // New: DOWN arrow when visible
                 localStorage.setItem(SCORE_BAR_STATE_KEY, 'visible');
-                document.body.style.marginBottom = '12rem'; 
+                bodyStyle.marginBottom = '12rem'; 
             } else {
+                // COLLAPSING: Content becomes hidden, Icon should point UP (^)
                 content.classList.add('hidden');
-                icon.classList.add('rotate-180');
+                icon.classList.remove('rotate-180'); // New: UP arrow when hidden
                 localStorage.setItem(SCORE_BAR_STATE_KEY, 'hidden');
-                document.body.style.marginBottom = '4rem'; 
+                bodyStyle.marginBottom = '4rem'; 
             }
         }
         
         function initScoreBarState() {
             const savedState = localStorage.getItem(SCORE_BAR_STATE_KEY);
             const content = document.getElementById('score-content');
-            const icon = document.getElementById('score-toggle-icon');
+            const icon = document.getElementById('score-toggle-icon'); // Define icon here
+            const bodyStyle = document.body.style;
 
             if (savedState === 'hidden') {
+                // State: Hidden (Collapsed) -> Icon should point UP (^)
                 content.classList.add('hidden');
-                icon.classList.add('rotate-180');
-                document.body.style.marginBottom = '4rem';
+                icon.classList.remove('rotate-180'); // New: UP arrow when hidden
+                bodyStyle.marginBottom = '4rem';
             } else {
+                // State: Visible (Expanded) -> Icon should point DOWN (v)
                 content.classList.remove('hidden');
-                icon.classList.remove('rotate-180');
-                document.body.style.marginBottom = '12rem'; 
+                icon.classList.add('rotate-180'); // New: DOWN arrow when visible (Default in HTML)
+                bodyStyle.marginBottom = '12rem'; 
             }
         }
         
@@ -1109,7 +1225,8 @@
                 .bg-kitchen-dark { background-color: #457A57 !important; color: white !important; }
                 
                 /* Reset input borders */
-                input, textarea { border: 1px solid #d1d5db !important; }
+                input, textarea { border: 1px solid #d1d5db !important; border-radius: 6px !important;}
+                .autosave-input { border: 1px solid #d1d5db !important; } /* override material style for print */
 
                 body { margin: 0 !important; padding: 0 !important; }
                 #form-content { display: block !important; padding: 0.5rem !important; }
@@ -1149,7 +1266,7 @@
                 .special-header-row { background-color: #eee !important; font-weight: bold; padding: 5px !important; }
                 
                 /* Force expand all sections for PDF */
-                .collapsible-content { display: block !important; }
+                .collapsible-content { display: block !important; max-height: none !important; opacity: 1 !important; }
                 .section-icon { display: none !important; }
                 
                 /* Force Table View for PDF Print */
@@ -1370,8 +1487,13 @@
                 item.classList.toggle('hidden', !isHidden);
             });
             
+            // 2. Toggle ICON (Arrow logic: Hidden -> UP, Visible -> DOWN)
             if (icon) {
-                icon.classList.toggle('rotate-180', !isHidden); 
+                if (isHidden) { // Expanding (will be visible) -> Needs DOWN arrow (rotate-180)
+                    icon.classList.add('rotate-180');
+                } else { // Collapsing (will be hidden) -> Needs UP arrow (no rotate-180)
+                    icon.classList.remove('rotate-180');
+                }
             }
         }
 
@@ -1391,8 +1513,8 @@
                         // Tambahkan event listener untuk header yang bisa di-toggle
                         div.classList.add('cursor-pointer');
                         div.setAttribute('onclick', `toggleSpecialReqGroup('${req.group}')`);
-                        // Ikon toggle (rotate-180 saat default tersembunyi)
-                        const iconSvg = `<svg id="icon-req-group-${req.group}" class="w-6 h-6 ml-2 transition-transform duration-200 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
+                        // Ikon default Collapsed -> Needs UP arrow (no rotate-180)
+                        const iconSvg = `<svg id="icon-req-group-${req.group}" class="w-6 h-6 ml-2 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
                         div.innerHTML = `<div class="w-12 text-sm text-kitchen-dark dark:text-white flex-shrink-0 text-center">${req.no}</div><div class="flex-grow text-sm text-kitchen-dark dark:text-white flex justify-between items-center">${req.text} ${iconSvg}</div>`;
                     } else {
                         // Header biasa (poin 1-8)
@@ -1402,7 +1524,7 @@
                     // Jika ini Header 9, tidak ada radio di baris ini.
                     if (req.no !== '9') {
                         // --- START REFACTORED LAYOUT FOR ITEMS 1-8 (Vertical Mobile, Horizontal Desktop) ---
-                        div.className = `flex flex-col md:flex-row md:items-start p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600`;
+                        div.className = `flex flex-col md:flex-row md:items-start p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 shadow-md`;
                         
                         div.innerHTML = `
                             <!-- Top Row: Number and Text (Always aligned, takes full width on mobile) -->
@@ -1411,7 +1533,7 @@
                                 <div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div>
                             </div>
                             <!-- Bottom Row: Radio Buttons (Full width on mobile, side-by-side under the text container) -->
-                            <div class="w-full flex-shrink-0 flex space-x-4 justify-start mt-3 border-t border-gray-200 dark:border-gray-700 pt-3 
+                            <div class="w-full flex-shrink-0 flex space-x-4 justify-end mt-3 border-t border-gray-200 dark:border-gray-700 pt-3 
                                 md:w-48 md:mt-0 md:border-t-0 md:pt-0 md:justify-end md:ml-4">
                                 <label class="inline-flex items-center cursor-pointer">
                                     <input type="radio" name="req-${req.no}" value="Ya" class="form-radio radio-ya h-5 w-5 focus:ring-kitchen-dark">
@@ -1449,7 +1571,7 @@
                 // --- START REFACTORED LAYOUT FOR GROUPED SUB-ITEMS (Vertical Mobile, Horizontal Desktop) ---
                 
                 // Use flex-col on mobile, md:flex-row on desktop. items-start to keep content at top.
-                div.className = `flex flex-col md:flex-row md:items-start p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600`;
+                div.className = `flex flex-col md:flex-row md:items-start p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm`;
 
                 if (req.group) {
                     div.classList.add(`req-group-${req.group}`, 'hidden'); // Item disembunyikan
@@ -1464,7 +1586,7 @@
                         <div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div>
                     </div>
                     <!-- Bottom Row: Radio Buttons (Full width on mobile, side-by-side under the text container) -->
-                    <div class="w-full flex-shrink-0 flex space-x-4 justify-start mt-3 border-t border-gray-200 dark:border-gray-700 pt-3 
+                    <div class="w-full flex-shrink-0 flex space-x-4 justify-end mt-3 border-t border-gray-200 dark:border-gray-700 pt-3 
                         md:w-48 md:mt-0 md:border-t-0 md:pt-0 md:justify-end md:ml-4">
                         <label class="inline-flex items-center cursor-pointer">
                             <input type="radio" name="req-${req.no}" value="Ya" class="form-radio radio-ya h-5 w-5 focus:ring-kitchen-dark">
@@ -1492,6 +1614,15 @@
             initTheme(); 
             renderCriteriaTable();
             renderSpecialRequirements();
+            
+            // Inisialisasi state animasi untuk semua bagian yang dapat dilipat
+            // Ini harus dipanggil setelah rendering DOM
+            initSectionState('content-a');
+            initSectionState('content-b');
+            initSectionState('content-d');
+            initSectionState('content-e');
+            initSectionState('content-f');
+            
             initializeFormState(); 
             initScoreBarState(); 
             
