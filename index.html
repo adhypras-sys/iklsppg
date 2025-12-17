@@ -94,18 +94,21 @@
             color: #e2e8f0;
         }
 
-        /* Custom style for the score bar toggle button on mobile */
+        /* Custom style for the score bar toggle button on mobile (Diperbarui untuk ikon bulat) */
         #score-toggle-btn {
             position: absolute;
-            top: -16px; /* Menonjol sedikit di atas border bar */
+            top: -16px; 
             right: 1rem; 
-            padding: 0.5rem 1rem;
-            border-radius: 9999px; /* Rounded pill shape */
-            font-size: 0.75rem; /* text-xs */
-            z-index: 21; /* Di atas score bar */
+            padding: 0.5rem; /* Diperbarui: 0.5rem 1rem -> 0.5rem */
+            border-radius: 9999px; 
+            z-index: 21; 
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            /* Tambahan untuk mobile view */
+            width: 3rem; /* Memastikan bentuk bulat yang bagus */
+            height: 3rem;
+            justify-content: center;
         }
-
+        
         /* Collapse/Expand Transition for Sections */
         .section-header {
             cursor: pointer;
@@ -382,10 +385,9 @@
     <!-- Bagian C: Total Skor dan Hasil (Fixed/Sticky Bottom) -->
     <div id="fixed-score-bar" class="p-4 md:p-6 border-t border-kitchen-main dark:border-gray-600">
         
-        <!-- Tombol Toggle yang Menonjol di Kanan -->
-        <button id="score-toggle-btn" onclick="toggleScoreBar()" class="bg-kitchen-dark hover:bg-kitchen-dark/90 text-white transition-colors focus:outline-none flex items-center space-x-2">
-            <span id="score-toggle-text" class="hidden md:inline font-semibold">Sembunyikan Nilai</span>
-            <svg id="score-toggle-icon" class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Tombol Toggle yang Menonjol di Kanan (Diperbarui) -->
+        <button id="score-toggle-btn" onclick="toggleScoreBar()" class="bg-kitchen-dark hover:bg-kitchen-dark/90 text-white transition-colors focus:outline-none flex items-center justify-center">
+            <svg id="score-toggle-icon" class="w-6 h-6 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
             </svg>
         </button>
@@ -400,7 +402,7 @@
                 </button>
                 <button id="export-pdf-btn" class="flex-shrink-0 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg whitespace-nowrap w-full md:w-auto text-sm">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Unduh PDF
+                    Unduh
                 </button>
             </div>
 
@@ -935,19 +937,16 @@
         function toggleScoreBar() {
             const content = document.getElementById('score-content');
             const icon = document.getElementById('score-toggle-icon');
-            const text = document.getElementById('score-toggle-text');
             const isHidden = content.classList.contains('hidden');
 
             if (isHidden) {
                 content.classList.remove('hidden');
                 icon.classList.remove('rotate-180');
-                text.textContent = 'Sembunyikan Nilai';
                 localStorage.setItem(SCORE_BAR_STATE_KEY, 'visible');
                 document.body.style.marginBottom = '12rem'; 
             } else {
                 content.classList.add('hidden');
                 icon.classList.add('rotate-180');
-                text.textContent = 'Tampilkan Nilai';
                 localStorage.setItem(SCORE_BAR_STATE_KEY, 'hidden');
                 document.body.style.marginBottom = '4rem'; 
             }
@@ -957,17 +956,14 @@
             const savedState = localStorage.getItem(SCORE_BAR_STATE_KEY);
             const content = document.getElementById('score-content');
             const icon = document.getElementById('score-toggle-icon');
-            const text = document.getElementById('score-toggle-text');
 
             if (savedState === 'hidden') {
                 content.classList.add('hidden');
                 icon.classList.add('rotate-180');
-                text.textContent = 'Tampilkan Nilai';
                 document.body.style.marginBottom = '4rem';
             } else {
                 content.classList.remove('hidden');
                 icon.classList.remove('rotate-180');
-                text.textContent = 'Sembunyikan Nilai';
                 document.body.style.marginBottom = '12rem'; 
             }
         }
