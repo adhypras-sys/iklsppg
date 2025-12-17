@@ -120,8 +120,9 @@
             cursor: pointer;
         }
 
-        /* MOBILE/RESPONSIVE VIEW: Hiding the table and showing card-style elements */
-        /* Default view (mobile/small screen) is hidden, shown by JS based on screen size */
+        /* PERBAIKAN B. Penilaian IKL untuk Responsif */
+        
+        /* MOBILE VIEW (default, < md): Sembunyikan tabel, tampilkan card list */
         #inspection-table { 
             display: none; 
         }
@@ -129,7 +130,7 @@
             display: block; 
         }
         
-        /* DESKTOP VIEW: Show the table, hide the cards */
+        /* DESKTOP VIEW (>= md): Tampilkan tabel, sembunyikan card list */
         @media (min-width: 768px) { /* md: breakpoint in Tailwind */
             #inspection-table {
                 display: table;
@@ -139,12 +140,21 @@
             }
         }
 
+        /* Style untuk container penilaian di mobile agar ada grid 2 kolom (4 baris) */
+        .mobile-score-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Diubah dari 4 ke 2 kolom */
+            gap: 0.5rem;
+        }
+
         /* Print Media Queries */
         @media print {
             #fixed-score-bar, #export-btn-container, .no-print, #theme-toggle, #score-toggle-btn { display: none !important; }
             body { margin: 0; padding: 0; background-color: white !important; color: black !important; }
             .fixed-header { position: static !important; }
-            .criteria-group-item { display: table-row !important; } /* Ensure sub-rows are visible in PDF */
+            /* Memaksa elemen yang tersembunyi untuk muncul */
+            .criteria-group-item, #inspection-table { display: table-row !important; } 
+            #inspection-cards { display: none !important; } 
             .criteria-row, #special-requirements > div, section { page-break-inside: avoid !important; }
             thead { display: table-header-group; }
             /* Paksa Light Mode saat Print Dialog Browser Native */
@@ -153,10 +163,6 @@
             /* Pastikan semua section terbuka saat print */
             .collapsible-content { display: block !important; }
             .section-icon { display: none !important; }
-
-            /* Force Table View for PDF Print */
-            #inspection-table { display: table !important; }
-            #inspection-cards { display: none !important; }
         }
         
         /* CLASSIFICATION CSS (Added for the final score color) */
@@ -245,7 +251,7 @@
                         <p class="text-xs"><span class="font-bold">3</span> = Kritis (risiko kesehatan tinggi, perlu perbaikan segera)</p>
                     </div>
                     
-                    <!-- Keterangan Area -->
+                    <!-- Keterangan Area - Disesuaikan untuk Responsif (Legenda Area UTUH) -->
                     <div id="area-legend" class="mb-4 text-xs font-medium text-gray-600 dark:text-gray-300 grid grid-cols-2 md:grid-cols-4 gap-2 p-3 bg-kitchen-cream dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
                         <p><span class="font-bold">A</span> = Area luar bangunan</p>
                         <p><span class="font-bold">B</span> = Area fasilitas karyawan</p>
@@ -285,7 +291,7 @@
                     </div>
 
                     <!-- 2. Tampilan Mobile (Daftar Kartu Vertikal) - Hanya terlihat di bawah md: -->
-                    <div id="inspection-cards" class="space-y-4">
+                    <div id="inspection-cards" class="space-y-3">
                         <!-- Kriteria akan dimasukkan di sini oleh JavaScript (Kartu) -->
                     </div>
                 </div>
@@ -547,21 +553,23 @@
             { no: 6, text: "Tersedia dokumentasi pengawasan internal secara berkala (minimal dilakukan 6 bulan sekali) menggunakan formulir IKL dan dibuktikan dengan rekaman pengawasan internal (IKL) yang sudah terisi." },
             { no: 7, text: "SPPG sudah menerapkan penyimpanan sampel arsip (bank sample) untuk pangan yang diproduksi harian selama 2 x 24 jam pada suhu penyimpanan chiller/kulkas." },
             { no: 8, text: "Tersedia perlengkapan P3K, obat-obatan, dan APAR yang tidak kedaluwarsa dan mudah dijangkau" },
-            // HEADER FOR GROUP 9 SPECIAL REQUIREMENTS
-            { no: '9', text: "Tersedia dokumentasi atau rekaman:", isHeader: true },
-            { no: '9.a.1', text: "SPPG memiliki SOP sanitasi fasilitas dan ruangan dan sudah disosialisasikan", displayNo: 'a.1' },
-            { no: '9.a.2', text: "SPPG memiliki SOP sanitasi peralatan dan sudah disosialisasikan", displayNo: 'a.2' },
-            { no: '9.a.3', text: "SPPG memiliki SOP persiapan bahan pangan dan sudah disosialisasikan", displayNo: 'a.3' },
-            { no: '9.a.4', text: "SPPG memiliki SOP pengolahan dan sudah disosialisasikan", displayNo: 'a.4' },
-            { no: '9.a.5', text: "SPPG memiliki SOP penyimpanan makanan dan sampel makanan dan sudah disosialisasikan", displayNo: 'a.5' },
-            { no: '9.a.6', text: "SPPG memiliki SOP keselamatan kerja dan sudah disosialisasikan", displayNo: 'a.6' },
-            { no: '9.a.7', text: "SPPG memiliki SOP higiene dan pemeriksaan kesehatan personil dan sudah disosialisasikan", displayNo: 'a.7' },
-            { no: '9.a.8', text: "SPPG memiliki SOP pemeliharaan peralatan dan bangunan dan sudah disosialisasikan", displayNo: 'a.8' },
-            { no: '9.a.9', text: "SPPG memiliki SOP pengendalian serangga, hewan pengerat, dan hewan peliharaan dan sudah disosialisasikan", displayNo: 'a.9' },
-            { no: '9.a.10', text: "SPPG memiliki SOP tindakan apabila terjadi keracunan makanan dan sudah disosialisasikan", displayNo: 'a.10' },
-            { no: '9.b', text: "Laporan hasil kalibrasi alat ukur seperti termometer (1 tahun terakhir) tersedia", displayNo: 'b' },
-            { no: '9.c', text: "Rekaman monitoring suhu chiller dan freezer tersedia", displayNo: 'c' },
-            { no: '9.d', text: "Rekaman pembersihan fasilitas (contoh: wastafel, toilet, area kerja) tersedia", displayNo: 'd' },
+            // HEADER FOR GROUP 9 SPECIAL REQUIREMENTS (Dibuat dapat diklik)
+            { no: '9', text: "Tersedia dokumentasi atau rekaman:", isHeader: true, group: '9_doc' },
+            // NEW SUB-HEADER FOR 9
+            { no: '9.a', text: "SPPG memiliki SOP di bawah ini (dapat ditunjukkan SOP dan rekaman daftar hadir sosialiasinya), yaitu:", isSubHeader: true, group: '9_doc' },
+            { no: '9.a.1', text: "SOP sanitasi fasilitas dan ruangan", displayNo: 'a.1', group: '9_doc' },
+            { no: '9.a.2', text: "SOP sanitasi peralatan", displayNo: 'a.2', group: '9_doc' },
+            { no: '9.a.3', text: "SOP persiapan bahan pangan", displayNo: 'a.3', group: '9_doc' },
+            { no: '9.a.4', text: "SOP pengolahan", displayNo: 'a.4', group: '9_doc' },
+            { no: '9.a.5', text: "SOP penyimpanan makanan dan sampel makanan", displayNo: 'a.5', group: '9_doc' },
+            { no: '9.a.6', text: "SOP keselamatan kerja", displayNo: 'a.6', group: '9_doc' },
+            { no: '9.a.7', text: "SOP higiene dan pemeriksaan kesehatan personil", displayNo: 'a.7', group: '9_doc' },
+            { no: '9.a.8', text: "SOP pemeliharaan peralatan dan bangunan", displayNo: 'a.8', group: '9_doc' },
+            { no: '9.a.9', text: "SOP pengendalian serangga, hewan pengerat, dan hewan peliharaan", displayNo: 'a.9', group: '9_doc' },
+            { no: '9.a.10', text: "SOP tindakan apabila terjadi keracunan makanan", displayNo: 'a.10', group: '9_doc' },
+            { no: '9.b', text: "Laporan hasil kalibrasi alat ukur seperti termometer (1 tahun terakhir) tersedia", displayNo: 'b', group: '9_doc' },
+            { no: '9.c', text: "Rekaman monitoring suhu chiller dan freezer tersedia", displayNo: 'c', group: '9_doc' },
+            { no: '9.d', text: "Rekaman pembersihan fasilitas (contoh: wastafel, toilet, area kerja) tersedia", displayNo: 'd', group: '9_doc' },
         ];
         
         const AREAS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -679,11 +687,33 @@
                 // Apply initial green highlight for default selected state
                 const initialBgClass = isChecked ? 'bg-score-green text-white font-semibold' : ''; 
                 
-                return `<input type="radio" id="${inputId}" name="${inputName}" value="${numericValue}" class="score-input hidden" ${isChecked ? 'checked' : ''}><label for="${inputId}" class="score-label ${isCard ? 'py-2' : ''} ${initialBgClass}">${val}</label>`;
+                return `<input type="radio" id="${inputId}" name="${inputName}" value="${numericValue}" class="score-input hidden"><label for="${inputId}" class="score-label ${isCard ? 'py-2' : ''} ${initialBgClass}">${val}</label>`;
             }).join('');
             
             return isCard ? `<div class="grid grid-cols-4 gap-2 text-xs">${optionsHTML}</div>` : `<div class="flex flex-col space-y-1">${optionsHTML}</div>`;
         }
+        
+        // Fungsi untuk mendapatkan HTML penilaian di tampilan kartu (mobile)
+        function getCardScoresHTML(crit) {
+            let html = '';
+            AREAS.forEach(area => {
+                const maxScore = getMaxScore(crit.areas[area]);
+                if (maxScore > 0 || crit.areas[area] === 'NA') { 
+                    // Tampilkan kode area (A, B, C...) saja (sesuai permintaan user)
+                    html += `
+                        <div class="space-y-1">
+                            <p class="text-xs font-bold text-gray-600 dark:text-gray-400">
+                                ${area}. 
+                            </p>
+                            ${getRadioOptionsHTML(crit, area, true)}
+                        </div>
+                    `;
+                }
+            });
+            // Mengembalikan grid 2 kolom (4 baris)
+            return `<div class="mobile-score-grid">${html}</div>`;
+        }
+
 
         // --- RENDERING FUNCTIONS ---
         
@@ -695,6 +725,8 @@
             
             CRITERIA.forEach((crit) => {
                 const isCollapsibleGroup = ['8', '9', '10', '13', '16', '17', '18', '19', '20', '21', '22', '23'].includes(crit.no);
+                let groupClass = ''; // Dideklarasikan di sini untuk mengatasi ReferenceError
+                let initialRotation = '';
                 
                 // === TABLE ROW RENDERING (Desktop View) ===
                 const tableRow = document.createElement('tr');
@@ -702,12 +734,13 @@
 
                 // Handle Header Row
                 if (crit.isHeader) {
+                    groupClass = crit.group ? `req-header-group-${crit.group}` : ''; // Tentukan groupClass di sini
                     tableRow.classList.add('bg-kitchen-main/10', 'dark:bg-gray-600', 'criteria-header-row'); 
                     
                     if (isCollapsibleGroup) {
                          tableRow.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
                          // Initial state is hidden (collapsed), so apply rotate-180 for arrow down
-                         const initialRotation = 'rotate-180'; 
+                         initialRotation = 'rotate-180'; 
                          // Menggunakan class w-6 h-6 dan stroke-width="3" untuk konsistensi ukuran ikon
                          const iconSvg = `<svg id="icon-group-table-${crit.no}" class="w-6 h-6 ml-2 transition-transform duration-200 ${initialRotation}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
                          tableRow.innerHTML = `
@@ -723,6 +756,19 @@
                     }
                     body.appendChild(tableRow);
                     
+                    // === CARD VIEW HEADER ===
+                    const cardHeader = document.createElement('div');
+                    // Perbaikan: groupClass dan initialRotation harus tersedia di sini
+                    if (crit.group) {
+                         groupClass = `req-header-group-${crit.group}`;
+                         initialRotation = 'rotate-180';
+                    }
+                    cardHeader.className = `p-3 bg-kitchen-main/10 dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 font-bold mt-4 criteria-header-row ${groupClass}`;
+                    cardHeader.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
+                    const cardIconSvg = `<svg id="icon-group-card-${crit.no}" class="w-6 h-6 ml-2 transition-transform duration-200 ${initialRotation}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
+                    cardHeader.innerHTML = `<div class="flex justify-between items-center"><span class="text-kitchen-dark dark:text-white">${crit.no}. ${crit.text}</span>${isCollapsibleGroup ? cardIconSvg : ''}</div>`;
+                    cardContainer.appendChild(cardHeader);
+                    
                 } else {
                     // Handle Sub-Item Row
                     const displayNo = crit.displayNo || crit.no;
@@ -735,6 +781,7 @@
                     
                     tableRow.innerHTML += `<td class="px-2 py-3 whitespace-nowrap text-center text-sm font-medium align-middle text-gray-700 dark:text-gray-300">${displayNo}</td><td class="${textClass} py-3 text-sm text-gray-700 dark:text-gray-300 align-middle">${crit.text}</td>`;
 
+                    // --- TABLE SCORES (Desktop) ---
                     AREAS.forEach(area => {
                         const cell = document.createElement('td');
                         cell.className = 'px-1 py-1 whitespace-nowrap text-center w-12 align-top'; 
@@ -742,57 +789,31 @@
                         tableRow.appendChild(cell);
                     });
                     body.appendChild(tableRow);
-                }
-
-                // === CARD RENDERING (Mobile View) ===
-                if (crit.isHeader) {
-                    // Header Card (Collapsible)
-                    const headerCard = document.createElement('div');
-                    headerCard.classList.add('p-3', 'bg-kitchen-main/20', 'dark:bg-gray-600', 'rounded-lg', 'font-bold', 'criteria-header-row');
-                    headerCard.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
                     
-                    if (isCollapsibleGroup) {
-                        // Initial state is hidden (collapsed), so apply rotate-180 for arrow down
-                        const initialRotation = 'rotate-180'; 
-                        // Menggunakan class w-6 h-6 dan stroke-width="3" untuk konsistensi ukuran ikon
-                        const iconSvg = `<svg id="icon-group-card-${crit.no}" class="w-6 h-6 ml-2 transition-transform duration-200 ${initialRotation}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
-                        headerCard.innerHTML = `<div class="flex items-center justify-between text-kitchen-dark dark:text-white"><span class="text-sm">${crit.no}. ${crit.text}</span> ${iconSvg}</div>`;
-                    } else {
-                        headerCard.innerHTML = `<div class="flex items-center justify-between text-kitchen-dark dark:text-white"><span class="text-sm">${crit.no}. ${crit.text}</span></div>`;
-                    }
-                    cardContainer.appendChild(headerCard);
-                    
-                } else {
-                    // Sub-Item Card
-                    const cardDiv = document.createElement('div');
-                    cardDiv.classList.add('p-3', 'bg-white', 'dark:bg-gray-800', 'rounded-lg', 'border', 'border-gray-300', 'dark:border-gray-700');
-                    
+                    // === CARD VIEW ITEM (Mobile) ===
+                    const cardItem = document.createElement('div');
+                    cardItem.className = `p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 criteria-group-item`;
                     if (crit.group) {
-                        cardDiv.classList.add(`criteria-group-${crit.group}`, 'criteria-group-item', 'hidden'); 
+                        cardItem.classList.add(`criteria-group-${crit.group}`, 'hidden'); 
                     }
-
-                    const displayNo = crit.displayNo || crit.no;
-                    const textContent = `<p class="text-sm font-semibold mb-3">${displayNo}. ${crit.text}</p>`;
                     
-                    let areasContent = '';
-                    AREAS.forEach(area => {
-                        if (crit.areas[area] !== 'NA') {
-                            areasContent += `
-                                <div class="p-2 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700">
-                                    <p class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">${area} (${AREA_LEGEND[area]}) - Max: ${crit.areas[area]}</p>
-                                    ${getRadioOptionsHTML(crit, area, true)}
-                                </div>`;
-                        }
-                    });
-                    
-                    cardDiv.innerHTML = textContent + `<div class="space-y-3">${areasContent}</div>`;
-                    cardContainer.appendChild(cardDiv);
+                    // Teks Persyaratan dan Nomor
+                    // Dihapus wrapper <div class="space-y-2"> dari sini untuk merapikan layout mobile.
+                    cardItem.innerHTML = `
+                        <div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700">
+                            <div class="flex-shrink-0 w-8 text-sm font-bold text-kitchen-dark dark:text-kitchen-main">${displayNo}.</div>
+                            <div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${crit.text}</div>
+                        </div>
+                        ${getCardScoresHTML(crit)}
+                    `;
+                    cardContainer.appendChild(cardItem);
                 }
             });
 
             // Re-attach listeners after rendering both views
             document.querySelectorAll('.score-input').forEach(input => input.addEventListener('change', handleScoreChange));
         }
+
 
         function calculateScore() {
             const scores = document.querySelectorAll('.score-input:checked');
@@ -1002,12 +1023,43 @@
         }
 
         function resetForm() {
-            if (confirm("Apakah Anda yakin ingin mereset semua formulir? Semua data yang tersimpan akan dihapus.")) {
+            // Menggunakan modal custom untuk konfirmasi
+            const confirmModal = document.createElement('div');
+            confirmModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            confirmModal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">Konfirmasi Reset</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">Apakah Anda yakin ingin mereset semua formulir? Semua data yang tersimpan akan dihapus.</p>
+                    <div class="flex justify-end space-x-3">
+                        <button id="cancel-reset" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">Batal</button>
+                        <button id="confirm-reset" class="px-4 py-2 text-sm font-medium text-white bg-score-red rounded-lg hover:bg-score-red/90 transition-colors">Reset Data</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(confirmModal);
+
+            document.getElementById('cancel-reset').addEventListener('click', () => {
+                document.body.removeChild(confirmModal);
+            });
+
+            document.getElementById('confirm-reset').addEventListener('click', () => {
                 localStorage.removeItem(STORAGE_KEY);
                 initializeFormState();
                 window.scrollTo(0, 0);
-                alert("Formulir berhasil direset.");
-            }
+                document.body.removeChild(confirmModal);
+                
+                // Modal konfirmasi sukses
+                const successModal = document.createElement('div');
+                successModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                successModal.innerHTML = `
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                        <svg class="w-10 h-10 text-score-green mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Formulir berhasil direset.</p>
+                        <button onclick="document.body.removeChild(this.closest('.fixed'))" class="mt-4 px-4 py-2 text-sm font-medium text-white bg-kitchen-dark rounded-lg hover:bg-kitchen-dark/90 transition-colors">Tutup</button>
+                    </div>
+                `;
+                document.body.appendChild(successModal);
+            });
         }
 
         async function fetchWithExponentialBackoff(url, options, maxRetries = 5) {
@@ -1161,7 +1213,7 @@
             clonedElement.querySelectorAll('thead th.text-xs').forEach(th => { th.classList.remove('text-xs'); th.classList.add('text-[10px]'); });
 
             clonedElement.querySelectorAll('#special-requirements > div').forEach(div => {
-                if(div.classList.contains('bg-kitchen-main/10')) {
+                if(div.classList.contains('bg-kitchen-main\\/10')) {
                     div.classList.add('special-header-row');
                     return;
                 }
@@ -1169,13 +1221,27 @@
                 const inputName = div.querySelector('input[type="radio"]') ? div.querySelector('input[type="radio"]').name : null;
                 div.classList.add('pdf-text');
                 if (inputName) {
-                    const resultDiv = div.querySelector('.flex-shrink-0.flex.space-x-4');
-                    if (resultDiv) {
+                    // Check if responsive layout was used (meaning options are on a separate row/column on mobile)
+                    const radioContainer = div.querySelector('.flex-shrink-0.flex.space-x-4');
+                    
+                    if (radioContainer) {
                         const selectedValue = getSelectedLabelText(inputName, clonedElement);
                         const staticSpan = document.createElement('span');
                         staticSpan.textContent = selectedValue;
                         staticSpan.className = 'text-xs font-medium pdf-text';
-                        resultDiv.innerHTML = ''; resultDiv.appendChild(staticSpan);
+                        
+                        // Replace the entire responsive radio block with the static result
+                        const newContainer = document.createElement('div');
+                        newContainer.className = 'flex-shrink-0 flex justify-end w-16'; // W-16 untuk meniru lebar kolom Ya/Tidak
+                        newContainer.appendChild(staticSpan);
+                        
+                        if(radioContainer.parentNode) {
+                            radioContainer.parentNode.replaceChild(newContainer, radioContainer);
+                        } else {
+                            // Fallback jika struktur parent berbeda (untuk item 1-8)
+                            const parentFlex = div.querySelector('.flex-col');
+                            if(parentFlex) parentFlex.appendChild(newContainer);
+                        }
                     }
                 }
                 const textDiv = div.querySelector('.flex-grow'); if (textDiv) textDiv.classList.remove('text-sm');
@@ -1232,7 +1298,17 @@
                 console.error("Ekspor PDF Gagal:", error);
                 exportBtn.disabled = false;
                 exportBtn.innerHTML = originalHtml;
-                window.alert("Gagal membuat atau mengunduh PDF. Silakan coba lagi.");
+                // Menggunakan modal custom untuk pesan error
+                const errorModal = document.createElement('div');
+                errorModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                errorModal.innerHTML = `
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                        <svg class="w-10 h-10 text-score-red mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Gagal membuat atau mengunduh PDF. Silakan coba lagi.</p>
+                        <button onclick="document.body.removeChild(this.closest('.fixed'))" class="mt-4 px-4 py-2 text-sm font-medium text-white bg-kitchen-dark rounded-lg hover:bg-kitchen-dark/90 transition-colors">Tutup</button>
+                    </div>
+                `;
+                document.body.appendChild(errorModal);
             });
         }
         
@@ -1240,59 +1316,177 @@
             calculatedMaxTotalScore = calculateMaxPossibleScore(); 
             document.getElementById('max-score-label').textContent = `Maksimum: ${calculatedMaxTotalScore}`;
 
+            // Reset text inputs
             document.querySelectorAll('#form-content input:not([type="radio"]), #form-content textarea').forEach(input => {
                 input.value = '';
             });
             
-            // Set default radio state (0/NA for inspection points, Tidak for special requirements)
+            // --- PERBAIKAN: Reset Visual dan Status Radio B. Penilaian IKL ---
+            
+            // 1. Kumpulkan semua nama grup radio B. Penilaian IKL (contoh: crit-1-A)
+            const inspectionRadioGroups = new Set();
             document.querySelectorAll('.score-input').forEach(input => {
-                // Hapus semua penanda yang mungkin ada dari rendering
-                const label = document.querySelector(`label[for="${input.id}"]`);
-                if (label) {
-                    label.classList.remove('bg-score-red', 'bg-score-green', 'text-white', 'font-semibold');
-                }
-
-                // Cek apakah ini input default (value 0)
-                if (input.value === '0') {
-                    input.checked = true;
-                    if (label) {
-                        label.classList.add('bg-score-green', 'text-white', 'font-semibold');
-                    }
+                inspectionRadioGroups.add(input.name);
+            });
+            
+            // 2. Reset setiap grup dengan memilih nilai '0' (NA) dan memicu event 'change'
+            inspectionRadioGroups.forEach(groupName => {
+                const defaultRadio = document.querySelector(`input[name="${groupName}"][value="0"]`);
+                if (defaultRadio) {
+                    defaultRadio.checked = true;
+                    // Memicu event change agar handleScoreChange mereset warna label 
+                    // dan mengaplikasikan highlight hijau default.
+                    const event = new Event('change');
+                    defaultRadio.dispatchEvent(event);
                 }
             });
             
+            // --- Reset untuk D. Persyaratan Khusus (Ya/Tidak) ---
+            
             document.querySelectorAll('#special-requirements input[type="radio"]').forEach(input => {
-                if (input.value === 'Tidak') input.checked = true;
+                // Set 'Tidak' sebagai default
+                if (input.value === 'Tidak') {
+                    input.checked = true;
+                } else if (input.value === 'Ya') {
+                    input.checked = false;
+                }
             });
 
             document.getElementById('ai-report-output').textContent = 'Tekan tombol di atas untuk menghasilkan ringkasan temuan kritis dan langkah perbaikan yang direkomendasikan oleh Gemini AI.';
             calculateScore();
+            
+            // Inisialisasi status tersembunyi untuk grup 9 (biar mirip B)
+            toggleSpecialReqGroup('9_doc', true);
         }
+
+        // Fungsi baru untuk toggle di D. Persyaratan Khusus
+        function toggleSpecialReqGroup(groupNo, forceHide = false) {
+            const groupItems = document.querySelectorAll(`.req-group-${groupNo}`);
+            const icon = document.getElementById(`icon-req-group-${groupNo}`);
+            
+            let isHidden = groupItems.length > 0 ? groupItems[0].classList.contains('hidden') : true;
+
+            if (forceHide && !isHidden) {
+                isHidden = false; // Akan disembunyikan di bawah
+            }
+            
+            groupItems.forEach(item => {
+                item.classList.toggle('hidden', !isHidden);
+            });
+            
+            if (icon) {
+                icon.classList.toggle('rotate-180', !isHidden); 
+            }
+        }
+
 
         function renderSpecialRequirements() {
             const container = document.getElementById('special-requirements');
             container.innerHTML = '';
             SPECIAL_REQUIREMENTS.forEach((req) => {
                 const div = document.createElement('div');
-                div.className = 'flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600';
                 
-                // HANDLING HEADER FOR SPECIAL REQS
+                // Cek apakah ini HEADER utama
                 if (req.isHeader) {
-                    div.classList.add('bg-kitchen-main/10', 'dark:bg-gray-600');
-                    div.innerHTML = `<div class="w-12 text-sm font-bold text-kitchen-dark dark:text-white flex-shrink-0 text-center">${req.no}</div><div class="flex-grow text-sm font-bold text-kitchen-dark dark:text-white">${req.text}</div>`;
+                    const groupClass = req.group ? `req-header-group-${req.group}` : '';
+                    div.className = `flex items-center p-3 bg-kitchen-main/10 dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 font-bold`;
+
+                    if (req.group) {
+                        // Tambahkan event listener untuk header yang bisa di-toggle
+                        div.classList.add('cursor-pointer');
+                        div.setAttribute('onclick', `toggleSpecialReqGroup('${req.group}')`);
+                        // Ikon toggle (rotate-180 saat default tersembunyi)
+                        const iconSvg = `<svg id="icon-req-group-${req.group}" class="w-6 h-6 ml-2 transition-transform duration-200 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
+                        div.innerHTML = `<div class="w-12 text-sm text-kitchen-dark dark:text-white flex-shrink-0 text-center">${req.no}</div><div class="flex-grow text-sm text-kitchen-dark dark:text-white flex justify-between items-center">${req.text} ${iconSvg}</div>`;
+                    } else {
+                        // Header biasa (poin 1-8)
+                        div.innerHTML = `<div class="w-12 text-sm text-kitchen-dark dark:text-white flex-shrink-0 text-center">${req.no}</div><div class="flex-grow text-sm text-kitchen-dark dark:text-white">${req.text}</div>`;
+                    }
+                    
+                    // Jika ini Header 9, tidak ada radio di baris ini.
+                    if (req.no !== '9') {
+                        // --- START REFACTORED LAYOUT FOR ITEMS 1-8 (Vertical Mobile, Horizontal Desktop) ---
+                        div.className = `flex flex-col md:flex-row md:items-start p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600`;
+                        
+                        div.innerHTML = `
+                            <!-- Top Row: Number and Text (Always aligned, takes full width on mobile) -->
+                            <div class="flex items-start w-full md:flex-grow">
+                                <div class="flex-shrink-0 w-12 text-sm text-gray-700 dark:text-gray-300 font-bold md:text-left">${req.no}</div>
+                                <div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div>
+                            </div>
+                            <!-- Bottom Row: Radio Buttons (Full width on mobile, side-by-side under the text container) -->
+                            <div class="w-full flex-shrink-0 flex space-x-4 justify-start mt-3 border-t border-gray-200 dark:border-gray-700 pt-3 
+                                md:w-48 md:mt-0 md:border-t-0 md:pt-0 md:justify-end md:ml-4">
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="req-${req.no}" value="Ya" class="form-radio radio-ya h-5 w-5 focus:ring-kitchen-dark">
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">Ya</span>
+                                </label>
+                                <label class="inline-flex items-center cursor-pointer">
+                                    <input type="radio" name="req-${req.no}" value="Tidak" class="form-radio radio-tidak h-5 w-5 focus:ring-score-red" checked>
+                                    <span class="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">Tidak</span>
+                                </label>
+                            </div>`;
+                        // --- END REFACTORED LAYOUT FOR ITEMS 1-8 ---
+                    }
+                    
                     container.appendChild(div);
                     return;
                 }
-
+                
+                // Cek apakah ini SUB-HEADER (9.a)
+                if (req.isSubHeader) {
+                    // Teks 9.a
+                    div.className = 'pl-16 pr-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-300';
+                    if (req.group) {
+                        div.classList.add(`req-group-${req.group}`, 'hidden'); // Sub-header disembunyikan
+                    }
+                    div.innerHTML = `<span>${req.text}</span>`;
+                    container.appendChild(div);
+                    return;
+                }
+                
+                // Jika bukan header atau sub-header, ini adalah item biasa (9.a.1, 9.b, dst.)
                 const displayNo = req.displayNo || req.no;
-                // Add indentation visually for sub-items
-                const indentClass = req.displayNo ? "pl-4" : "";
+                // Tentukan kelas indentasi hanya untuk sub-item (9.a.1, 9.b, dll.)
+                const indentClass = (req.no > 8 && req.displayNo && req.displayNo.length > 1) ? "pl-8" : ""; 
+                
+                // --- START REFACTORED LAYOUT FOR GROUPED SUB-ITEMS (Vertical Mobile, Horizontal Desktop) ---
+                
+                // Use flex-col on mobile, md:flex-row on desktop. items-start to keep content at top.
+                div.className = `flex flex-col md:flex-row md:items-start p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600`;
 
-                div.innerHTML = `<div class="flex-shrink-0 w-12 text-sm text-gray-700 dark:text-gray-300 text-center">${displayNo}</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300 ${indentClass}">${req.text}</div><div class="flex-shrink-0 flex space-x-4 ml-4"><label class="inline-flex items-center cursor-pointer"><input type="radio" name="req-${req.no}" value="Ya" class="form-radio radio-ya h-5 w-5 focus:ring-kitchen-dark"><span class="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">Ya</span></label><label class="inline-flex items-center cursor-pointer"><input type="radio" name="req-${req.no}" value="Tidak" class="form-radio radio-tidak h-5 w-5 focus:ring-score-red"><span class="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">Tidak</span></label></div>`;
+                if (req.group) {
+                    div.classList.add(`req-group-${req.group}`, 'hidden'); // Item disembunyikan
+                }
+                
+                // Top Row: Number and Text (Always aligned, takes full width)
+                div.innerHTML = `
+                    <div class="flex items-start w-full md:flex-grow">
+                        <!-- Number/ID (fixed width w-12, left-aligned, use indentClass for 9.a.1 style) -->
+                        <div class="flex-shrink-0 w-12 text-sm text-gray-700 dark:text-gray-300 font-bold ${indentClass}">${displayNo}</div>
+                        <!-- Text content (flows next to number) -->
+                        <div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div>
+                    </div>
+                    <!-- Bottom Row: Radio Buttons (Full width on mobile, side-by-side under the text container) -->
+                    <div class="w-full flex-shrink-0 flex space-x-4 justify-start mt-3 border-t border-gray-200 dark:border-gray-700 pt-3 
+                        md:w-48 md:mt-0 md:border-t-0 md:pt-0 md:justify-end md:ml-4">
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="req-${req.no}" value="Ya" class="form-radio radio-ya h-5 w-5 focus:ring-kitchen-dark">
+                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">Ya</span>
+                        </label>
+                        <label class="inline-flex items-center cursor-pointer">
+                            <input type="radio" name="req-${req.no}" value="Tidak" class="form-radio radio-tidak h-5 w-5 focus:ring-score-red" checked>
+                            <span class="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">Tidak</span>
+                        </label>
+                    </div>`;
+                // --- END REFACTORED LAYOUT FOR GROUPED SUB-ITEMS ---
                 container.appendChild(div);
             });
+            
             // Add listeners for special requirements autosave
              document.querySelectorAll('#special-requirements input[type="radio"]').forEach(input => {
+                // Set default checked state and trigger initial styling if necessary (for persistent state)
+                if (input.value === 'Tidak') input.checked = true; // Default state
                 input.addEventListener('change', saveFormData);
             });
         }
@@ -1403,22 +1597,78 @@
 
             outputDiv.textContent = ''; errorDiv.classList.add('hidden'); loadingDiv.classList.remove('hidden'); generateBtn.disabled = true;
 
-            const systemPrompt = `Anda adalah seorang ahli sanitasi. Analisis hasil IKL berikut. Format Markdown.
-### Ringkasan Temuan Kritis (Maks 3 poin)
-* [Analisis]
-### Rekomendasi Perbaikan (Maks 5 langkah)
-1. [Langkah]`;
+            // 1. Kumpulkan data ketidaksesuaian dari B. Penilaian IKL
+            let inspectionData = "Daftar Ketidaksesuaian B. Penilaian IKL:\n";
+            let totalDeficiencies = 0;
+            CRITERIA.forEach(crit => {
+                if (crit.isHeader || crit.isSubHeader) return;
+                
+                AREAS.forEach(area => {
+                    const inputName = `crit-${crit.no}-${area}`;
+                    const checkedInput = document.querySelector(`input[name="${inputName}"]:checked`);
+                    
+                    if (checkedInput && parseInt(checkedInput.value, 10) > 0) {
+                        const score = checkedInput.value;
+                        const areaName = AREA_LEGEND[area];
+                        const deficiencyText = crit.text;
+                        inspectionData += `- [${crit.no}] Area ${area} (${areaName}): "${deficiencyText}" - Nilai: ${score} (Kritikalitas: ${score})\n`;
+                        totalDeficiencies++;
+                    }
+                });
+            });
 
-            const userQuery = `Fasilitas: ${sppgName}, Skor: ${iklScore}, Nilai Kurang: ${totalFailedScore}, Catatan: "${catatanAkhir}"`;
+            // 2. Kumpulkan data ketidaksesuaian dari D. Persyaratan Khusus
+            let specialReqData = "\nDaftar Ketidaksesuaian D. Persyaratan Khusus (TIDAK): \n";
+            SPECIAL_REQUIREMENTS.forEach(req => {
+                if (req.isHeader || req.isSubHeader) return;
+                const inputName = `req-${req.no}`;
+                const checkedInput = document.querySelector(`input[name="${inputName}"]:checked`);
+                
+                if (checkedInput && checkedInput.value === 'Tidak') {
+                    const reqNo = req.displayNo || req.no;
+                    specialReqData += `- [${reqNo}] "${req.text}" - Status: TIDAK\n`;
+                    totalDeficiencies++;
+                }
+            });
+            
+            // 3. Gabungkan dan buat prompt
+            const finalPrompt = `
+Saya adalah ahli sanitasi dan telah melakukan inspeksi SPPG. Berikut adalah data yang dikumpulkan:
+1. Data Umum: Nama Fasilitas: ${sppgName}, Nilai Final IKL: ${iklScore}.
+2. Total Nilai Ketidaksesuaian: ${totalFailedScore} poin (Maksimum ${calculatedMaxTotalScore}).
+3. Catatan Lapangan Tambahan: ${catatanAkhir || 'Tidak ada catatan tambahan.'}
+
+Berikut adalah daftar lengkap kriteria yang dinilai TIDAK MEMENUHI SYARAT (skor > 0) atau tidak memiliki rekaman (Status TIDAK di Persyaratan Khusus):
+${inspectionData}
+${specialReqData}
+
+Tolong hasilkan laporan singkat dalam format Markdown yang mencakup:
+1. Ringkasan Temuan Kritis (maksimal 3 poin paling berisiko).
+2. Rekomendasi Perbaikan (maksimal 5 langkah praktis untuk meningkatkan skor ke minimal 80).
+Format output harus sesuai System Instruction yang diberikan.
+            `;
+
+
+            const systemPrompt = `Anda adalah seorang ahli sanitasi. Analisis hasil IKL berikut. Gunakan Bahasa Indonesia dan tampilkan hasil dalam format Markdown. Jangan ulangi data yang sudah diberikan di atas. Berikan fokus pada dampak risiko.
+### Ringkasan Temuan Kritis (Maks 3 poin)
+* [Analisis temuan 1]
+* [Analisis temuan 2]
+* [Analisis temuan 3]
+### Rekomendasi Perbaikan (Maks 5 langkah)
+1. [Langkah perbaikan 1]
+2. [Langkah perbaikan 2]
+3. [Langkah perbaikan 3]
+4. [Langkah perbaikan 4]
+5. [Langkah perbaikan 5]`;
+
             
             // Hapus API Key dari URL
             const apiUrl = API_URL.replace("?key=", ""); 
             
-            const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
+            const payload = { contents: [{ parts: [{ text: finalPrompt }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
 
             try {
-                // Gunakan fetch tanpa menambahkan API Key secara manual, 
-                // karena environment Canvas akan menanganinya jika API_URL tidak berisi key
+                // Gunakan fetch dengan backoff
                 const response = await fetchWithExponentialBackoff(apiUrl, { 
                     method: 'POST', 
                     headers: { 'Content-Type': 'application/json' }, 
