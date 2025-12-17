@@ -1,28 +1,34 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IKL SPPG Interaktif - Kemenkes</title>
-    <!-- Memuat Tailwind CSS dari CDN untuk styling yang modern dan responsif -->
+    <!-- Memuat Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Memuat Pustaka html2pdf.js (untuk ekspor PDF) -->
+    <!-- Memuat Pustaka html2pdf.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <!-- Konfigurasi Tailwind untuk font Inter dan warna kustom -->
+    <!-- Konfigurasi Tailwind -->
     <script>
         tailwind.config = {
+            darkMode: 'class', // Mengaktifkan mode gelap berbasis kelas
             theme: {
                 extend: {
                     colors: {
-                        // Palet Warna Dapur Bersih Higienis (Kontras)
-                        'kitchen-main': '#779D89',    /* Deep Sage (Aksen Utama - Kontras) */
-                        'kitchen-dark': '#457A57',    /* Rich Thyme (Skor Bagus & Tombol Primer - Jelas) */
-                        'kitchen-accent': '#C76E57',  /* Warm Terracotta (Teks/Garis - Kaya) */
-                        'kitchen-cream': '#FBFBF9',   /* Lighter Cream (Background pendukung - Jelas) */
-                        'score-red': '#cc3333',       /* Merah (Skor Buruk - Kontras) */
-                        'score-green': '#457A57',     /* Menggunakan Rich Thyme */
+                        'kitchen-main': '#779D89',
+                        'kitchen-dark': '#457A57',
+                        'kitchen-accent': '#C76E57',
+                        'kitchen-cream': '#FBFBF9',
+                        'score-red': '#cc3333',
+                        'score-green': '#457A57',
+                        
+                        // Warna khusus Dark Mode
+                        'dark-bg': '#1a202c',       /* Latar sangat gelap */
+                        'dark-surface': '#2d3748',  /* Latar elemen/kartu */
+                        'dark-border': '#4a5568',   /* Border abu-abu */
+                        'dark-text': '#e2e8f0',     /* Teks terang */
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -32,369 +38,377 @@
         }
     </script>
     <style>
-        /* Menggunakan font Inter secara default */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7f9fb; /* Default bg */
+            transition: background-color 0.3s, color 0.3s; /* Transisi halus */
         }
 
-        /* Custom form control styling untuk Persyaratan Khusus */
-        /* Menggunakan accent-color untuk memastikan warna bulatan radio button */
-        .radio-ya {
-            accent-color: #457A57; /* Rich Thyme / Hijau */
-        }
-        .radio-tidak {
-            accent-color: #cc3333; /* Score Red / Merah */
-        }
+        /* --- STYLING MODE GELAP & TERANG --- */
+        
+        /* Custom Radio Colors */
+        .radio-ya { accent-color: #457A57; }
+        .radio-tidak { accent-color: #cc3333; }
 
-        /* Styling untuk radio button / kotak skor - HANYA PADA LABEL SAAT DIKLIK */
-        /* Hapus warna latar belakang dan teks dari CSS global, serahkan ke JS */
+        /* Styling Score Label */
         .score-input:checked + .score-label {
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             transform: scale(1.05);
-            border-color: #457A57; /* Rich Thyme */
+            border-color: #457A57;
         }
         
-        /* Kelas default label */
-        /* Terapkan font-medium (500) untuk konsistensi */
+        /* Default Label Style (Light Mode) */
         .score-label {
             transition: all 0.15s ease-in-out;
             cursor: pointer;
-            /* Ukuran font diseragamkan di sini */
             @apply border border-gray-300 w-full text-center py-1 rounded-lg text-xs font-medium hover:bg-kitchen-cream text-gray-700; 
         }
 
-        /* Gaya Khusus untuk warna skor (teks) default */
-        /* Warna teks bawaan untuk skor adalah abu-abu tua (text-gray-700) */
-        /* Tidak perlu kelas score-red-text dan score-green-text lagi karena teks tidak berubah warna */
-
-
-        /* Hover effect pada baris kriteria */
-        .criteria-row:hover {
-            background-color: #FBFBF9; /* Background cream muda saat hover */
+        /* Dark Mode Label Style */
+        .dark .score-label {
+            @apply border-gray-600 text-gray-300 hover:bg-gray-700 bg-gray-800;
         }
+
+        /* Hover Rows */
+        .criteria-row:hover { background-color: #FBFBF9; }
+        .dark .criteria-row:hover { background-color: #2d3748; }
         
-        /* Fixed header for table on top */
-        .fixed-header {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
+        /* Sticky Elements */
+        .fixed-header { position: sticky; top: 0; z-index: 10; }
         
-        /* Fixed score bar at the bottom */
         #fixed-score-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
             z-index: 20;
             box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.1);
             backdrop-filter: blur(5px);
             background-color: rgba(255, 255, 255, 0.95);
+            transition: height 0.3s ease-in-out, padding 0.3s ease-in-out;
+        }
+        
+        /* Dark Mode Score Bar */
+        .dark #fixed-score-bar {
+            background-color: rgba(26, 32, 44, 0.95); /* Dark bg */
+            border-top-color: #457A57;
+            color: #e2e8f0;
         }
 
-        /* Kelas khusus untuk konten yang akan dicetak (menyembunyikan tombol, dll) */
+        /* Custom style for the score bar toggle button on mobile */
+        #score-toggle-btn {
+            position: absolute;
+            top: -16px; /* Menonjol sedikit di atas border bar */
+            right: 1rem; 
+            padding: 0.5rem 1rem;
+            border-radius: 9999px; /* Rounded pill shape */
+            font-size: 0.75rem; /* text-xs */
+            z-index: 21; /* Di atas score bar */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Collapse/Expand Transition for Sections */
+        .section-header {
+            cursor: pointer;
+            user-select: none;
+        }
+        .section-header:hover {
+            opacity: 0.8;
+        }
+
+        /* Styling for the new collapsible criteria headers */
+        .criteria-header-row {
+            cursor: pointer;
+        }
+
+        /* MOBILE/RESPONSIVE VIEW: Hiding the table and showing card-style elements */
+        /* Default view (mobile/small screen) is hidden, shown by JS based on screen size */
+        #inspection-table { 
+            display: none; 
+        }
+        #inspection-cards { 
+            display: block; 
+        }
+        
+        /* DESKTOP VIEW: Show the table, hide the cards */
+        @media (min-width: 768px) { /* md: breakpoint in Tailwind */
+            #inspection-table {
+                display: table;
+            }
+            #inspection-cards {
+                display: none;
+            }
+        }
+
+        /* Print Media Queries */
         @media print {
-            #fixed-score-bar, #export-btn-container {
-                display: none !important;
-            }
-            body {
-                margin: 0;
-                padding: 0;
-            }
-            .fixed-header {
-                position: static !important;
-            }
-
-            /* HINDARI PAGE BREAK DI TENGAH BARIS/KRITERIA/BOX */
-            /* Tambahkan properti khusus untuk setiap section */
-            .criteria-row, 
-            #special-requirements > div,
-            section {
-                page-break-inside: avoid !important;
-            }
+            #fixed-score-bar, #export-btn-container, .no-print, #theme-toggle, #score-toggle-btn { display: none !important; }
+            body { margin: 0; padding: 0; background-color: white !important; color: black !important; }
+            .fixed-header { position: static !important; }
+            .criteria-group-item { display: table-row !important; } /* Ensure sub-rows are visible in PDF */
+            .criteria-row, #special-requirements > div, section { page-break-inside: avoid !important; }
+            thead { display: table-header-group; }
+            /* Paksa Light Mode saat Print Dialog Browser Native */
+            .dark { color-scheme: light; } 
             
-            /* Pastikan header tabel diulang jika terpotong, meskipun html2pdf kurang mendukungnya secara native */
-            thead {
-                display: table-header-group;
-            }
+            /* Pastikan semua section terbuka saat print */
+            .collapsible-content { display: block !important; }
+            .section-icon { display: none !important; }
 
-            /* Untuk Tanda Tangan agar tidak terpotong */
-            .grid.grid-cols-1.md\:grid-cols-2.gap-6 {
-                page-break-inside: avoid;
-            }
+            /* Force Table View for PDF Print */
+            #inspection-table { display: table !important; }
+            #inspection-cards { display: none !important; }
         }
     </style>
 </head>
-<body class="p-4 md:p-8">
-    <div class="max-w-6xl mx-auto bg-white shadow-xl rounded-xl overflow-hidden mb-24">
+<body class="p-4 md:p-8 bg-[#f7f9fb] dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+    <div class="max-w-6xl mx-auto bg-white dark:bg-gray-800 shadow-xl rounded-xl overflow-hidden mb-24 border dark:border-gray-700">
         
-        <!-- Header Aplikasi - Menggunakan warna kitchen-dark (hijau kontras) -->
-        <header class="bg-kitchen-dark p-6 text-white text-center">
-            <!-- Ukuran judul besar dan tebal -->
+        <!-- Header Aplikasi -->
+        <header class="bg-kitchen-dark p-6 text-white text-center relative">
             <h1 class="text-2xl md:text-3xl font-extrabold mb-1">INSTRUMEN INSPEKSI KESEHATAN LINGKUNGAN (IKL)</h1>
             <h2 class="text-lg md:text-xl font-medium">SATUAN PELAYANAN PEMENUHAN GIZI (SPPG)</h2>
+            <div id="autosave-status" class="mt-2 text-xs font-light italic opacity-80 h-4"></div>
+
+            <!-- Tombol Toggle Tema (Pojok Kanan Atas) -->
+            <button id="theme-toggle" class="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors focus:outline-none" title="Ganti Tema">
+                <!-- Icon Matahari (untuk mode gelap) -->
+                <svg id="icon-sun" class="w-6 h-6 text-yellow-300 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <!-- Icon Bulan (untuk mode terang) -->
+                <svg id="icon-moon" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
         </header>
 
-        <!-- Container untuk Tombol Ekspor (KOSONGKAN karena dipindah ke fixed bar) -->
-        <div id="export-btn-container" class="hidden"></div> 
-
         <main class="p-6 md:p-8" id="form-content">
-            <!-- Bagian A: Data Umum SPPG -->
-            <section class="mb-8 p-4 bg-kitchen-cream rounded-lg border border-kitchen-main/50">
-                <!-- JUDUL BARU A. Data Umum -->
-                <h3 class="text-lg font-bold text-gray-700 mb-4 border-b border-kitchen-accent/50 pb-2">A. Data Umum</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    
-                    <!-- 1. Nama SPPG -->
-                    <label class="block">
-                        <span class="text-sm font-medium text-gray-700">1. Nama SPPG</span>
-                        <input type="text" id="nama_sppg" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700">
-                    </label>
-                    
-                    <!-- 2. Alamat -->
-                    <label class="block">
-                        <span class="text-sm font-medium text-gray-700">2. Alamat</span>
-                        <input type="text" id="alamat_sppg" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700">
-                    </label>
-                    
-                    <!-- 3. Nama Pengelola -->
-                    <label class="block">
-                        <span class="text-sm font-medium text-gray-700">3. Nama Pengelola</span>
-                        <input type="text" id="nama_pengelola" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700">
-                    </label>
-                    
-                    <!-- 4. Kontak Pengelola -->
-                    <label class="block">
-                        <span class="text-sm font-medium text-gray-700">4. Kontak Pengelola</span>
-                        <input type="text" id="kontak_pengelola" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700">
-                    </label>
-
-                    <!-- 5. Jumlah Porsi (Updated numbering) -->
-                    <label class="block">
-                        <span class="text-sm font-medium text-gray-700">5. Jumlah Porsi</span>
-                        <input type="number" id="jumlah_porsi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700">
-                    </label>
-                    
-                    <!-- 6. Distribusi Pangan (Updated numbering) -->
-                    <label class="block">
-                        <span class="text-sm font-medium text-gray-700">6. Distribusi Pangan</span>
-                        <input type="text" id="distribusi_pangan" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700">
-                    </label>
-                    
-                    <!-- 7. Jumlah Total Penjamah Pangan (Updated numbering) -->
-                    <label class="block">
-                        <span class="text-sm font-medium text-gray-700">7. Jumlah Total Penjamah Pangan</span>
-                        <input type="number" id="total_penjamah" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700">
-                    </label>
-                    
-                    <!-- 8. Jumlah Penjamah Pangan Terlatih (Updated numbering) -->
-                    <label class="block">
-                        <span class="text-sm font-medium text-gray-700">8. Jumlah Penjamah Pangan Terlatih</span>
-                        <input type="number" id="penjamah_bersertifikat" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700">
-                    </label>
-                    
-                    <!-- 9. Nama Pemeriksa (Updated numbering) -->
-                    <label class="block">
-                        <span class="text-sm font-medium text-gray-700">9. Nama Pemeriksa</span>
-                        <input type="text" id="nama_pemeriksa" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700">
-                    </label>
-                    
-                    <!-- 10. Tanggal Pemeriksaan (Updated numbering) -->
-                    <label class="block">
-                        <span class="text-sm font-medium text-gray-700">10. Tanggal Pemeriksaan</span>
-                        <input type="date" id="tanggal_pemeriksaan" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700">
-                    </label>
-
-                    <!-- START MOVE: Geolocation block moved to the end -->
-                    <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-kitchen-main/30 pt-4 mt-4">
+            <!-- Bagian A: Data Umum SPPG (Collapsible) -->
+            <section class="mb-8 p-4 bg-kitchen-cream dark:bg-gray-700 rounded-lg border border-kitchen-main/50 dark:border-gray-600">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-a')">
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-white">A. Data Umum</h3>
+                    <svg id="icon-content-a" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+                
+                <div id="content-a" class="collapsible-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Input fields dengan styling dark mode -->
                         <label class="block">
-                            <!-- REMOVE NUMBERING: Lintang (Latitude) -->
-                            <span class="text-sm font-medium text-gray-700">Lintang (Latitude)</span>
-                            <input type="text" id="latitude" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700" placeholder="-6.2088" readonly>
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">1. Nama SPPG</span>
+                            <input type="text" id="nama_sppg" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800 focus:ring-kitchen-dark focus:border-kitchen-dark">
                         </label>
-                        <label class="block">
-                            <!-- REMOVE NUMBERING: Bujur (Longitude) -->
-                            <span class="text-sm font-medium text-gray-700">Bujur (Longitude)</span>
-                            <input type="text" id="longitude" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700" placeholder="106.8456" readonly>
-                        </label>
-                        <button id="get-location-btn" class="mt-6 md:mt-1 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-2 px-4 rounded-md transition-colors shadow-md text-sm">
-                            <!-- SVG ikon Map Pin (Pin Peta) -->
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9a2 2 0 100-4 2 2 0 000 4z"/></svg>
-                            Dapatkan Lokasi
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">2. Alamat</span><input type="text" id="alamat_sppg" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">3. Nama Pengelola</span><input type="text" id="nama_pengelola" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">4. Kontak Pengelola</span><input type="text" id="kontak_pengelola" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">5. Jumlah Porsi</span><input type="number" id="jumlah_porsi" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">6. Distribusi Pangan</span><input type="text" id="distribusi_pangan" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">7. Jumlah Total Penjamah Pangan</span><input type="number" id="total_penjamah" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">8. Jumlah Penjamah Pangan Terlatih</span><input type="number" id="penjamah_bersertifikat" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">9. Nama Pemeriksa</span><input type="text" id="nama_pemeriksa" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">10. Tanggal Pemeriksaan</span><input type="date" id="tanggal_pemeriksaan" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></label>
+
+                        <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-kitchen-main/30 dark:border-gray-500 pt-4 mt-4">
+                            <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Lintang (Latitude)</span><input type="text" id="latitude" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800" placeholder="-6.2088" readonly></label>
+                            <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Bujur (Longitude)</span><input type="text" id="longitude" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800" placeholder="106.8456" readonly></label>
+                            <button id="get-location-btn" class="mt-6 md:mt-1 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-2 px-4 rounded-md transition-colors shadow-md text-sm">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9a2 2 0 100-4 2 2 0 000 4z"/></svg>
+                                Dapatkan Lokasi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bagian B: Inspeksi Kesehatan Lingkungan (Collapsible) -->
+            <section class="mb-8">
+                <div class="flex justify-between items-center section-header border-b border-gray-300 dark:border-gray-600 pb-2 mb-4" onclick="toggleSection('content-b')">
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-white">B. Penilaian IKL</h3>
+                    <svg id="icon-content-b" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+                
+                <div id="content-b" class="collapsible-content">
+                    <!-- Keterangan Nilai -->
+                    <div class="mb-4 p-4 bg-kitchen-main/20 dark:bg-green-900/30 text-kitchen-dark dark:text-green-300 rounded-lg border border-kitchen-dark/50 dark:border-green-700">
+                        <p class="font-bold text-sm">Keterangan Nilai:</p> 
+                        <p class="text-xs"><span class="font-bold">3</span> = Kritis (risiko kesehatan tinggi, perlu perbaikan segera)</p>
+                        <p class="text-xs"><span class="font-bold">2</span> = Mayor (perlu perhatian serius)</p>
+                        <p class="text-xs"><span class="font-bold">1</span> = Minor (perlu perbaikan wajar)</p>
+                        <p class="text-xs"><span class="font-bold">NA</span> = Not Applicable (tidak berlaku)</p>
+                    </div>
+                    
+                    <!-- Keterangan Area -->
+                    <div id="area-legend" class="mb-4 text-xs font-medium text-gray-600 dark:text-gray-300 grid grid-cols-2 md:grid-cols-4 gap-2 p-3 bg-kitchen-cream dark:bg-gray-700 rounded-lg border border-gray-300 dark:border-gray-600">
+                        <p><span class="font-bold">A</span> = Area luar bangunan</p>
+                        <p><span class="font-bold">B</span> = Area fasilitas karyawan</p>
+                        <p><span class="font-bold">C</span> = Area penerimaan bahan baku</p>
+                        <p><span class="font-bold">D</span> = Area penyimpanan</p>
+                        <p><span class="font-bold">E</span> = Area pengolahan pangan</p>
+                        <p><span class="font-bold">F</span> = Area pengemasan/pemorsian</p>
+                        <p><span class="font-bold">G</span> = Area loading produk jadi</p>
+                        <p><span class="font-bold">H</span> = Area pencucian peralatan</p>
+                    </div>
+
+                    <!-- 1. Tampilan Desktop (Tabel Horizontal) - Hanya terlihat di md: ke atas -->
+                    <div class="overflow-x-auto">
+                        <table id="inspection-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                            <thead class="bg-kitchen-dark text-white fixed-header">
+                                <tr>
+                                    <th class="w-10 px-2 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Nomor</th>
+                                    <th class="w-64 px-4 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Persyaratan</th>
+                                    <th colspan="8" class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider">Penilaian</th>
+                                </tr>
+                                <tr class="bg-kitchen-dark/80">
+                                    <th colspan="2" class="px-4 py-1 text-xs"></th>
+                                    <th class="px-2 py-1 text-xs font-bold">A</th>
+                                    <th class="px-2 py-1 text-xs font-bold">B</th>
+                                    <th class="px-2 py-1 text-xs font-bold">C</th>
+                                    <th class="px-2 py-1 text-xs font-bold">D</th>
+                                    <th class="px-2 py-1 text-xs font-bold">E</th>
+                                    <th class="px-2 py-1 text-xs font-bold">F</th>
+                                    <th class="px-2 py-1 text-xs font-bold">G</th>
+                                    <th class="px-2 py-1 text-xs font-bold">H</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inspection-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-200">
+                                <!-- Kriteria akan dimasukkan di sini oleh JavaScript (Tabel) -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 2. Tampilan Mobile (Daftar Kartu Vertikal) - Hanya terlihat di bawah md: -->
+                    <div id="inspection-cards" class="space-y-4">
+                        <!-- Kriteria akan dimasukkan di sini oleh JavaScript (Kartu) -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Bagian D: Persyaratan Khusus (Collapsible) -->
+            <section class="mt-8 p-4 bg-kitchen-cream dark:bg-gray-700 rounded-lg border border-kitchen-main/50 dark:border-gray-600">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-d')">
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-white">D. Persyaratan Khusus</h3>
+                    <svg id="icon-content-d" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+
+                <div id="content-d" class="collapsible-content">
+                    <div id="special-requirements" class="space-y-3">
+                        <!-- Persyaratan khusus akan dimasukkan di sini oleh JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bagian E: Catatan Akhir dan Tanda Tangan (Collapsible) -->
+            <section class="mt-8 p-4 bg-kitchen-cream dark:bg-gray-700 rounded-lg border border-kitchen-main/50 dark:border-gray-600">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-e')">
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-white">E. Catatan dan Saran</h3>
+                    <svg id="icon-content-e" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+
+                <div id="content-e" class="collapsible-content">
+                    <label class="block mb-4">
+                        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Catatan dan saran</span>
+                        <textarea id="catatan_akhir" rows="4" class="autosave-input mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 text-sm text-gray-700 dark:text-white dark:bg-gray-800"></textarea>
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mb-2 text-sm">Petugas Pemeriksa</p>
+                            <input type="text" placeholder="" class="autosave-input block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 mb-4 text-sm text-gray-700 dark:text-white dark:bg-gray-800" id="ttd_pemeriksa_nama">
+                            <div class="border-b border-dashed border-gray-400 pt-12"><span class="text-xs text-gray-500 dark:text-gray-400">Tanda tangan</span></div>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mb-2 text-sm">Pengelola SPPG</p>
+                            <input type="text" placeholder="" class="autosave-input block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm p-2 mb-4 text-sm text-gray-700 dark:text-white dark:bg-gray-800" id="ttd_pengelola_nama">
+                            <div class="border-b border-dashed border-gray-400 pt-12"><span class="text-xs text-gray-500 dark:text-gray-400">Tanda tangan</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Bagian F: Analisis dan Rekomendasi Berbasis Gemini AI (Collapsible) -->
+            <section class="mt-8 p-4 bg-kitchen-cream dark:bg-gray-700 rounded-lg border border-kitchen-main/50 dark:border-gray-600">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-f')">
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-white flex items-center">F. Rekomendasi</h3>
+                    <svg id="icon-content-f" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+
+                <div id="content-f" class="collapsible-content">
+                    <div class="mb-4">
+                        <button id="generate-ai-report-btn" class="flex items-center justify-center bg-kitchen-accent hover:bg-kitchen-accent/90 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-md text-sm w-full md:w-auto">
+                            Buat Rekomendasi Menggunakan AI
                         </button>
                     </div>
-                    <!-- END MOVE: Geolocation block -->
-                </div>
-            </section>
-
-            <!-- Bagian B: Inspeksi Kesehatan Lingkungan -->
-            <section class="mb-8">
-                <!-- JUDUL BARU B. Penilaian IKL -->
-                <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">B. Penilaian IKL</h3>
-                <!-- Keterangan Skor -->
-                <div class="mb-4 p-4 bg-kitchen-main/20 text-kitchen-dark rounded-lg border border-kitchen-dark/50">
-                    <!-- UPDATE: Mengganti judul keterangan -->
-                    <p class="font-bold text-sm">Keterangan Nilai:</p> 
-                    <!-- UPDATE: Membuat nilai skor tebal dan meringkas deskripsi -->
-                    <p class="text-xs"><span class="font-bold">3</span> = Kritis (risiko kesehatan tinggi, perlu perbaikan segera)</p>
-                    <p class="text-xs"><span class="font-bold">2</span> = Mayor (perlu perhatian serius)</p>
-                    <p class="text-xs"><span class="font-bold">1</span> = Minor (perlu perbaikan wajar)</p>
-                    <p class="text-xs"><span class="font-bold">NA</span> = Not Applicable (tidak berlaku)</p>
-                </div>
-                
-                <!-- Keterangan Area -->
-                <div class="mb-4 text-xs font-medium text-gray-600 grid grid-cols-2 md:grid-cols-4 gap-2 p-3 bg-kitchen-cream rounded-lg border border-gray-300">
-                    <!-- UPDATE: Membuat huruf area A s.d. H tebal -->
-                    <p><span class="font-bold">A</span> = Area luar bangunan</p>
-                    <p><span class="font-bold">B</span> = Area fasilitas karyawan</p>
-                    <p><span class="font-bold">C</span> = Area penerimaan bahan baku</p>
-                    <p><span class="font-bold">D</span> = Area penyimpanan</p>
-                    <p><span class="font-bold">E</span> = Area pengolahan pangan</p>
-                    <p><span class="font-bold">F</span> = Area pengemasan/pemorsian</p>
-                    <p><span class="font-bold">G</span> = Area loading produk jadi</p>
-                    <p><span class="font-bold">H</span> = Area pencucian peralatan</p>
-                </div>
-
-
-                <!-- Tabel Inspeksi -->
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <!-- Header Tabel (Sticky/Fixed) -->
-                        <thead class="bg-kitchen-dark text-white fixed-header">
-                            <tr>
-                                <!-- JUDUL KOLOM BARU: Nomor -->
-                                <th class="w-10 px-2 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Nomor</th>
-                                <!-- JUDUL KOLOM BARU: Persyaratan -->
-                                <th class="w-64 px-4 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Persyaratan</th>
-                                <!-- JUDUL KOLOM BARU: Penilaian -->
-                                <th colspan="8" class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider">Penilaian</th>
-                            </tr>
-                            <tr class="bg-kitchen-dark/80">
-                                <th colspan="2" class="px-4 py-1 text-xs"></th>
-                                <th class="px-2 py-1 text-xs font-bold">A</th>
-                                <th class="px-2 py-1 text-xs font-bold">B</th>
-                                <th class="px-2 py-1 text-xs font-bold">C</th>
-                                <th class="px-2 py-1 text-xs font-bold">D</th>
-                                <th class="px-2 py-1 text-xs font-bold">E</th>
-                                <th class="px-2 py-1 text-xs font-bold">F</th>
-                                <th class="px-2 py-1 text-xs font-bold">G</th>
-                                <th class="px-2 py-1 text-xs font-bold">H</th>
-                            </tr>
-                        </thead>
-                        <tbody id="inspection-body" class="bg-white divide-y divide-gray-200 text-gray-800">
-                            <!-- Kriteria akan dimasukkan di sini oleh JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-            
-            <!-- Bagian D: Persyaratan Khusus -->
-            <section class="mt-8">
-                <!-- JUDUL BARU D. Persyaratan Khusus -->
-                <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">D. Persyaratan Khusus</h3>
-                <div id="special-requirements" class="space-y-3">
-                    <!-- Persyaratan khusus akan dimasukkan di sini oleh JavaScript -->
-                </div>
-            </section>
-
-            <!-- Catatan Akhir dan Tanda Tangan -->
-            <section class="mt-8 p-4 bg-kitchen-cream rounded-lg border border-kitchen-main/50">
-                <!-- E. Catatan dan Saran -->
-                <h3 class="text-lg font-bold text-gray-700 mb-4 border-b pb-2">E. Catatan dan Saran</h3>
-                <label class="block mb-4">
-                    <!-- UPDATE: Hapus angka 1. dan ubah font menjadi bold -->
-                    <span class="text-sm font-bold text-gray-700">Catatan dan saran</span>
-                    <textarea id="catatan_akhir" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 text-sm text-gray-700"></textarea>
-                </label>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <!-- UPDATE: Label diubah menjadi Petugas Pemeriksa (tanpa angka) -->
-                        <p class="font-semibold text-gray-700 mb-2 text-sm">Petugas Pemeriksa</p>
-                        <!-- Placeholder dihapus agar kotak kosong -->
-                        <input type="text" placeholder="" class="block w-full rounded-md border-gray-300 shadow-sm p-2 mb-4 text-sm text-gray-700" id="ttd_pemeriksa_nama">
-                        <!-- UPDATE: TTD label diubah menjadi "Tanda tangan" (tanpa titik dua) -->
-                        <div class="border-b border-dashed pt-12"><span class="text-xs text-gray-500">Tanda tangan</span></div>
+                    
+                    <div id="ai-report-output" class="min-h-[100px] p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                        Tekan tombol di atas untuk menghasilkan ringkasan temuan kritis dan langkah perbaikan yang direkomendasikan oleh Gemini AI.
                     </div>
-                    <div>
-                        <!-- UPDATE: Label diubah menjadi Pengelola SPPG (tanpa angka) -->
-                        <p class="font-semibold text-gray-700 mb-2 text-sm">Pengelola SPPG</p>
-                        <!-- Placeholder dihapus agar kotak kosong -->
-                        <input type="text" placeholder="" class="block w-full rounded-md border-gray-300 shadow-sm p-2 mb-4 text-sm text-gray-700" id="ttd_pengelola_nama">
-                        <!-- UPDATE: TTD label diubah menjadi "Tanda tangan" (tanpa titik dua) -->
-                        <div class="border-b border-dashed pt-12"><span class="text-xs text-gray-500">Tanda tangan</span></div>
+                    <div id="ai-loading" class="hidden mt-2 text-center text-sm font-medium text-kitchen-dark dark:text-green-400">
+                        <svg class="animate-spin h-5 w-5 mr-3 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Gemini AI sedang menganalisis data...
+                    </div>
+                    <div id="ai-error" class="hidden mt-2 p-3 bg-score-red/20 text-score-red dark:text-red-300 rounded-md text-sm font-medium">
+                        Terjadi kesalahan saat menghubungi Gemini AI. Coba lagi atau periksa koneksi internet Anda.
                     </div>
                 </div>
             </section>
-            
-            <!-- Bagian F: Analisis dan Rekomendasi Berbasis Gemini AI (Fitur Baru) -->
-            <section class="mt-8 p-4 bg-kitchen-cream rounded-lg border border-kitchen-main/50">
-                <!-- JUDUL BARU F. Rekomendasi -->
-                <h3 class="text-lg font-bold text-gray-700 mb-4 border-b border-kitchen-accent/50 pb-2 flex items-center">
-                    F. Rekomendasi
-                </h3>
-                <!-- CATATAN TELAH DIHAPUS DARI SINI -->
-                <div class="mb-4">
-                    <button id="generate-ai-report-btn" class="flex items-center justify-center bg-kitchen-accent hover:bg-kitchen-accent/90 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-md text-sm w-full md:w-auto">
-                        <!-- REMOVE: Icon sparkles/svg -->
-                        Buat Rekomendasi Menggunakan AI
-                    </button>
-                </div>
-                
-                <div id="ai-report-output" class="min-h-[100px] p-4 bg-white border border-gray-200 rounded-md text-sm text-gray-700 whitespace-pre-wrap">
-                    Tekan tombol di atas untuk menghasilkan ringkasan temuan kritis dan langkah perbaikan yang direkomendasikan oleh Gemini AI.
-                </div>
-                <div id="ai-loading" class="hidden mt-2 text-center text-sm font-medium text-kitchen-dark">
-                    <svg class="animate-spin h-5 w-5 mr-3 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    Gemini AI sedang menganalisis data...
-                </div>
-                <div id="ai-error" class="hidden mt-2 p-3 bg-score-red/20 text-score-red rounded-md text-sm font-medium">
-                    Terjadi kesalahan saat menghubungi Gemini AI. Coba lagi atau periksa koneksi internet Anda.
-                </div>
-            </section>
-
         </main>
     </div>
 
     <!-- Bagian C: Total Skor dan Hasil (Fixed/Sticky Bottom) -->
-    <div id="fixed-score-bar" class="p-4 md:p-6 border-t border-kitchen-main">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+    <div id="fixed-score-bar" class="p-4 md:p-6 border-t border-kitchen-main dark:border-gray-600">
+        
+        <!-- Tombol Toggle yang Menonjol di Kanan -->
+        <button id="score-toggle-btn" onclick="toggleScoreBar()" class="bg-kitchen-dark hover:bg-kitchen-dark/90 text-white transition-colors focus:outline-none flex items-center space-x-2">
+            <span id="score-toggle-text" class="hidden md:inline font-semibold">Sembunyikan Nilai</span>
+            <svg id="score-toggle-icon" class="w-5 h-5 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+            </svg>
+        </button>
+
+        <div id="score-content" class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 ease-in-out">
             
-            <!-- Tombol Ekspor PDF -->
-            <div class="flex flex-col space-y-2 w-full md:w-auto order-3 md:order-1">
-                <button id="export-pdf-btn" class="flex-shrink-0 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg whitespace-nowrap w-full text-sm">
+            <!-- Tombol Aksi (Kiri/Bawah pada mobile) -->
+            <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto order-3 md:order-1">
+                <button id="reset-form-btn" class="flex-shrink-0 flex items-center justify-center bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 dark:text-white text-gray-700 font-bold py-2 px-4 rounded-lg transition-colors shadow-sm whitespace-nowrap w-full md:w-auto text-sm border border-gray-400 dark:border-gray-500">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Reset
+                </button>
+                <button id="export-pdf-btn" class="flex-shrink-0 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-2 px-6 rounded-lg transition-colors shadow-lg whitespace-nowrap w-full md:w-auto text-sm">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Unduh PDF
                 </button>
             </div>
 
+            <!-- Score Progress -->
             <div class="flex-grow w-full md:w-auto order-1 md:order-2">
-                <!-- JUDUL C. Nilai IKL diubah agar sesuai dengan sub-judul lainnya -->
-                <h3 class="text-lg font-bold text-gray-700 mb-2">C. Nilai IKL</h3>
-                <!-- Progress Bar Container -->
-                <div class="w-full bg-gray-200 rounded-full h-4">
+                <h3 class="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">C. Nilai IKL</h3>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
                     <div id="score-progress-bar" class="h-4 rounded-full transition-all duration-500" style="width: 100%;"></div>
                 </div>
-                <div class="flex justify-between text-xs text-gray-600 mt-1">
-                    <span>0% (Sangat Buruk)</span>
-                    <span>100% (Sempurna)</span>
+                <!-- Hilangkan tulisan (Sangat Buruk) dan (Sempurna) -->
+                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    <span>0%</span> 
+                    <span>100%</span>
                 </div>
             </div>
             
             <!-- Nilai Skor -->
-            <!-- UPDATE: Mengubah items-baseline menjadi items-center untuk perataan vertikal yang lebih baik -->
             <div class="flex-shrink-0 flex space-x-4 items-center order-2 md:order-3">
                 <div class="text-center">
-                    <!-- Nilai Kurang: text-xs, font normal, text-gray-500 (sama dengan Max: 315) dan tanpa titik dua -->
-                    <p class="text-xs text-gray-500">Nilai Kurang</p>
+                    <!-- Ganti Total Ketidaksesuaian dengan Tidak Memenuhi Syarat -->
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Tidak Memenuhi Syarat</p>
                     <p id="total-score-value" class="text-xl font-bold text-score-red mt-1">0</p>
-                    <p class="text-xs text-gray-500">Max: 315</p>
+                    <!-- Ganti Max: 507 dengan Maksimum 507 -->
+                    <p id="max-score-label" class="text-xs text-gray-500 dark:text-gray-400">Maksimum: -</p>
                 </div>
                 <div class="text-center">
-                    <!-- Nilai IKL Final: text-sm, font-semibold, text-gray-800 (Mempertahankan tampilan yang lebih menonjol) dan tanpa titik dua -->
-                    <p class="text-sm font-semibold text-gray-800">Nilai IKL Final</p> 
+                    <!-- Ganti Skor IKL (0-100) dengan Nilai Final IKL -->
+                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Nilai Final IKL</p> 
                     <p id="final-ikl-score" class="text-4xl font-extrabold transition-colors duration-500">100.00</p>
-                    <!-- Status kelayakan tetap menggunakan font-semibold agar terlihat jelas -->
                     <p id="ikl-status" class="text-xs font-semibold mt-1"></p> 
                 </div>
             </div>
@@ -403,125 +417,112 @@
 
 
     <script>
-        // --- DATA KONSTAN FORMULIR LENGKAP ---
-
+        // --- DATA KONSTAN FORMULIR ---
         const CRITERIA = [
-            // No. 1 - H:1
             { no: 1, text: "Halaman SPPG dalam kondisi bersih, tidak bersemak, dan tidak terdapat tanaman yang menempel langsung pada dinding bangunan pengolahan pangan.", areas: { A: 1, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 2 - A:1
             { no: 2, text: "Area parkir kendaraan jauh dari pintu masuk bangunan pengolahan pangan untuk mencegah kontaminasi asap kendaraan masuk ke ruang pengolahan pangan.", areas: { A: 1, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 3 - A:1
             { no: 3, text: "Bangunan SPPG dilengkapi dengan drainase pada bagian luar dengan kondisi bersih, tidak tersumbat atau meluap, dan memiliki grease trap/penangkap lemak.", areas: { A: 1, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 4 - A:1
             { no: 4, text: "Pintu masuk bahan pangan dan produk jadi dibuat secara terpisah", areas: { A: 1, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 5 - A:2, B-H:3
             { no: 5, text: "Area bebas banjir, jika tidak, maka terdapat pengendalian untuk mencegah kontaminasi terhadap pangan yang sedang ditangani", areas: { A: 2, B: 3, C: 3, D: 3, E: 3, F: 3, G: 3, H: 3 } },
-            // No. 6 - A:2, B:1, C-E:2, F-H:1
-            { no: 6, text: "Area bebas dari polusi (contoh: pencemaran bau/asap/debu), dan jika tidak, maka terdapat pengendalian untuk mencegah kontaminasi terhadap pangan yang ditangani.", areas: { A: 2, B: 1, C: 2, D: 2, E: 2, F: 1, G: 1, H: 1 } },
-            // No. 7 - A-H:1
+            
+            // NO 6 FIXED: F and G set to 2, H set to 1, A set to 1, C set to 1, D set to 2, E set to 2
+            { no: 6, text: "Area bebas dari polusi (contoh: pencemaran bau/asap/debu), dan jika tidak, maka terdapat pengendalian untuk mencegah kontaminasi terhadap pangan yang ditangani.", areas: { A: 1, B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 1 } },
+            
             { no: 7, text: "Bangunan / area memiliki ventilasi udara yang cukup.", areas: { A: 1, B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 } },
-            // No. 8a - H:1
-            { no: '8a', text: "Tersedia ruang/area khusus untuk istirahat karyawan yang bersih dan bebas dari vektor atau binatang pembawa penyakit (semua siklus kehidupan) dan tanda-tanda keberadaannya.", areas: { A: 'NA', B: 1, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 8b - H:1
-            { no: '8b', text: "Tersedia area penyimpanan pakaian dan barang pribadi karyawan (loker) yang bersih dan cukup (pria dan wanita).", areas: { A: 'NA', B: 1, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 8c - H:1
-            { no: '8c', text: "Tempat penyimpanan (loker) dilengkapi dengan tata tertib penggunaan loker dan tidak digunakan sebagai tempat penyimpanan makanan dan peralatan pengolahan pangan", areas: { A: 'NA', B: 1, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 9a - H:1
-            { no: '9a', text: "Jumlah toilet cukup sesuai jumlah karyawan dan dibuat terpisah antara laki-laki dan perempuan", areas: { A: 'NA', B: 1, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 9b - H:2
-            { no: '9b', text: "Desain toilet kuat dengan permukaan halus dan mudah dibersihkan", areas: { A: 'NA', B: 2, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 9c - B-H:2
-            { no: '9c', text: "Pintu atau ventilasi toilet tidak membuka langsung ke area pengolahan pangan", areas: { A: 'NA', B: 2, C: 2, D: 2, E: 2, F: 2, G: 2, H: 2 } },
-            // No. 9d - F:3
-            { no: '9d', text: "Toilet dilengkapi dengan sabun, air mengalir, alat pengering tangan, tempat sampah, dan petunjuk mencuci tangan setelah dari toilet.", areas: { A: 'NA', B: 3, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 10a - B-H:2
-            { no: '10a', text: "Jumlah wastafel/fasilitas cuci tangan cukup sesuai dengan jumlah karyawan dan posisi tempat cuci tangan mudah dijangkau di area dimana banyak kontak tangan penjamah dengan pangan", areas: { A: 'NA', B: 2, C: 2, D: 2, E: 2, F: 2, G: 2, H: 2 } },
-            // No. 10b - B-H:1
-            { no: '10b', text: "Desain kuat, mudah dibersihkan, dan dilengkapi dengan petunjuk cuci tangan", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 } },
-            // No. 10c - B-H:3
-            { no: '10c', text: "Dilengkapi dengan air mengalir, sabun cuci tangan, dan pengering tangan (bisa hand dryer atau tissue, tetapi tidak boleh kain serbet)", areas: { A: 'NA', B: 3, C: 3, D: 3, E: 3, F: 3, G: 3, H: 3 } },
-            // No. 11 - A-H:1
-            { no: 11, text: "Luas area cukup untuk memudahkan pergerakan bahan atau personil", areas: { A: 1, B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 } },
-            // No. 12 - A,B,E,F,G:1, C,D,H:2
-            { no: 12, text: "Struktur bangunan (dinding, plafon, atau atap) tidak ada lubang / retakan yang menjadi potensi masuknya atau bersarangnya vektor atau binatang pembawa penyakit.", areas: { A: 1, B: 1, C: 2, D: 2, E: 1, F: 1, G: 1, H: 2 } },
-            // No. 13a - B,C:2, D-H:1
-            { no: '13a', text: "Lantai bersih dan terawat (tidak rusak atau tidak retak/berlubang)", areas: { A: 'NA', B: 2, C: 2, D: 1, E: 1, F: 1, G: 1, H: 1 } },
-            // No. 13b - A,C,D,E,H:2, B,F,G:1
-            { no: '13b', text: "Tidak terdapat genangan air", areas: { A: 2, B: 1, C: 2, D: 2, E: 2, F: 1, G: 1, H: 2 } },
-            // No. 13c - B-H:1
-            { no: '13c', text: "Pertemuan lantai dan dinding tidak membentuk sudut mati (jika tidak demikian, maka harus dilakukan pembersihan secara rutin dan tidak ditemukan bukti visual kumpulan debu/kotoran)", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 } },
-            // No. 14 - B-H:1
+            
+            // HEADER FOR GROUP 8 (Collapsible)
+            { no: '8', text: "Tempat penyimpanan atau loker karyawan", isHeader: true, group: '8' },
+            { no: '8a', text: "Tersedia ruang/area khusus untuk istirahat karyawan yang bersih dan bebas dari vektor atau binatang pembawa penyakit (semua siklus kehidupan) dan tanda-tanda keberadaannya.", areas: { A: 'NA', B: 1, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'a', group: '8' },
+            { no: '8b', text: "Tersedia area penyimpanan pakaian dan barang pribadi karyawan (loker) yang bersih dan cukup (pria dan wanita).", areas: { A: 'NA', B: 1, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'b', group: '8' },
+            { no: '8c', text: "Tempat penyimpanan (loker) dilengkapi dengan tata tertib penggunaan loker dan tidak digunakan sebagai tempat penyimpanan makanan dan peralatan pengolahan pangan", areas: { A: 'NA', B: 1, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'c', group: '8' },
+
+            // HEADER FOR GROUP 9 (Collapsible)
+            { no: '9', text: "Toilet", isHeader: true, group: '9' },
+            { no: '9a', text: "Jumlah toilet cukup sesuai jumlah karyawan dan dibuat terpisah antara laki-laki dan perempuan", areas: { A: 'NA', B: 1, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'a', group: '9' },
+            { no: '9b', text: "Desain toilet kuat dengan permukaan halus dan mudah dibersihkan", areas: { A: 'NA', B: 2, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'b', group: '9' },
+            { no: '9c', text: "Pintu atau ventilasi toilet tidak membuka langsung ke area pengolahan pangan", areas: { A: 'NA', B: 2, C: 2, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'c', group: '9' },
+            { no: '9d', text: "Toilet dilengkapi dengan sabun, air mengalir, alat pengering tangan, tempat sampah, dan petunjuk mencuci tangan setelah dari toilet.", areas: { A: 'NA', B: 3, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'd', group: '9' },
+
+            // HEADER FOR GROUP 10 (Collapsible)
+            { no: '10', text: "Wastafel atau fasilitas cuci tangan", isHeader: true, group: '10' },
+            { no: '10a', text: "Jumlah wastafel/fasilitas cuci tangan cukup sesuai dengan jumlah karyawan dan posisi tempat cuci tangan mudah dijangkau di area dimana banyak kontak tangan penjamah dengan pangan", areas: { A: 'NA', B: 2, C: 2, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'a', group: '10' },
+            { no: '10b', text: "Desain kuat, mudah dibersihkan, dan dilengkapi dengan petunjuk cuci tangan", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 }, displayNo: 'b', group: '10' },
+            { no: '10c', text: "Dilengkapi dengan air mengalir, sabun cuci tangan, dan pengering tangan (bisa hand dryer atau tissue, tetapi tidak boleh kain serbet)", areas: { A: 'NA', B: 3, C: 3, D: 3, E: 3, F: 3, G: 3, H: 3 }, displayNo: 'c', group: '10' },
+            
+            // NO 11
+            { no: 11, text: "Luas area cukup untuk memudahkan pergerakan bahan atau personil", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 } },
+            
+            // NO 12
+            { no: 12, text: "Struktur bangunan (dinding, plafon, atau atap) tidak ada lubang / retakan yang menjadi potensi masuknya atau bersarangnya vektor atau binatang pembawa penyakit.", areas: { A: 1, B: 1, C: 1, D: 2, E: 2, F: 2, G: 1, H: 1 } },
+            
+            // HEADER FOR GROUP 13
+            { no: '13', text: "Lantai", isHeader: true, group: '13' },
+            { no: '13a', text: "Lantai bersih dan terawat (tidak rusak atau tidak retak/berlubang)", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 2, F: 2, G: 1, H: 1 }, displayNo: 'a', group: '13' },
+            { no: '13b', text: "Tidak terdapat genangan air", areas: { A: 1, B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'b', group: '13' },
+            { no: '13c', text: "Pertemuan lantai dan dinding tidak membentuk sudut mati (jika tidak demikian, maka harus dilakukan pembersihan secara rutin dan tidak ditemukan bukti visual kumpulan debu/kotoran)", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 }, displayNo: 'c', group: '13' },
+            
             { no: 14, text: "Pintu dalam kondisi bersih dan terawat (tidak berlubang dan dapat menutup sempurna)", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 } },
-            // No. 15 - B,F:1, C,D,E,G,H:2
-            { no: 15, text: "Pencahayaan cukup terang dengan lampu tercover (jika lampu terbuat dari bahan mudah pecah) dan kondisi cover (jika ada) bersih dan terawat.", areas: { A: 'NA', B: 1, C: 2, D: 2, E: 2, F: 1, G: 2, H: 2 } },
-            // No. 16a - B-H:1
-            { no: '16a', text: "Tinggi minimal 2.4 meter dari lantai", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 } },
-            // No. 16b - A,C,D,E,F,H:2, G:1
-            { no: '16b', text: "Kondisi tertutup, bersih dan terawat (contoh: tidak ada jamur, debu, kotoran, sarang hama atau sawang)", areas: { A: 2, B: 'NA', C: 2, D: 2, E: 2, F: 2, G: 1, H: 2 } },
-            // No. 16c - B,C,D,E:2, F,G,H:1
-            { no: '16c', text: "Tidak ada kondensasi air", areas: { A: 'NA', B: 2, C: 2, D: 2, E: 2, F: 1, G: 1, H: 1 } },
-            // No. 17a - A,E,F:1, B,C,D,G,H:2
-            { no: '17a', text: "Tidak ada sampah berserakan", areas: { A: 1, B: 2, C: 2, D: 2, E: 1, F: 1, G: 2, H: 2 } },
-            // No. 17b - A,C,G:1, B,D,E,F,H:2
-            { no: '17b', text: "Terdapat tempat sampah dalam kondisi tertutup, sampah tidak mengunung (frekuensi pembuangan minimal 1x24 jam) dan kondisi bersih", areas: { A: 1, B: 2, C: 1, D: 2, E: 2, F: 2, G: 1, H: 2 } },
-            // No. 18a - A,E:1, C,F:2, B,D,G,H:3
-            { no: '18a', text: "Bebas vektor atau binatang pembawa penyakit (semua tingkat siklus kehidupannya) dan tanda-tanda keberadaannya (contoh: kotoran atau bagian tubuh hama)", areas: { A: 1, B: 3, C: 2, D: 3, E: 1, F: 2, G: 3, H: 3 } },
-            // No. 18b - B,E:1, A,C,D,F,G,H:2
-            { no: '18b', text: "Terdapat jebakan hama yang ditempatkan pada posisi yang sesuai dan dalam kondisi terawat (tidak rusak, tidak berjamur, dan bersih).", areas: { A: 2, B: 1, C: 2, D: 2, E: 1, F: 2, G: 2, H: 2 } },
-            // No. 18c - B-G:3, H:1
-            { no: '18c', text: "Pengendalian tidak mengunakan bahan kimia (pestisida) di area dalam bangunan pengolahan pangan", areas: { A: 'NA', B: 3, C: 3, D: 3, E: 3, F: 3, G: 3, H: 1 } },
-            // No. 18d - A,D:1, B,C,E,F,G,H:2
-            { no: '18d', text: "JIKA ventilasi berupa bukaan (contoh: jendela/exhaust) yang terbuka keluar, maka terdapat kasa/tirai/plastik curtain anti serangga untuk mencegah masuknya vektor atau binatang pembawa penyakit. Kasa/tirai/plastik curtain dalam kondisi bersih dan terawat.", areas: { A: 1, B: 2, C: 2, D: 1, E: 2, F: 2, G: 2, H: 2 } },
-            // No. 19a - C-G:1
-            { no: '19a', text: "Penyimpanan bahan baku, ingredien dan kemasan tidak langsung menyentuh lantai (contoh: menggunakan palet) dengan jarak minimal 15 cm dari lantai, 5 cm dari dinding, dan 60 cm dari langit-langit", areas: { A: 'NA', B: 'NA', C: 1, D: 1, E: 1, F: 1, G: 1, H: 'NA' } },
-            // No. 19b - A,E,F:2
-            { no: '19b', text: "Kemasan bekas bahan baku mentah tidak disimpan di area yang terdapat pangan matang", areas: { A: 2, B: 'NA', C: 'NA', D: 'NA', E: 2, F: 2, G: 'NA', H: 'NA' } },
-            // No. 19c - C-G:3
-            { no: '19c', text: "Penyimpanan bahan mentah tidak menyatu dengan pangan matang (contoh di ruang penyimpanan, chiller atau freezer), dan penyimpanan bahan pangan (mentah atau matang) tidak menyatu dengan penyimpanan bahan kimia.", areas: { A: 'NA', B: 'NA', C: 3, D: 3, E: 3, F: 3, G: 3, H: 'NA' } },
-            // No. 19d - C-G:3
-            { no: '19d', text: "Bahan baku pangan dan ingredient dalam kondisi baik dan tidak busuk atau berlendir", areas: { A: 'NA', B: 'NA', C: 3, D: 3, E: 3, F: 3, G: 3, H: 'NA' } },
-            // No. 19e - B,D,E,F,G:3
-            { no: '19e', text: "Khusus untuk bahan baku olahan terkemas dalam kondisi baik (tidak kedaluwarsa, kemasan utuh/tidak bocor, dan memiliki izin edar dari instansi terkait)", areas: { A: 'NA', B: 3, C: 'NA', D: 3, E: 3, F: 3, G: 3, H: 'NA' } },
-            // No. 19f - G:2
-            { no: '19f', text: "Khusus untuk chiller atau freezer yang digunakan untuk menyimpan bahan pangan, ingredien, atau pangan siap saji, maka suhu penyimpanan harus sesuai (chiller 0-4°C dan freezer ≤(-15°C))", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 2, H: 'NA' } },
-            // No. 19g - A-D,H:2, E,F,G:1
-            { no: '19g', text: "Bahan kimia (contoh untuk cuci tangan/sanitasi tangan, cuci peralatan, pembersihan lantai) disimpan pada area khusus dengan akses terbatas dan memiliki identitas yang jelas. Kuantitas bahan kimia yang digunakan di setiap area hanya untuk penggunaan harian (tidak dalam kemasan galon/bulk)", areas: { A: 2, B: 2, C: 2, D: 2, E: 1, F: 1, G: 1, H: 2 } },
-            // No. 19h - G:3
-            { no: '19h', text: "Tidak ada pangan matang yang disimpan sementara di area luar bangunan pengolahan dalam kondisi terbuka.", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 3, H: 'NA' } },
-            // No. 19i - C-H:3
-            { no: '19i', text: "Penyimpanan kemasan yang kontak pangan matang dalam kondisi bersih", areas: { A: 'NA', B: 'NA', C: 3, D: 3, E: 3, F: 3, G: 3, H: 3 } },
-            // No. 20a - B,D,E,G,H:3, F:1
-            { no: '20a', text: "Personil sehat/tidak menunjukkan gejala penyakit", areas: { A: 'NA', B: 3, C: 'NA', D: 3, E: 3, F: 1, G: 3, H: 3 } },
-            // No. 20b - D-H:2
-            { no: '20b', text: "Personil menggunakan APD (celemek, masker, hairnet/penutup rambut) dengan lengkap dan benar", areas: { A: 'NA', B: 'NA', C: 'NA', D: 2, E: 2, F: 2, G: 2, H: 2 } },
-            // No. 20c - C,E,F,G,H:2
-            { no: '20c', text: "Personil menggunakan pakaian kerja khusus selama berada di area pengolahan pangan", areas: { A: 'NA', B: 'NA', C: 2, D: 'NA', E: 2, F: 2, G: 2, H: 2 } },
-            // No. 20d - B,E,F,G:3, H:2
-            { no: '20d', text: "Personil menerapkan personil higiene dengan benar (contoh: tidak memakai aksesoris/perhiasan, rutin mencuci tangan, tidak batuk/bersin langsung di atas pangan, tidak merokok/makan/minum saat mengolah pangan, tidak mengaruk atau menyentuh bagian badan dan kemudian menyentuh pangan)", areas: { A: 'NA', B: 3, C: 'NA', D: 'NA', E: 3, F: 3, G: 3, H: 2 } },
-            // No. 20e - D-H:3
-            { no: '20e', text: "Jika personil memiliki luka, maka luka harus ditutup dengan perban/sejenisnya dan ditutup penutup yang tahan air dan dalam kondisi bersih", areas: { A: 'NA', B: 'NA', C: 'NA', D: 3, E: 3, F: 3, G: 3, H: 3 } },
-            // No. 20f - D-H:2
-            { no: '20f', text: "Personil yang bekerja di area ini memiliki pemahaman mengenai prinsip umum higiene personil dan keamanan pangan", areas: { A: 'NA', B: 'NA', C: 'NA', D: 2, E: 2, F: 2, G: 2, H: 2 } },
-            // No. 21a - C,F,G:3, D:1, E:2
-            { no: '21a', text: "Dibuat dari bahan tara pangan (kedap air, tahan karat, tidak mentransfer zat berbahaya) dan kondisi terawat (tidak rusak, tidak berkarat, dan bersih)", areas: { A: 'NA', B: 'NA', C: 3, D: 1, E: 2, F: 3, G: 3, H: 'NA' } },
-            // No. 21b - C,D,G:3, E:2, F,H:1
-            { no: '21b', text: "Peralatan dalam kondisi terawat (tidak rusak/pecah, tidak berkarat, dan bersih)", areas: { A: 'NA', B: 'NA', C: 3, D: 3, E: 2, F: 1, G: 3, H: 1 } },
-            // No. 21c - F:3
-            { no: '21c', text: "Khusus untuk kemasan pangan matang dalam kondisi bersih dan terawat (tidak rusak/pecah, tidak berkarat, dan bersih (tidak terdapat sisa bahan kimia pencucian atau sisa makanan), serta dapat ditutup sempurna)", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 3, G: 'NA', H: 'NA' } },
-            // No. 22a - E:2
-            { no: '22a', text: "Jika terdapat proses thawing/pencairan bahan pangan, maka dilakukan dengan benar.", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 2, F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 22b - E:3
-            { no: '22b', text: "Pangan dimasak sampai matang sempurna dengan penampakan visual normal (tidak ada benda asing) dan bau normal", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 3, F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 22c - E:3
-            { no: '22c', text: "Suhu inti pangan yang dimasak minimal 75°C (lakukan sampling pada saat inspeksi dan ukur menggunakan termometer)", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 3, F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 23a - A:2
-            { no: '23a', text: "Kondisi kendaraan pengangkutan pangan matang bersih, terawat dan bebas dari vektor atau binatang pembawa penyakit.", areas: { A: 2, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
-            // No. 23b - A:3
-            { no: '23b', text: "Pangan yang diangkut dalam kondisi kemasan tertutup sempurna dan pengangkutan sesuai untuk menjaga suhu panas atau dingin (sesuai jenis pangan)", areas: { A: 3, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
+            
+            { no: 15, text: "Pencahayaan cukup terang dengan lampu tercover (jika lampu terbuat dari bahan mudah pecah) dan kondisi cover (jika ada) bersih dan terawat.", areas: { A: 'NA', B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 2 } },
+            
+            // HEADER FOR GROUP 16
+            { no: '16', text: "Langit-langit", isHeader: true, group: '16' },
+            { no: '16a', text: "Tinggi minimal 2.4 meter dari lantai", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 }, displayNo: 'a', group: '16' },
+            { no: '16b', text: "Kondisi tertutup, bersih dan terawat (contoh: tidak ada jamur, debu, kotoran, sarang hama atau sawang)", areas: { A: 'NA', B: 1, C: 2, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'b', group: '16' },
+            { no: '16c', text: "Tidak ada kondensasi air", areas: { A: 'NA', B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 1 }, displayNo: 'c', group: '16' },
+            
+            // HEADER FOR GROUP 17
+            { no: '17', text: "Tempat sampah dan limbah", isHeader: true, group: '17' },
+            { no: '17a', text: "Tidak ada sampah berserakan", areas: { A: 1, B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'a', group: '17' },
+            { no: '17b', text: "Terdapat tempat sampah dalam kondisi tertutup, sampah tidak mengunung (frekuensi pembuangan minimal 1x24 jam) dan kondisi bersih", areas: { A: 1, B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'b', group: '17' },
+            
+            // HEADER FOR GROUP 18
+            { no: '18', text: "Vektor atau binatang pembawa penyakit", isHeader: true, group: '18' },
+            { no: '18a', text: "Bebas vektor atau binatang pembawa penyakit (semua tingkat siklus kehidupannya) dan tanda-tanda keberadaannya (contoh: kotoran atau bagian tubuh hama)", areas: { A: 1, B: 1, C: 2, D: 3, E: 3, F: 3, G: 3, H: 2 }, displayNo: 'a', group: '18' },
+            { no: '18b', text: "Terdapat jebakan hama yang ditempatkan pada posisi yang sesuai dan dalam kondisi terawat (tidak rusak, tidak berjamur, dan bersih).", areas: { A: 1, B: 1, C: 2, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'b', group: '18' },
+            { no: '18c', text: "Pengendalian tidak mengunakan bahan kimia (pestisida) di area dalam bangunan pengolahan pangan", areas: { A: 'NA', B: 1, C: 3, D: 3, E: 3, F: 3, G: 3, H: 3 }, displayNo: 'c', group: '18' },
+            { no: '18d', text: "JIKA ventilasi berupa bukaan (contoh: jendela/exhaust) yang terbuka keluar, maka terdapat kasa/tirai/plastik curtain anti serangga untuk mencegah masuknya vektor atau binatang pembawa penyakit. Kasa/tirai/plastik curtain dalam kondisi bersih dan terawat.", areas: { A: 1, B: 1, C: 2, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'd', group: '18' },
+            
+            // HEADER FOR GROUP 19
+            { no: '19', text: "Penyimpanan bahan baku, bumbu, kemasan, bahan kimia dan pangan matang", isHeader: true, group: '19' },
+            { no: '19a', text: "Penyimpanan bahan baku, ingredien dan kemasan tidak langsung menyentuh lantai (contoh: menggunakan palet) dengan jarak minimal 15 cm dari lantai, 5 cm dari dinding, dan 60 cm dari langit-langit", areas: { A: 'NA', B: 1, C: 'NA', D: 1, E: 1, F: 1, G: 1, H: 'NA' }, displayNo: 'a', group: '19' },
+            { no: '19b', text: "Kemasan bekas bahan baku mentah tidak disimpan di area yang terdapat pangan matang", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 2, F: 2, G: 2, H: 'NA' }, displayNo: 'b', group: '19' },
+            { no: '19c', text: "Penyimpanan bahan mentah tidak menyatu dengan pangan matang (contoh di ruang penyimpanan, chiller atau freezer), dan penyimpanan bahan pangan (mentah atau matang) tidak menyatu dengan penyimpanan bahan kimia.", areas: { A: 'NA', B: 'NA', C: 3, D: 3, E: 3, F: 3, G: 3, H: 'NA' }, displayNo: 'c', group: '19' },
+            { no: '19d', text: "Bahan baku pangan dan ingredient dalam kondisi baik dan tidak busuk atau berlendir", areas: { A: 'NA', B: 'NA', C: 3, D: 3, E: 3, F: 3, G: 3, H: 'NA' }, displayNo: 'd', group: '19' },
+            { no: '19e', text: "Khusus untuk bahan baku olahan terkemas dalam kondisi baik (tidak kedaluwarsa, kemasan utuh/tidak bocor, dan memiliki izin edar dari instansi terkait)", areas: { A: 'NA', B: 'NA', C: 3, D: 3, E: 3, F: 3, G: 3, H: 'NA' }, displayNo: 'e', group: '19' },
+            { no: '19f', text: "Khusus untuk chiller atau freezer yang digunakan untuk menyimpan bahan pangan, ingredien, atau pangan siap saji, maka suhu penyimpanan harus sesuai (chiller 0-4°C dan freezer ≤(-15°C))", areas: { A: 'NA', B: 'NA', C: 'NA', D: 2, E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'f', group: '19' },
+            { no: '19g', text: "Bahan kimia (contoh untuk cuci tangan/sanitasi tangan, cuci peralatan, pembersihan lantai) disimpan pada area khusus dengan akses terbatas dan memiliki identitas yang jelas. Kuantitas bahan kimia yang digunakan di setiap area hanya untuk penggunaan harian (tidak dalam kemasan galon/bulk)", areas: { A: 'NA', B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'g', group: '19' },
+            { no: '19h', text: "Tidak ada pangan matang yang disimpan sementara di area luar bangunan pengolahan dalam kondisi terbuka.", areas: { A: 3, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'h', group: '19' },
+            { no: '19i', text: "Penyimpanan kemasan yang kontak pangan matang dalam kondisi bersih", areas: { A: 'NA', B: 'NA', C: 'NA', D: 3, E: 3, F: 3, G: 3, H: 3 }, displayNo: 'i', group: '19' },
+            
+            // HEADER FOR GROUP 20
+            { no: '20', text: "Personil", isHeader: true, group: '20' },
+            { no: '20a', text: "Personil sehat/tidak menunjukkan gejala penyakit", areas: { A: 'NA', B: 'NA', C: 1, D: 3, E: 3, F: 3, G: 3, H: 3 }, displayNo: 'a', group: '20' },
+            { no: '20b', text: "Personil menggunakan APD (celemek, masker, hairnet/penutup rambut) dengan lengkap dan benar", areas: { A: 'NA', B: 'NA', C: 'NA', D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'b', group: '20' },
+            { no: '20c', text: "Personil menggunakan pakaian kerja khusus selama berada di area pengolahan pangan", areas: { A: 'NA', B: 'NA', C: 'NA', D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'c', group: '20' },
+            { no: '20d', text: "Personil menerapkan personil higiene dengan benar (contoh: tidak memakai aksesoris/perhiasan, rutin mencuci tangan, tidak batuk/bersin langsung di atas pangan, tidak merokok/makan/minum saat mengolah pangan, tidak mengaruk atau menyentuh bagian badan dan kemudian menyentuh pangan)", areas: { A: 'NA', B: 'NA', C: 'NA', D: 3, E: 3, F: 3, G: 3, H: 2 }, displayNo: 'd', group: '20' },
+            { no: '20e', text: "Jika personil memiliki luka, maka luka harus ditutup dengan perban/sejenisnya dan ditutup penutup yang tahan air dan dalam kondisi bersih", areas: { A: 'NA', B: 'NA', C: 'NA', D: 3, E: 3, F: 3, G: 3, H: 3 }, displayNo: 'e', group: '20' },
+            { no: '20f', text: "Personil yang bekerja di area ini memiliki pemahaman mengenai prinsip umum higiene personil dan keamanan pangan", areas: { A: 'NA', B: 'NA', C: 'NA', D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'f', group: '20' },
+            
+            // HEADER FOR GROUP 21
+            { no: '21', text: "Peralatan atau kemasan yang kontak langsung dengan pangan", isHeader: true, group: '21' },
+            { no: '21a', text: "Dibuat dari bahan tara pangan (kedap air, tahan karat, tidak mentransfer zat berbahaya) dan kondisi terawat (tidak rusak, tidak berkarat, dan bersih)", areas: { A: 'NA', B: 'NA', C: 1, D: 2, E: 3, F: 3, G: 3, H: 'NA' }, displayNo: 'a', group: '21' },
+            { no: '21b', text: "Peralatan dalam kondisi terawat (tidak rusak/pecah, tidak berkarat, dan bersih)", areas: { A: 'NA', B: 'NA', C: 1, D: 2, E: 3, F: 3, G: 3, H: 1 }, displayNo: 'b', group: '21' },
+            { no: '21c', text: "Khusus untuk kemasan pangan matang dalam kondisi bersih dan terawat (tidak rusak/pecah, tidak berkarat, dan bersih (tidak terdapat sisa bahan kimia pencucian atau sisa makanan), serta dapat ditutup sempurna)", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 3, G: 3, H: 'NA' }, displayNo: 'c', group: '21' },
+            
+            // HEADER FOR GROUP 22
+            { no: '22', text: "Proses pengolahan pangan", isHeader: true, group: '22' },
+            { no: '22a', text: "Jika terdapat proses thawing/pencairan bahan pangan, maka dilakukan dengan benar.", areas: { A: 'NA', B: 'NA', C: 'NA', D: 2, E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'a', group: '22' },
+            { no: '22b', text: "Pangan dimasak sampai matang sempurna dengan penampakan visual normal (tidak ada benda asing) dan bau normal", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 3, F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'b', group: '22' },
+            { no: '22c', text: "Suhu inti pangan yang dimasak minimal 75°C (lakukan sampling pada saat inspeksi dan ukur menggunakan termometer)", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 3, F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'c', group: '22' },
+            
+            // HEADER FOR GROUP 23
+            { no: '23', text: "Proses pengangkutan pangan matang", isHeader: true, group: '23' },
+            { no: '23a', text: "Kondisi kendaraan pengangkutan pangan matang bersih, terawat dan bebas dari vektor atau binatang pembawa penyakit.", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 2, H: 'NA' }, displayNo: 'a', group: '23' },
+            { no: '23b', text: "Pangan yang diangkut dalam kondisi kemasan tertutup sempurna dan pengangkutan sesuai untuk menjaga suhu panas atau dingin (sesuai jenis pangan)", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 3, H: 'NA' }, displayNo: 'b', group: '23' },
         ];
 
         const SPECIAL_REQUIREMENTS = [
-            // Definisi Persyaratan Khusus
             { no: 1, text: "Pengelola/pemilik SPPG memiliki sertifikat pelatihan keamanan pangan siap saji" },
             { no: 2, text: "Penjamah pangan yang bekerja di SPPG sudah memiliki sertifikat pelatihan keamanan pangan siap saji minimal 50%" },
             { no: 3, text: "Penjamah dilakukan pemeriksaan kesehatan secara berkala minimal 1 (satu) kali setahun dan dapat dibuktikan dengan rekaman pemeriksaan kesehatan dari unit pelayanan kesehatan setempat." },
@@ -530,43 +531,454 @@
             { no: 6, text: "Tersedia dokumentasi pengawasan internal secara berkala (minimal dilakukan 6 bulan sekali) menggunakan formulir IKL dan dibuktikan dengan rekaman pengawasan internal (IKL) yang sudah terisi." },
             { no: 7, text: "SPPG sudah menerapkan penyimpanan sampel arsip (bank sample) untuk pangan yang diproduksi harian selama 2 x 24 jam pada suhu penyimpanan chiller/kulkas." },
             { no: 8, text: "Tersedia perlengkapan P3K, obat-obatan, dan APAR yang tidak kedaluwarsa dan mudah dijangkau" },
-            { no: '9.a.1', text: "SPPG memiliki SOP sanitasi fasilitas dan ruangan dan sudah disosialisasikan" },
-            { no: '9.a.2', text: "SPPG memiliki SOP sanitasi peralatan dan sudah disosialisasikan" },
-            { no: '9.a.3', text: "SPPG memiliki SOP persiapan bahan pangan dan sudah disosialisasikan" },
-            { no: '9.a.4', text: "SPPG memiliki SOP pengolahan dan sudah disosialisasikan" },
-            { no: '9.a.5', text: "SPPG memiliki SOP penyimpanan makanan dan sampel makanan dan sudah disosialisasikan" },
-            { no: '9.a.6', text: "SPPG memiliki SOP keselamatan kerja dan sudah disosialisasikan" },
-            { no: '9.a.7', text: "SPPG memiliki SOP higiene dan pemeriksaan kesehatan personil dan sudah disosialisasikan" },
-            { no: '9.a.8', text: "SPPG memiliki SOP pemeliharaan peralatan dan bangunan dan sudah disosialisasikan" },
-            { no: '9.a.9', text: "SPPG memiliki SOP pengendalian serangga, hewan pengerat, dan hewan peliharaan dan sudah disosialisasikan" },
-            { no: '9.a.10', text: "SPPG memiliki SOP tindakan apabila terjadi keracunan makanan dan sudah disosialisasikan" },
-            { no: '9.b', text: "Laporan hasil kalibrasi alat ukur seperti termometer (1 tahun terakhir) tersedia" },
-            { no: '9.c', text: "Rekaman monitoring suhu chiller dan freezer tersedia" },
-            { no: '9.d', text: "Rekaman pembersihan fasilitas (contoh: wastafel, toilet, area kerja) tersedia" },
+            // HEADER FOR GROUP 9 SPECIAL REQUIREMENTS
+            { no: '9', text: "Tersedia dokumentasi atau rekaman:", isHeader: true },
+            { no: '9.a.1', text: "SPPG memiliki SOP sanitasi fasilitas dan ruangan dan sudah disosialisasikan", displayNo: 'a.1' },
+            { no: '9.a.2', text: "SPPG memiliki SOP sanitasi peralatan dan sudah disosialisasikan", displayNo: 'a.2' },
+            { no: '9.a.3', text: "SPPG memiliki SOP persiapan bahan pangan dan sudah disosialisasikan", displayNo: 'a.3' },
+            { no: '9.a.4', text: "SPPG memiliki SOP pengolahan dan sudah disosialisasikan", displayNo: 'a.4' },
+            { no: '9.a.5', text: "SPPG memiliki SOP penyimpanan makanan dan sampel makanan dan sudah disosialisasikan", displayNo: 'a.5' },
+            { no: '9.a.6', text: "SPPG memiliki SOP keselamatan kerja dan sudah disosialisasikan", displayNo: 'a.6' },
+            { no: '9.a.7', text: "SPPG memiliki SOP higiene dan pemeriksaan kesehatan personil dan sudah disosialisasikan", displayNo: 'a.7' },
+            { no: '9.a.8', text: "SPPG memiliki SOP pemeliharaan peralatan dan bangunan dan sudah disosialisasikan", displayNo: 'a.8' },
+            { no: '9.a.9', text: "SPPG memiliki SOP pengendalian serangga, hewan pengerat, dan hewan peliharaan dan sudah disosialisasikan", displayNo: 'a.9' },
+            { no: '9.a.10', text: "SPPG memiliki SOP tindakan apabila terjadi keracunan makanan dan sudah disosialisasikan", displayNo: 'a.10' },
+            { no: '9.b', text: "Laporan hasil kalibrasi alat ukur seperti termometer (1 tahun terakhir) tersedia", displayNo: 'b' },
+            { no: '9.c', text: "Rekaman monitoring suhu chiller dan freezer tersedia", displayNo: 'c' },
+            { no: '9.d', text: "Rekaman pembersihan fasilitas (contoh: wastafel, toilet, area kerja) tersedia", displayNo: 'd' },
         ];
         
-        // Max Score dihitung ulang dari data kriteria di atas (Total sum of non-'NA' values)
-        const MAX_TOTAL_SCORE = 315; 
+        const AREAS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        const AREA_LEGEND = {
+            A: 'Area luar bangunan',
+            B: 'Area fasilitas karyawan',
+            C: 'Area penerimaan bahan baku',
+            D: 'Area penyimpanan',
+            E: 'Area pengolahan pangan',
+            F: 'Area pengemasan/pemorsian',
+            G: 'Area loading produk jadi',
+            H: 'Area pencucian peralatan'
+        };
+
+        let calculatedMaxTotalScore = 0; 
+        const STORAGE_KEY = 'ikl_sppg_autosave_v1';
+        const THEME_KEY = 'ikl_sppg_theme_v1';
+        const SCORE_BAR_STATE_KEY = 'ikl_sppg_score_bar_state';
         
-        // --- KONSTANTA GEMINI API ---
         const apiKey = ""; 
         const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=" + apiKey;
 
-        /**
-         * Utility function for fetching with retry logic (exponential backoff).
-         * @param {string} url - The API endpoint URL.
-         * @param {object} options - Fetch options (method, headers, body).
-         * @param {number} maxRetries - Maximum number of retries.
-         * @returns {Promise<Response>}
-         */
+        // --- COLLAPSIBLE CRITERIA LOGIC (for both Table and Card view) ---
+        function toggleCriteriaGroup(groupNo) {
+            // Toggle for TABLE view
+            const tableRows = document.querySelectorAll(`#inspection-table .criteria-group-${groupNo}`);
+            const tableIcon = document.getElementById(`icon-group-table-${groupNo}`);
+            
+            // Toggle for CARD view
+            const cardDivs = document.querySelectorAll(`#inspection-cards .criteria-group-${groupNo}`);
+            const cardIcon = document.getElementById(`icon-group-card-${groupNo}`);
+            
+            // Determine state based on the table rows (assuming they are rendered first)
+            let isHidden = tableRows[0]?.classList.contains('hidden');
+
+            // Toggle TABLE rows
+            tableRows.forEach(row => {
+                row.classList.toggle('hidden', !isHidden);
+            });
+            if (tableIcon) {
+                tableIcon.classList.toggle('rotate-180', isHidden); 
+            }
+
+            // Toggle CARD divs
+            cardDivs.forEach(div => {
+                div.classList.toggle('hidden', !isHidden);
+            });
+            if (cardIcon) {
+                cardIcon.classList.toggle('rotate-180', isHidden); 
+            }
+        }
+        
+        // --- UTILITY FUNCTIONS ---
+        function calculateMaxPossibleScore() {
+            let max = 0;
+            CRITERIA.forEach(crit => {
+                if (crit.isHeader) return;
+                Object.values(crit.areas).forEach(val => {
+                    if (val !== 'NA') max += parseInt(val, 10);
+                });
+            });
+            return max;
+        }
+
+        function getMaxScore(areaScore) { return areaScore === 'NA' ? 0 : parseInt(areaScore, 10); }
+
+        function handleScoreChange(event) {
+            const currentInput = event.target;
+            const score = parseInt(currentInput.value, 10);
+            const name = currentInput.name;
+
+            // Step 1: Remove all highlight/color classes from all labels associated with this radio group name
+            document.querySelectorAll(`input[name="${name}"] + .score-label`).forEach(label => {
+                label.classList.remove('bg-score-red', 'bg-score-green', 'text-white', 'font-semibold');
+                label.classList.add('font-medium'); 
+            });
+            
+            // Step 2: Apply color class to the selected input's label(s)
+            const inputId = currentInput.id;
+            
+            document.querySelectorAll(`label[for="${inputId}"]`).forEach(label => {
+                if (score > 0) {
+                    label.classList.add('bg-score-red', 'text-white', 'font-semibold');
+                    label.classList.remove('font-medium');
+                } else {
+                    label.classList.add('bg-score-green', 'text-white', 'font-semibold'); 
+                    label.classList.remove('font-medium');
+                }
+            });
+
+            // Step 3: Recalculate score and save
+            calculateScore();
+            saveFormData(); 
+        }
+        
+        function getRadioOptionsHTML(crit, area, isCard = false) {
+            const maxScore = getMaxScore(crit.areas[area]);
+            const inputName = `crit-${crit.no}-${area}`;
+
+            if (crit.areas[area] === 'NA') {
+                return isCard ? `<span class="text-xs text-gray-500 dark:text-gray-500 font-medium">NA</span>` : `<span class="text-xs text-gray-500 dark:text-gray-500 font-medium">NA</span>`;
+            }
+
+            // Options: NA (value 0) and actual scores (value 1 to maxScore)
+            const scoreOptions = ['NA'];
+            for (let i = 1; i <= maxScore; i++) scoreOptions.push(i);
+
+            const optionsHTML = scoreOptions.map(val => {
+                const numericValue = val === 'NA' ? 0 : val;
+                const inputId = `${inputName}-${val}`;
+                // Set default checked state for 'NA' or '0' (which represents 'Memenuhi Syarat' atau 'Not Applicable')
+                const isChecked = (val === 'NA' || val === 0);
+                // Apply initial green highlight for default selected state
+                const initialBgClass = isChecked ? 'bg-score-green text-white font-semibold' : ''; 
+                
+                return `<input type="radio" id="${inputId}" name="${inputName}" value="${numericValue}" class="score-input hidden" ${isChecked ? 'checked' : ''}><label for="${inputId}" class="score-label ${isCard ? 'py-2' : ''} ${initialBgClass}">${val}</label>`;
+            }).join('');
+            
+            return isCard ? `<div class="grid grid-cols-4 gap-2 text-xs">${optionsHTML}</div>` : `<div class="flex flex-col space-y-1">${optionsHTML}</div>`;
+        }
+
+        // --- RENDERING FUNCTIONS ---
+        
+        function renderCriteriaTable() {
+            const body = document.getElementById('inspection-body');
+            const cardContainer = document.getElementById('inspection-cards');
+            body.innerHTML = '';
+            cardContainer.innerHTML = '';
+            
+            CRITERIA.forEach((crit) => {
+                const isCollapsibleGroup = ['8', '9', '10', '13', '16', '17', '18', '19', '20', '21', '22', '23'].includes(crit.no);
+                
+                // === TABLE ROW RENDERING (Desktop View) ===
+                const tableRow = document.createElement('tr');
+                tableRow.className = 'criteria-row border-b hover:bg-kitchen-cream dark:hover:bg-gray-700 transition-colors border-gray-200 dark:border-gray-700';
+
+                // Handle Header Row
+                if (crit.isHeader) {
+                    tableRow.classList.add('bg-kitchen-main/10', 'dark:bg-gray-600', 'criteria-header-row'); 
+                    
+                    if (isCollapsibleGroup) {
+                         tableRow.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
+                         const iconSvg = `<svg id="icon-group-table-${crit.no}" class="w-4 h-4 ml-2 transition-transform duration-200 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>`;
+                         tableRow.innerHTML = `
+                            <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-bold align-middle text-kitchen-dark dark:text-white border-r border-gray-200 dark:border-gray-600">${crit.no}</td>
+                            <td colspan="9" class="px-4 py-3 text-sm font-bold text-kitchen-dark dark:text-white align-middle flex items-center justify-between">
+                                <span>${crit.text}</span>
+                                ${iconSvg}
+                            </td>`;
+                    } else {
+                        tableRow.innerHTML = `
+                            <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-bold align-middle text-kitchen-dark dark:text-white border-r border-gray-200 dark:border-gray-600">${crit.no}</td>
+                            <td colspan="9" class="px-4 py-3 text-sm font-bold text-kitchen-dark dark:text-white align-middle">${crit.text}</td>`;
+                    }
+                    body.appendChild(tableRow);
+                    
+                } else {
+                    // Handle Sub-Item Row
+                    const displayNo = crit.displayNo || crit.no;
+                    const textClass = crit.displayNo ? "pl-8" : "px-4"; 
+                    
+                    if (crit.group) {
+                        tableRow.classList.add(`criteria-group-${crit.group}`, 'criteria-group-item', 'hidden'); 
+                    }
+                    
+                    tableRow.innerHTML += `<td class="px-2 py-3 whitespace-nowrap text-center text-sm font-medium align-middle text-gray-700 dark:text-gray-300">${displayNo}</td><td class="${textClass} py-3 text-sm text-gray-700 dark:text-gray-300 align-middle">${crit.text}</td>`;
+
+                    AREAS.forEach(area => {
+                        const cell = document.createElement('td');
+                        cell.className = 'px-1 py-1 whitespace-nowrap text-center w-12 align-top'; 
+                        cell.innerHTML = getRadioOptionsHTML(crit, area, false);
+                        tableRow.appendChild(cell);
+                    });
+                    body.appendChild(tableRow);
+                }
+
+                // === CARD RENDERING (Mobile View) ===
+                if (crit.isHeader) {
+                    // Header Card (Collapsible)
+                    const headerCard = document.createElement('div');
+                    headerCard.classList.add('p-3', 'bg-kitchen-main/20', 'dark:bg-gray-600', 'rounded-lg', 'font-bold', 'criteria-header-row');
+                    headerCard.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
+                    
+                    const iconSvg = isCollapsibleGroup ? `<svg id="icon-group-card-${crit.no}" class="w-4 h-4 ml-2 transition-transform duration-200 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>` : '';
+                    
+                    headerCard.innerHTML = `<div class="flex items-center justify-between text-kitchen-dark dark:text-white"><span class="text-sm">${crit.no}. ${crit.text}</span> ${iconSvg}</div>`;
+                    cardContainer.appendChild(headerCard);
+                    
+                } else {
+                    // Sub-Item Card
+                    const cardDiv = document.createElement('div');
+                    cardDiv.classList.add('p-3', 'bg-white', 'dark:bg-gray-800', 'rounded-lg', 'border', 'border-gray-300', 'dark:border-gray-700');
+                    
+                    if (crit.group) {
+                        cardDiv.classList.add(`criteria-group-${crit.group}`, 'criteria-group-item', 'hidden'); 
+                    }
+
+                    const displayNo = crit.displayNo || crit.no;
+                    const textContent = `<p class="text-sm font-semibold mb-3">${displayNo}. ${crit.text}</p>`;
+                    
+                    let areasContent = '';
+                    AREAS.forEach(area => {
+                        if (crit.areas[area] !== 'NA') {
+                            areasContent += `
+                                <div class="p-2 border border-gray-200 dark:border-gray-600 rounded-md bg-gray-50 dark:bg-gray-700">
+                                    <p class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">${area} (${AREA_LEGEND[area]}) - Max: ${crit.areas[area]}</p>
+                                    ${getRadioOptionsHTML(crit, area, true)}
+                                </div>`;
+                        }
+                    });
+                    
+                    cardDiv.innerHTML = textContent + `<div class="space-y-3">${areasContent}</div>`;
+                    cardContainer.appendChild(cardDiv);
+                }
+            });
+
+            // Set initial icon state for table (and by proxy, card) headers that are hidden by default
+            const collapsibleHeaders = CRITERIA.filter(c => c.isHeader && c.group).map(c => c.no);
+            collapsibleHeaders.forEach(groupNo => {
+                // Initial state for sub-items is 'hidden' in the code above, 
+                // so the icon needs to be rotated to represent 'collapsed' state (rotate-180)
+                const tableIcon = document.getElementById(`icon-group-table-${groupNo}`);
+                const cardIcon = document.getElementById(`icon-group-card-${groupNo}`);
+
+                if (tableIcon) tableIcon.classList.add('rotate-180');
+                if (cardIcon) cardIcon.classList.add('rotate-180');
+            });
+
+            // Re-attach listeners after rendering both views
+            document.querySelectorAll('.score-input').forEach(input => input.addEventListener('change', handleScoreChange));
+        }
+
+        function calculateScore() {
+            const scores = document.querySelectorAll('.score-input:checked');
+            let totalScore = 0;
+            scores.forEach(input => {
+                const value = parseInt(input.value, 10);
+                // Hanya menjumlahkan skor jika nilainya > 0 (menunjukkan ketidaksesuaian/demerit)
+                if (!isNaN(value) && value > 0) { 
+                    totalScore += value;
+                }
+            });
+
+            // Recalculate MAX score in case of dynamic changes
+            const maxScore = calculateMaxPossibleScore();
+            
+            // Formula: 100 - ( (Total Demerit / Max Possible Demerit) * 100 )
+            let iklScore = 100;
+            if (maxScore > 0) {
+                 iklScore = 100 - ((totalScore / maxScore) * 100);
+            }
+            
+            // Safety clamp
+            iklScore = Math.max(0, Math.min(100, iklScore));
+
+            const iklProgress = iklScore;
+            // Gunakan warna Tailwind CSS/kustom yang didefinisikan di <style>
+            const scoreColor = iklScore >= 80 ? 'var(--tw-colors-score-green)' : 'var(--tw-colors-score-red)';
+            const progressColorClass = iklScore >= 80 ? 'bg-score-green' : 'bg-score-red';
+            const iklStatusText = iklScore >= 80 ? 'MEMENUHI SYARAT' : 'TIDAK MEMENUHI SYARAT';
+            const iklStatusColorClass = iklScore >= 80 ? 'text-score-green' : 'text-score-red';
+            
+            // Mengganti label Total Ketidaksesuaian
+            document.getElementById('total-score-value').textContent = totalScore;
+            // Mengganti label Max: X
+            document.getElementById('max-score-label').textContent = `Maksimum: ${maxScore}`; 
+            
+            const finalScoreElement = document.getElementById('final-ikl-score');
+            finalScoreElement.textContent = iklScore.toFixed(2);
+            finalScoreElement.style.color = scoreColor;
+            
+            const iklStatusElement = document.getElementById('ikl-status');
+            // Pastikan class warna lama dihapus sebelum menambahkan yang baru
+            iklStatusElement.classList.remove('text-score-green', 'text-score-red');
+            iklStatusElement.textContent = iklStatusText;
+            iklStatusElement.classList.add(iklStatusColorClass);
+
+            const progressBar = document.getElementById('score-progress-bar');
+            progressBar.style.width = `${iklProgress}%`;
+            progressBar.classList.remove('bg-score-green', 'bg-score-red');
+            progressBar.classList.add(progressColorClass);
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem(THEME_KEY);
+            // Default ke light mode jika tidak ada settingan
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('icon-moon').classList.add('hidden');
+                document.getElementById('icon-sun').classList.remove('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('icon-sun').classList.add('hidden');
+                document.getElementById('icon-moon').classList.remove('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+            
+            // Toggle icons
+            if (isDark) {
+                document.getElementById('icon-moon').classList.add('hidden');
+                document.getElementById('icon-sun').classList.remove('hidden');
+            } else {
+                document.getElementById('icon-sun').classList.add('hidden');
+                document.getElementById('icon-moon').classList.remove('hidden');
+            }
+        }
+        
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const icon = document.getElementById('icon-' + sectionId);
+            
+            if (content.classList.contains('hidden')) {
+                // Expand
+                content.classList.remove('hidden');
+                icon.classList.remove('-rotate-90'); // Kembali ke posisi panah bawah (default)
+            } else {
+                // Collapse
+                content.classList.add('hidden');
+                icon.classList.add('-rotate-90'); // Putar panah ke samping (kanan/kiri tergantung arah)
+            }
+        }
+
+        function toggleScoreBar() {
+            const content = document.getElementById('score-content');
+            const icon = document.getElementById('score-toggle-icon');
+            const text = document.getElementById('score-toggle-text');
+            const isHidden = content.classList.contains('hidden');
+
+            if (isHidden) {
+                content.classList.remove('hidden');
+                icon.classList.remove('rotate-180');
+                text.textContent = 'Sembunyikan Nilai';
+                localStorage.setItem(SCORE_BAR_STATE_KEY, 'visible');
+                document.body.style.marginBottom = '12rem'; 
+            } else {
+                content.classList.add('hidden');
+                icon.classList.add('rotate-180');
+                text.textContent = 'Tampilkan Nilai';
+                localStorage.setItem(SCORE_BAR_STATE_KEY, 'hidden');
+                document.body.style.marginBottom = '4rem'; 
+            }
+        }
+        
+        function initScoreBarState() {
+            const savedState = localStorage.getItem(SCORE_BAR_STATE_KEY);
+            const content = document.getElementById('score-content');
+            const icon = document.getElementById('score-toggle-icon');
+            const text = document.getElementById('score-toggle-text');
+
+            if (savedState === 'hidden') {
+                content.classList.add('hidden');
+                icon.classList.add('rotate-180');
+                text.textContent = 'Tampilkan Nilai';
+                document.body.style.marginBottom = '4rem';
+            } else {
+                content.classList.remove('hidden');
+                icon.classList.remove('rotate-180');
+                text.textContent = 'Sembunyikan Nilai';
+                document.body.style.marginBottom = '12rem'; 
+            }
+        }
+        
+        function saveFormData() {
+            const formData = {
+                textInputs: {},
+                radioInputs: {}
+            };
+            document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea').forEach(input => {
+                formData.textInputs[input.id] = input.value;
+            });
+            document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                formData.radioInputs[input.name] = input.value;
+            });
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+            
+            const statusDiv = document.getElementById('autosave-status');
+            statusDiv.textContent = 'Tersimpan otomatis';
+            setTimeout(() => { statusDiv.textContent = ''; }, 2000);
+        }
+
+        function loadFormData() {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (!savedData) return;
+
+            try {
+                const formData = JSON.parse(savedData);
+                if (formData.textInputs) {
+                    for (const [id, value] of Object.entries(formData.textInputs)) {
+                        const input = document.getElementById(id);
+                        if (input) input.value = value;
+                    }
+                }
+
+                if (formData.radioInputs) {
+                    for (const [name, value] of Object.entries(formData.radioInputs)) {
+                        const radio = document.querySelector(`input[name="${name}"][value="${value}"]`);
+                        if (radio) {
+                            radio.checked = true;
+                            // Trigger change event to apply styles and recalculate
+                            const event = new Event('change');
+                            radio.dispatchEvent(event);
+                        }
+                    }
+                }
+                
+                calculateScore(); 
+            } catch (e) {
+                console.error("Error loading autosave data", e);
+            }
+        }
+
+        function resetForm() {
+            if (confirm("Apakah Anda yakin ingin mereset semua formulir? Semua data yang tersimpan akan dihapus.")) {
+                localStorage.removeItem(STORAGE_KEY);
+                initializeFormState();
+                window.scrollTo(0, 0);
+                alert("Formulir berhasil direset.");
+            }
+        }
+
         async function fetchWithExponentialBackoff(url, options, maxRetries = 5) {
             for (let i = 0; i < maxRetries; i++) {
                 try {
                     const response = await fetch(url, options);
-                    if (response.status !== 429) { // Not a rate limit error
-                        return response;
-                    }
-                    // Handle rate limit: wait and retry
+                    if (response.status !== 429) { return response; }
                     const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
                     await new Promise(resolve => setTimeout(resolve, delay));
                 } catch (error) {
@@ -578,189 +990,111 @@
             throw new Error("Maximum retries reached for API call.");
         }
 
-        /**
-         * Mengubah formulir HTML menjadi PDF menggunakan html2pdf.js.
-         */
         function exportToPDF() {
-            // Ambil elemen body untuk cloning. Kita akan menghilangkan margin/padding pada body yang di-clone.
             const originalBody = document.body;
             const element = document.getElementById('form-content');
-            
-            // 1. Tentukan nama file
             const namaSppg = document.getElementById('nama_sppg').value || 'SPPG_Tidak_Bernama';
             const tanggal = document.getElementById('tanggal_pemeriksaan').value || new Date().toISOString().slice(0, 10);
             const filename = `IKL_${namaSppg.replace(/\s/g, '_')}_${tanggal}.pdf`;
             
-            // 2. Konfigurasi html2pdf
             const opt = {
-                // MENGECILKAN MARGIN untuk memaksimalkan konten di halaman A4
                 margin: 0.25, 
                 filename: filename,
                 image: { type: 'jpeg', quality: 0.98 },
-                // MENINGKATKAN SKALA untuk ketajaman, namun mengandalkan CSS kustom untuk kerapatan.
                 html2canvas: { scale: 2, logging: false, dpi: 300, letterRendering: true }, 
                 jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
             };
 
-            // Mengambil seluruh konten body dan mengkloningnya
             const clonedBody = originalBody.cloneNode(true);
             const clonedElement = clonedBody.querySelector('#form-content');
 
-            // 3. Terapkan posisi statis pada header tabel (penting untuk layout PDF)
             const fixedHeader = clonedElement.querySelector('.fixed-header');
-            if (fixedHeader) {
-                fixedHeader.style.position = 'static';
-            }
+            if (fixedHeader) fixedHeader.style.position = 'static';
 
-            // 4. Menambahkan style untuk mengecilkan jarak antar baris dan font di PDF
             const style = document.createElement('style');
             style.textContent = `
-                /* HILANGKAN MARGIN PADA BODY DOKUMEN YANG DI-CLONE */
-                body {
-                    margin: 0 !important;
-                    padding: 0 !important;
+                /* FORCE LIGHT MODE UNTUK PDF */
+                body, #form-content, section, div, table, tr, td, th, input, textarea {
+                    background-color: #ffffff !important;
+                    color: #000000 !important;
+                    border-color: #e2e8f0 !important; /* gray-200 equivalent */
                 }
-                /* MEMAKSA CONTAINER UTAMA JADI BLOCK */
-                #form-content {
-                    display: block !important;
-                    padding-top: 0.5rem !important;
-                    padding-bottom: 0.5rem !important;
-                }
+                
+                /* Reset kitchen specific colors for PDF print clarity */
+                .bg-kitchen-cream { background-color: #FBFBF9 !important; }
+                .bg-kitchen-dark { background-color: #457A57 !important; color: white !important; }
+                
+                /* Reset input borders */
+                input, textarea { border: 1px solid #d1d5db !important; }
 
-                /* CSS Umum untuk mengurangi padding/margin pada PDF */
-                .pdf-text {
-                    line-height: 1.1;
-                    padding-top: 1px !important; 
-                    padding-bottom: 1px !important; 
+                body { margin: 0 !important; padding: 0 !important; }
+                #form-content { display: block !important; padding: 0.5rem !important; }
+                .pdf-text { line-height: 1.1; padding: 1px !important; }
+                #inspection-body td:nth-child(2), #special-requirements .flex-grow {
+                    font-size: 10.5px !important; line-height: 1.1 !important;
+                    padding: 2px !important;
                 }
-                
-                /* Mengatur ukuran font untuk Kriteria/Persyaratan Khusus (Teks Panjang) */
-                #inspection-body td:nth-child(2), 
-                #special-requirements .flex-grow {
-                    font-size: 10.5px !important; 
-                    line-height: 1.1 !important;
-                    padding-top: 2px !important; 
-                    padding-bottom: 2px !important; 
-                    padding-left: 2px !important; 
-                    padding-right: 2px !important;
+                #inspection-body td:nth-child(2) { width: 40% !important; }
+                #inspection-body td:nth-child(1), #inspection-body td:nth-child(n+3) span {
+                    font-size: 9.5px !important; line-height: 1.0 !important;
                 }
-                
-                /* Memastikan kolom Persyaratan (child 2) mengambil lebar penuh yang dialokasikan */
-                #inspection-body td:nth-child(2) {
-                    width: 40% !important; /* Alokasi lebar yang jelas untuk kolom deskripsi */
-                }
-
-                /* Mengatur ukuran font untuk Kolom Skor dan Kolom Nomor */
-                #inspection-body td:nth-child(1),
-                #inspection-body td:nth-child(n+3) span {
-                    font-size: 9.5px !important; 
-                    line-height: 1.0 !important;
-                    padding-top: 0.5px !important;
-                    padding-bottom: 0.5px !important;
-                }
-                
-                /* Mengatur ukuran font untuk input yang diganti (Data Umum) */
                 .input-replacement {
-                    font-size: 11px !important; 
-                    line-height: 1.1 !important;
-                    color: #1f2937 !important; /* Mengubah warna teks input menjadi gelap (text-gray-800) */
-                    border-bottom: 1px solid #d1d5db !important;
-                    display: block !important;
-                    padding-left: 0 !important;
-                    padding-right: 0 !important;
-                    padding-top: 2px !important;
-                    padding-bottom: 2px !important;
+                    font-size: 11px !important; line-height: 1.1 !important;
+                    color: #1f2937 !important; border-bottom: 1px solid #d1d5db !important;
+                    display: block !important; padding: 2px 0 !important;
                 }
-                
-                /* TTD Area Spacing */
-                .border-b.border-dashed.pt-12 {
-                    padding-top: 25px !important; 
+                .border-b.border-dashed.pt-12 { padding-top: 25px !important; }
+                #inspection-body td { padding-top: 2px !important; padding-bottom: 2px !important; }
+                table, th, td { border-collapse: collapse; }
+                #inspection-body tr { border-bottom: 1px solid #e5e7eb; }
+                section, .criteria-row, #special-requirements > div, .grid.grid-cols-1.md\\:grid-cols-2.gap-6 {
+                    page-break-inside: avoid !important; page-break-after: auto !important;
                 }
-                
-                /* Pastikan sel tabel memiliki padding minimal */
-                #inspection-body td {
-                    padding-top: 2px !important;
-                    padding-bottom: 2px !important;
-                }
-                
-                /* Atur border agar terlihat jelas */
-                table, th, td {
-                    border-collapse: collapse;
-                }
-                #inspection-body tr {
-                    border-bottom: 1px solid #e5e7eb;
-                }
-
-                /* PENTING: Mencegah pemotongan antar bagian utama dan elemen penting */
-                section, .criteria-row, #special-requirements > div, .grid.grid-cols-1.md\:grid-cols-2.gap-6 {
-                    page-break-inside: avoid !important;
-                    page-break-after: auto !important;
-                }
-                /* PENTING: Mencegah page-break sebelum elemen, yang bisa menyebabkan halaman kosong */
-                section:first-child { 
-                    page-break-before: auto !important;
-                }
-
-
-                /* Pastikan thead diulang di setiap halaman */
-                @page { 
-                    /* Mencegah footer/header default PDF tool */
-                    margin: 0.25in;
-                }
-                thead {
-                    display: table-header-group;
-                }
-                
-                /* Mengurangi padding pada elemen section utama */
+                section:first-child { page-break-before: auto !important; }
+                @page { margin: 0.25in; }
+                thead { display: table-header-group; }
                 .p-6 { padding: 0.5rem !important; }
                 .p-8 { padding: 0.5rem !important; }
-
-                /* Mengurangi padding/margin pada kotak section */
                 .mb-8 { margin-bottom: 1rem !important; }
                 .p-4 { padding: 0.5rem !important; }
-
-                /* Hapus Fixed Score Bar dari clone */
-                #fixed-score-bar {
-                    display: none !important;
-                }
-                header {
-                    margin-bottom: 1rem !important;
-                }
+                #fixed-score-bar, #autosave-status, #theme-toggle, #score-toggle-btn { display: none !important; } 
+                header { margin-bottom: 1rem !important; }
+                
+                /* PDF specific style for header rows */
+                .criteria-row.bg-kitchen-main\\/10 { background-color: #eee !important; font-weight: bold; }
+                .special-header-row { background-color: #eee !important; font-weight: bold; padding: 5px !important; }
+                
+                /* Force expand all sections for PDF */
+                .collapsible-content { display: block !important; }
+                .section-icon { display: none !important; }
+                
+                /* Force Table View for PDF Print */
+                #inspection-table { display: table !important; }
+                #inspection-cards { display: none !important; }
+                .criteria-group-item { display: table-row !important; }
             `;
             clonedBody.appendChild(style);
 
-
-            // Fungsi helper untuk mendapatkan label yang terpilih dari radio group
             const getSelectedLabelText = (inputName, clonedDoc) => {
                 const checkedInput = clonedDoc.querySelector(`input[name="${inputName}"]:checked`);
                 if (checkedInput) {
-                    // Cari label yang terkait dengan ID input
                     const label = clonedDoc.querySelector(`label[for="${checkedInput.id}"]`);
-                    // Jika label ditemukan, gunakan teksnya (misal: 'NA', '1', 'Ya', 'Tidak')
                     return label ? label.textContent.trim() : checkedInput.value;
                 }
                 return '—';
             };
 
-            // Mengganti semua input dan textarea dengan nilai teks statisnya
             clonedElement.querySelectorAll('input, textarea').forEach(input => {
-                if (input.type === 'radio') {
-                    return; 
-                }
-                
+                if (input.type === 'radio') return; 
                 const span = document.createElement('span');
-                // Menggunakan kelas CSS baru yang diinjeksikan untuk styling statis
                 span.className = 'input-replacement'; 
                 span.textContent = input.value || '—';
-                
-                // Pastikan input memiliki parent sebelum diganti
-                if (input.parentNode) {
-                    input.parentNode.replaceChild(span, input);
-                }
+                if (input.parentNode) input.parentNode.replaceChild(span, input);
             });
 
-            // Mengganti grup radio dengan nilai teks statis untuk Kriteria Inspeksi
             clonedElement.querySelectorAll('#inspection-body tr').forEach(row => {
+                if(row.querySelector('td[colspan]')) return;
+                
                 const cells = row.querySelectorAll('td:nth-child(n+3)');
                 cells.forEach(cell => {
                     const inputName = cell.querySelector('input[type="radio"]') ? cell.querySelector('input[type="radio"]').name : null;
@@ -768,156 +1102,82 @@
                         const selectedValue = getSelectedLabelText(inputName, clonedElement);
                         const staticSpan = document.createElement('span');
                         staticSpan.textContent = selectedValue;
-                        // Kelas ini akan diatur ukurannya oleh CSS injection
                         staticSpan.className = 'text-xs font-medium block py-1 pdf-text';
-                        
                         const radioDiv = cell.querySelector('div.flex.flex-col');
                         if(radioDiv) {
-                            // Cek warna latar belakang label yang terpilih dan terapkan ke span statis
                             const checkedLabel = cell.querySelector('input[type="radio"]:checked + .score-label');
                             if (checkedLabel) {
-                                // Menganalisis kelas background yang ditambahkan oleh JS (bg-score-red/green)
-                                // Menggunakan style langsung pada span statis agar terbaca oleh html2canvas
                                 if (checkedLabel.classList.contains('bg-score-red')) {
-                                    staticSpan.style.backgroundColor = '#cc3333';
-                                    staticSpan.style.color = 'white'; 
-                                    staticSpan.style.fontWeight = '600'; 
+                                    staticSpan.style.backgroundColor = '#cc3333'; staticSpan.style.color = 'white'; staticSpan.style.fontWeight = '600'; 
                                 } else if (checkedLabel.classList.contains('bg-score-green')) {
-                                    staticSpan.style.backgroundColor = '#457A57';
-                                    staticSpan.style.color = 'white'; 
-                                    staticSpan.style.fontWeight = '600';
+                                    staticSpan.style.backgroundColor = '#457A57'; staticSpan.style.color = 'white'; staticSpan.style.fontWeight = '600';
                                 }
                             }
-                            
-                            // Hapus seluruh div yang berisi radio button
                             cell.innerHTML = '';
                         }
-                        
                         cell.appendChild(staticSpan);
                     }
                 });
-                
-                // Menghapus kelas font manual karena sudah diurus oleh style injection
                 const textCell = row.querySelector('td:nth-child(2)');
-                if (textCell) {
-                    textCell.classList.remove('text-sm');
-                    textCell.classList.remove('pdf-text-small');
-                    textCell.style.lineHeight = ''; 
-                }
+                if (textCell) { textCell.classList.remove('text-sm'); textCell.style.lineHeight = ''; }
             });
             
-            // Mengubah ukuran font pada header tabel
-            clonedElement.querySelectorAll('thead th.text-xs').forEach(th => {
-                th.classList.remove('text-xs');
-                th.classList.add('text-[10px]'); // Tetap 10px untuk header
-            });
+            clonedElement.querySelectorAll('thead th.text-xs').forEach(th => { th.classList.remove('text-xs'); th.classList.add('text-[10px]'); });
 
-            // Mengganti grup radio dengan nilai teks statis untuk Persyaratan Khusus
             clonedElement.querySelectorAll('#special-requirements > div').forEach(div => {
-                const inputName = div.querySelector('input[type="radio"]') ? div.querySelector('input[type="radio"]').name : null;
-                
-                // Mengaplikasikan kelas line-height pada div container
-                div.classList.add('pdf-text');
+                if(div.classList.contains('bg-kitchen-main/10')) {
+                    div.classList.add('special-header-row');
+                    return;
+                }
 
+                const inputName = div.querySelector('input[type="radio"]') ? div.querySelector('input[type="radio"]').name : null;
+                div.classList.add('pdf-text');
                 if (inputName) {
                     const resultDiv = div.querySelector('.flex-shrink-0.flex.space-x-4');
                     if (resultDiv) {
                         const selectedValue = getSelectedLabelText(inputName, clonedElement);
                         const staticSpan = document.createElement('span');
                         staticSpan.textContent = selectedValue;
-                        // Kelas ini akan diatur ukurannya oleh CSS injection
                         staticSpan.className = 'text-xs font-medium pdf-text';
-                        
-                        // Hapus konten dinamis dan ganti dengan teks statis
-                        resultDiv.innerHTML = '';
-                        resultDiv.appendChild(staticSpan);
+                        resultDiv.innerHTML = ''; resultDiv.appendChild(staticSpan);
                     }
                 }
-                
-                // Menghapus kelas font manual karena sudah diurus oleh style injection
-                const textDiv = div.querySelector('.flex-grow');
-                if (textDiv) {
-                    textDiv.classList.remove('text-sm');
-                    textDiv.classList.remove('pdf-text');
-                }
-                const noDiv = div.querySelector('.flex-shrink-0.w-12');
-                if (noDiv) {
-                    noDiv.classList.remove('text-sm');
-                    noDiv.classList.add('text-xs');
-                }
+                const textDiv = div.querySelector('.flex-grow'); if (textDiv) textDiv.classList.remove('text-sm');
+                const noDiv = div.querySelector('.flex-shrink-0.w-12'); if (noDiv) noDiv.classList.add('text-xs');
             });
             
-            // Mengecilkan font pada keterangan skor dan area
-            clonedElement.querySelectorAll('section .text-sm').forEach(el => {
-                el.classList.remove('text-sm');
-                el.classList.add('text-xs', 'pdf-text');
-            });
-            clonedElement.querySelectorAll('section .text-base').forEach(el => {
-                el.classList.remove('text-base');
-                el.classList.add('text-sm', 'pdf-text');
-            });
+            clonedElement.querySelectorAll('section .text-sm').forEach(el => { el.classList.remove('text-sm'); el.classList.add('text-xs', 'pdf-text'); });
+            clonedElement.querySelectorAll('section .text-base').forEach(el => { el.classList.remove('text-base'); el.classList.add('text-sm', 'pdf-text'); });
 
-            // --- Menambahkan output AI ke PDF ---
-            // Cari elemen output AI yang asli di DOM
             const aiOutputElement = document.getElementById('ai-report-output');
-            
             if (aiOutputElement && aiOutputElement.textContent.trim() !== "Tekan tombol di atas untuk menghasilkan ringkasan temuan kritis dan langkah perbaikan yang direkomendasikan oleh Gemini AI.") {
-                // Buat bagian F (Rekomendasi) di dalam konten yang di-clone
                 const aiReportSection = document.createElement('section');
                 aiReportSection.className = 'mt-8 p-4 bg-kitchen-cream rounded-lg border border-kitchen-main/50';
-                aiReportSection.style.pageBreakInside = 'avoid'; // Penting!
-                
-                aiReportSection.innerHTML = `
-                    <h3 class="text-lg font-bold text-gray-700 mb-4 border-b border-kitchen-accent/50 pb-2">F. Rekomendasi</h3>
-                    <div class="p-4 rounded-lg border-2 border-dashed bg-gray-50" style="border-color: #C76E57;">
-                        <pre class="text-xs text-gray-700 whitespace-pre-wrap">${aiOutputElement.textContent}</pre>
-                    </div>
-                `;
+                aiReportSection.style.pageBreakInside = 'avoid';
+                aiReportSection.innerHTML = `<h3 class="text-lg font-bold text-gray-700 mb-4 border-b border-kitchen-accent/50 pb-2">F. Rekomendasi</h3><div class="p-4 rounded-lg border-2 border-dashed bg-gray-50" style="border-color: #C76E57;"><pre class="text-xs text-gray-700 whitespace-pre-wrap">${aiOutputElement.textContent}</pre></div>`;
                 clonedElement.appendChild(aiReportSection);
             }
-            // --- Akhir penambahan output AI ke PDF ---
 
-
-            // --- UPDATE: Menampilkan skor akhir di dalam konten PDF dengan format 3 baris yang lebih besar dan tebal ---
             const finalScoreElement = document.getElementById('final-ikl-score');
             const iklStatusElement = document.getElementById('ikl-status');
-            
             const scoreValue = finalScoreElement.textContent;
             const statusText = iklStatusElement.textContent; 
-            // Ambil warna dari elemen aslinya
             const resolvedScoreColor = finalScoreElement.style.color;
-            
-            // Menggunakan hardcoded hex dari config untuk keamanan PDF
-            const scoreGreenHex = '#457A57';
-            const scoreRedHex = '#cc3333';
+            const scoreGreenHex = '#457A57'; const scoreRedHex = '#cc3333';
             const resolvedStatusColor = statusText.includes('MEMENUHI SYARAT') ? scoreGreenHex : scoreRedHex;
 
             const scoreResultDiv = document.createElement('div');
             scoreResultDiv.className = 'mt-6 p-4 rounded-lg border-2 border-dashed bg-gray-50';
             scoreResultDiv.style.borderColor = resolvedScoreColor;
-            scoreResultDiv.style.pageBreakInside = 'avoid'; // Penting!
-            
-            scoreResultDiv.innerHTML = `
-                <h4 class="text-sm font-semibold text-gray-700 pdf-heading border-b border-gray-300 pb-1 mb-2">Hasil Akhir Inspeksi</h4>
-                <div class="text-center py-2">
-                    <p class="text-sm font-semibold text-gray-800 mb-1">Nilai IKL Final</p>
-                    <!-- Nilai Skor: Besar (2.5em), Tebal (800), Berwarna -->
-                    <p style="color: ${resolvedScoreColor}; font-weight: 800; font-size: 2.5em; line-height: 1.1; margin-bottom: 5px;">${scoreValue}</p>
-                    <!-- Status: Sedang (1em), Tebal (700), Berwarna -->
-                    <p style="color: ${resolvedStatusColor}; font-weight: 700; font-size: 1em;">${statusText}</p>
-                </div>
-            `;
+            scoreResultDiv.style.pageBreakInside = 'avoid';
+            scoreResultDiv.innerHTML = `<h4 class="text-sm font-semibold text-gray-700 pdf-heading border-b border-gray-300 pb-1 mb-2">Hasil Akhir Inspeksi</h4><div class="text-center py-2"><p class="text-sm font-semibold text-gray-800 mb-1">Nilai Final IKL</p><p style="color: ${resolvedScoreColor}; font-weight: 800; font-size: 2.5em; line-height: 1.1; margin-bottom: 5px;">${scoreValue}</p><p style="color: ${resolvedStatusColor}; font-weight: 700; font-size: 1em;">${statusText}</p></div>`;
             clonedElement.appendChild(scoreResultDiv);
-            // --- END UPDATE ---
 
-
-            // Mulai proses ekspor (dengan spinner)
             const exportBtn = document.getElementById('export-pdf-btn');
             exportBtn.disabled = true;
             const originalHtml = exportBtn.innerHTML;
             exportBtn.innerHTML = '<svg class="animate-spin mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Mempersiapkan & Mengunduh...';
 
-            // PENTING: Menggunakan clonedBody sebagai sumber, bukan clonedElement
             html2pdf().set(opt).from(clonedBody).save().then(() => {
                 exportBtn.disabled = false;
                 exportBtn.innerHTML = originalHtml;
@@ -929,428 +1189,161 @@
             });
         }
         
-        /**
-         * Mengatur ulang semua input form ke nilai kosong atau default checked HTML
-         */
         function initializeFormState() {
-            // 1. Bersihkan semua input teks, number, date, dan textarea
+            calculatedMaxTotalScore = calculateMaxPossibleScore(); 
+            document.getElementById('max-score-label').textContent = `Maksimum: ${calculatedMaxTotalScore}`;
+
             document.querySelectorAll('#form-content input:not([type="radio"]), #form-content textarea').forEach(input => {
                 input.value = '';
             });
             
-            // 2. Set ulang semua radio button kriteria ke nilai default ('0' / NA) dan terapkan warna
-            document.querySelectorAll('#inspection-body input[type="radio"]').forEach(input => {
+            // Set default radio state (0/NA for inspection points, Tidak for special requirements)
+            document.querySelectorAll('.score-input').forEach(input => {
+                // Hapus semua penanda yang mungkin ada dari rendering
                 const label = document.querySelector(`label[for="${input.id}"]`);
                 if (label) {
-                    // Hapus semua kelas warna latar belakang dan ketebalan
                     label.classList.remove('bg-score-red', 'bg-score-green', 'text-white', 'font-semibold');
-                    
-                    if (input.value === '0') {
-                        input.checked = true;
-                        // Terapkan latar belakang hijau, teks putih, dan font tebal/semi-bold (600) untuk kontras
+                }
+
+                // Cek apakah ini input default (value 0)
+                if (input.value === '0') {
+                    input.checked = true;
+                    if (label) {
                         label.classList.add('bg-score-green', 'text-white', 'font-semibold');
                     }
                 }
             });
             
-            // 3. Set ulang semua radio button persyaratan khusus ke nilai default ('Tidak')
             document.querySelectorAll('#special-requirements input[type="radio"]').forEach(input => {
-                if (input.value === 'Tidak') {
-                    input.checked = true;
-                }
+                if (input.value === 'Tidak') input.checked = true;
             });
 
-            // 4. Reset output AI
             document.getElementById('ai-report-output').textContent = 'Tekan tombol di atas untuk menghasilkan ringkasan temuan kritis dan langkah perbaikan yang direkomendasikan oleh Gemini AI.';
-
-            // 5. Hitung skor awal
             calculateScore();
         }
 
-        /**
-         * Fungsi untuk mengelola perubahan warna latar belakang pada kotak skor saat diklik.
-         * @param {Event} event - Event change dari radio button.
-         */
-        function handleScoreChange(event) {
-            const currentInput = event.target;
-            const score = parseInt(currentInput.value, 10);
-            const name = currentInput.name;
-
-            // 1. Hapus semua kelas warna latar belakang dan ketebalan dari semua label dalam grup radio yang sama
-            document.querySelectorAll(`input[name="${name}"] + .score-label`).forEach(label => {
-                label.classList.remove('bg-score-red', 'bg-score-green', 'text-white', 'font-semibold');
-                // Pastikan font-medium tetap ada sebagai default/fallback saat tidak dipilih
-                label.classList.add('font-medium'); 
-            });
-            
-            // 2. Tentukan dan terapkan warna latar belakang, teks, dan ketebalan yang sesuai pada label yang baru dipilih
-            const selectedLabel = currentInput.nextElementSibling;
-            
-            if (score > 0) {
-                // Merah untuk skor 1, 2, atau 3. Tambahkan text-white dan font-semibold
-                selectedLabel.classList.add('bg-score-red', 'text-white', 'font-semibold');
-                selectedLabel.classList.remove('font-medium');
-            } else {
-                // Hijau (Rich Thyme) untuk skor 0 (NA). Tambahkan text-white dan font-semibold
-                selectedLabel.classList.add('bg-score-green', 'text-white', 'font-semibold');
-                selectedLabel.classList.remove('font-medium');
-            }
-
-            // 3. Hitung skor total
-            calculateScore();
-        }
-
-        /**
-         * Menghitung dan memperbarui skor IKL secara real-time.
-         */
-        function calculateScore() {
-            const scores = document.querySelectorAll('.score-input:checked');
-            let totalScore = 0;
-
-            scores.forEach(input => {
-                const value = input.value;
-                // Pastikan input adalah angka, NA dihitung sebagai 0
-                if (!isNaN(parseInt(value, 10))) {
-                    // PENTING: Saat menyimpan skor, kita hanya menjumlahkan nilai yang TERPILIH.
-                    totalScore += parseInt(value, 10);
-                }
-            });
-
-            // Hitung Skor IKL
-            const iklScore = 100 - ((totalScore / MAX_TOTAL_SCORE) * 100);
-            const iklProgress = Math.min(100, Math.max(0, iklScore));
-
-            // Tentukan warna berdasarkan skor
-            const scoreColor = iklScore >= 80 ? 'var(--tw-colors-score-green)' : 'var(--tw-colors-score-red)';
-            const progressColor = iklScore >= 80 ? 'bg-score-green' : 'bg-score-red';
-            
-            // Tentukan Status Kelayakan (NEW)
-            const iklStatusText = iklScore >= 80 ? 'MEMENUHI SYARAT' : 'TIDAK MEMENUHI SYARAT';
-            const iklStatusColor = iklScore >= 80 ? 'text-score-green' : 'text-score-red';
-            
-            // Perbarui tampilan total skor
-            document.getElementById('total-score-value').textContent = totalScore;
-            
-            // Perbarui tampilan skor IKL
-            const finalScoreElement = document.getElementById('final-ikl-score');
-            finalScoreElement.textContent = iklScore.toFixed(2);
-            finalScoreElement.style.color = scoreColor;
-            
-            // Perbarui Status IKL (NEW)
-            const iklStatusElement = document.getElementById('ikl-status');
-            iklStatusElement.textContent = iklStatusText;
-            iklStatusElement.classList.remove('text-score-green', 'text-score-red');
-            iklStatusElement.classList.add(iklStatusColor);
-
-
-            // Perbarui progress bar
-            const progressBar = document.getElementById('score-progress-bar');
-            progressBar.style.width = `${iklProgress}%`;
-            progressBar.classList.remove('bg-score-green', 'bg-score-red');
-            progressBar.classList.add(progressColor);
-        }
-
-        /**
-         * Memeriksa skor maksimum untuk area tertentu (1, 2, atau 3)
-         */
-        function getMaxScore(areaScore) {
-            if (areaScore === 'NA') return 0;
-            return parseInt(areaScore, 10);
-        }
-
-        /**
-         * Membuat baris kriteria untuk tabel inspeksi dan menambahkan listener.
-         */
-        function renderCriteriaTable() {
-            const body = document.getElementById('inspection-body');
-            body.innerHTML = '';
-            
-            CRITERIA.forEach((crit) => {
-                const row = document.createElement('tr');
-                row.className = 'criteria-row border-b hover:bg-kitchen-cream transition-colors';
-
-                // Kolom No. (Rata Tengah & Vertikal)
-                row.innerHTML += `
-                    <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-medium align-middle text-gray-700">${crit.no}</td>
-                    <!-- Kolom Persyaratan/Kriteria (Rata Tengah Vertikal) -->
-                    <td class="px-4 py-3 text-sm text-gray-700 align-middle">${crit.text}</td>
-                `;
-
-                const areas = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-                areas.forEach(area => {
-                    const maxScore = getMaxScore(crit.areas[area]); // Nilai max score untuk area ini (atau 0 jika NA)
-                    const inputName = `crit-${crit.no}-${area}`;
-                    
-                    let cellContent;
-                    if (crit.areas[area] === 'NA') {
-                        cellContent = `<span class="text-xs text-gray-500 font-medium">NA</span>`;
-                    } else {
-                        // Tentukan opsi yang tersedia berdasarkan maxScore
-                        const scoreOptions = ['NA'];
-                        for (let i = 1; i <= maxScore; i++) {
-                            scoreOptions.push(i);
-                        }
-                        
-                        const radioButtons = scoreOptions.map(val => {
-                            const numericValue = val === 'NA' ? 0 : val;
-                            // Tambahkan kelas background default untuk inisialisasi visual (NA dipilih)
-                            // Hapus font-semibold di sini, akan ditambahkan di JS saat dipilih
-                            const initialBgClass = (val === 'NA') ? 'bg-score-green text-white font-semibold' : ''; 
-                            
-                            return `
-                                <input type="radio" id="${inputName}-${val}" name="${inputName}" value="${numericValue}" class="score-input hidden">
-                                <label for="${inputName}-${val}" class="score-label ${initialBgClass}">${val}</label>
-                            `;
-                        }).join('');
-
-                        cellContent = `<div class="flex flex-col space-y-1">${radioButtons}</div>`;
-                    }
-
-                    // Tambahkan kelas align-top di sini
-                    const cell = document.createElement('td');
-                    cell.className = 'px-1 py-1 whitespace-nowrap text-center w-12 align-top'; 
-                    cell.innerHTML = cellContent;
-                    row.appendChild(cell);
-                });
-
-                body.appendChild(row);
-            });
-            
-            // Tambahkan event listener ke semua input radio agar MENGELOLA PERUBAHAN WARNA DAN MENGHITUNG SKOR
-            document.querySelectorAll('.score-input').forEach(input => {
-                input.addEventListener('change', handleScoreChange);
-            });
-        }
-        
-        /**
-         * Membuat baris persyaratan khusus dan menambahkan listener.
-         */
         function renderSpecialRequirements() {
             const container = document.getElementById('special-requirements');
             container.innerHTML = '';
-
             SPECIAL_REQUIREMENTS.forEach((req) => {
                 const div = document.createElement('div');
-                // UPDATE: Gunakan items-center untuk alignment vertikal tengah pada penomoran D.
-                div.className = 'flex items-center p-3 bg-white rounded-lg border';
+                div.className = 'flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600';
                 
-                // Styling penomoran: text-sm dan text-gray-700
-                div.innerHTML = `
-                    <div class="flex-shrink-0 w-12 text-sm text-gray-700">${req.no}</div> <!-- Penomoran disamakan ukurannya (text-sm) dan warnanya (text-gray-700) dengan teks persyaratan -->
-                    <div class="flex-grow text-sm text-gray-700">${req.text}</div> <!-- Teks pertanyaan menggunakan text-gray-700 -->
-                    <div class="flex-shrink-0 flex space-x-4 ml-4">
-                        <label class="inline-flex items-center cursor-pointer">
-                            <!-- Menggunakan kelas khusus 'radio-ya' untuk warna bulatan hijau -->
-                            <input type="radio" name="req-${req.no}" value="Ya" class="form-radio radio-ya h-5 w-5 focus:ring-kitchen-dark">
-                            <span class="ml-2 text-sm text-gray-700 font-medium">Ya</span>
-                        </label>
-                        <label class="inline-flex items-center cursor-pointer">
-                            <!-- Menggunakan kelas khusus 'radio-tidak' untuk warna bulatan merah -->
-                            <input type="radio" name="req-${req.no}" value="Tidak" class="form-radio radio-tidak h-5 w-5 focus:ring-score-red">
-                            <span class="ml-2 text-sm text-gray-700 font-medium">Tidak</span>
-                        </label>
-                    </div>
-                `;
+                // HANDLING HEADER FOR SPECIAL REQS
+                if (req.isHeader) {
+                    div.classList.add('bg-kitchen-main/10', 'dark:bg-gray-600');
+                    div.innerHTML = `<div class="w-12 text-sm font-bold text-kitchen-dark dark:text-white flex-shrink-0 text-center">${req.no}</div><div class="flex-grow text-sm font-bold text-kitchen-dark dark:text-white">${req.text}</div>`;
+                    container.appendChild(div);
+                    return;
+                }
+
+                const displayNo = req.displayNo || req.no;
+                // Add indentation visually for sub-items
+                const indentClass = req.displayNo ? "pl-4" : "";
+
+                div.innerHTML = `<div class="flex-shrink-0 w-12 text-sm text-gray-700 dark:text-gray-300 text-center">${displayNo}</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300 ${indentClass}">${req.text}</div><div class="flex-shrink-0 flex space-x-4 ml-4"><label class="inline-flex items-center cursor-pointer"><input type="radio" name="req-${req.no}" value="Ya" class="form-radio radio-ya h-5 w-5 focus:ring-kitchen-dark"><span class="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">Ya</span></label><label class="inline-flex items-center cursor-pointer"><input type="radio" name="req-${req.no}" value="Tidak" class="form-radio radio-tidak h-5 w-5 focus:ring-score-red"><span class="ml-2 text-sm text-gray-700 dark:text-gray-300 font-medium">Tidak</span></label></div>`;
                 container.appendChild(div);
             });
-
-            // Karena tidak ada lagi saveFormData, listener ini hanya perlu ada jika ingin melacak perubahan.
-            // Namun karena tidak ada logika lain yang memproses input teks/checkbox lain, kita biarkan kosong.
+            // Add listeners for special requirements autosave
+             document.querySelectorAll('#special-requirements input[type="radio"]').forEach(input => {
+                input.addEventListener('change', saveFormData);
+            });
         }
-        
-        /**
-         * Mengambil lokasi pengguna saat ini (lintang dan bujur)
-         */
+
+        // --- INIT ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme(); 
+            renderCriteriaTable();
+            renderSpecialRequirements();
+            initializeFormState(); 
+            initScoreBarState(); 
+            
+            // Restore from Autosave
+            loadFormData();
+
+            // Add Autosave Listeners to text inputs
+            document.querySelectorAll('.autosave-input').forEach(input => {
+                input.addEventListener('input', saveFormData);
+            });
+
+            document.getElementById('get-location-btn').addEventListener('click', getLocation);
+            document.getElementById('export-pdf-btn').addEventListener('click', exportToPDF);
+            document.getElementById('generate-ai-report-btn').addEventListener('click', generateReport);
+            document.getElementById('reset-form-btn').addEventListener('click', resetForm);
+            
+            // Theme toggle listener
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        });
+
         function getLocation() {
             const latInput = document.getElementById('latitude');
             const lonInput = document.getElementById('longitude');
             const btn = document.getElementById('get-location-btn');
             
-            const originalLatPlaceholder = latInput.placeholder;
-            const originalLonPlaceholder = lonInput.placeholder;
-            
-            // Ikon Pinpoint Peta
-            const MAP_PIN_SVG = `<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9a2 2 0 100-4 2 2 0 000 4z"/></svg>`;
+            const MAP_PIN_SVG = `<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9a2 2 0 100-4 2 2 0 000 4z"/></svg>`;
             const SPINNER_SVG = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
 
-
-            latInput.value = 'Mengambil...';
-            lonInput.value = 'Mengambil...';
-            btn.disabled = true;
-            btn.innerHTML = `${SPINNER_SVG} Memuat Lokasi...`;
+            latInput.value = 'Mengambil...'; lonInput.value = 'Mengambil...';
+            btn.disabled = true; btn.innerHTML = `${SPINNER_SVG} Memuat Lokasi...`;
 
             if (navigator.geolocation) {
-                const options = {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                    maximumAge: 0 
-                };
-                
+                const options = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
                         latInput.value = position.coords.latitude.toFixed(6);
                         lonInput.value = position.coords.longitude.toFixed(6);
-                        btn.disabled = false;
-                        // Menggunakan ikon Pinpoint Peta
-                        btn.innerHTML = `${MAP_PIN_SVG} Dapatkan Lokasi`;
+                        btn.disabled = false; btn.innerHTML = `${MAP_PIN_SVG} Dapatkan Lokasi`;
+                        saveFormData(); 
                     },
                     (error) => {
-                        // Perbaikan: Catat error dengan properti yang lebih jelas
-                        console.error("Error getting location. Code:", error.code, "Message:", error.message, error);
-                        let errorMessage;
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                errorMessage = "Akses lokasi ditolak oleh pengguna.";
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                errorMessage = "Informasi lokasi tidak tersedia/error jaringan.";
-                                break;
-                            case error.TIMEOUT:
-                                errorMessage = "Waktu tunggu (timeout) habis. Coba lagi.";
-                                break;
-                            default:
-                                errorMessage = `Error tidak diketahui (Kode: ${error.code}).`;
-                                break;
-                        }
-                        
-                        latInput.value = '';
-                        lonInput.value = '';
-                        latInput.placeholder = `Gagal: ${errorMessage}`;
-                        lonInput.placeholder = '—';
-                        
-                        btn.disabled = false;
-                        btn.textContent = 'Gagal Mendapatkan Lokasi';
-                        btn.classList.remove('bg-kitchen-dark', 'hover:bg-kitchen-dark/80');
-                        btn.classList.add('bg-score-red', 'hover:bg-score-red/80');
-                        
-                        console.log(`[Peringatan Geolokasi] ${errorMessage}. Pastikan layanan lokasi diaktifkan.`);
-                        
-                        setTimeout(() => {
-                            latInput.placeholder = originalLatPlaceholder;
-                            lonInput.placeholder = originalLonPlaceholder;
-                            btn.innerHTML = `${MAP_PIN_SVG} Dapatkan Lokasi`;
-                            btn.classList.remove('bg-score-red', 'hover:bg-score-red/80');
-                            btn.classList.add('bg-kitchen-dark', 'hover:bg-kitchen-dark/80');
-                        }, 5000);
+                        console.error("Error location", error);
+                        latInput.value = ''; lonInput.value = '';
+                        latInput.placeholder = `Gagal`; lonInput.placeholder = '—';
+                        btn.disabled = false; btn.textContent = 'Gagal';
+                        setTimeout(() => { btn.innerHTML = `${MAP_PIN_SVG} Dapatkan Lokasi`; }, 3000);
                     },
                     options 
                 );
             } else {
-                latInput.value = 'N/A';
-                lonInput.value = 'N/A';
-                btn.disabled = false;
-                btn.textContent = 'Geolokasi Tidak Didukung';
-                console.log('Peringatan: Browser Anda tidak mendukung Geolocation API.');
+                latInput.value = 'N/A'; lonInput.value = 'N/A';
+                btn.disabled = false; btn.textContent = 'Tidak Didukung';
             }
         }
-        
-        /**
-         * Menghasilkan ringkasan analisis dan rekomendasi perbaikan menggunakan Gemini AI.
-         */
+
         async function generateReport() {
             const outputDiv = document.getElementById('ai-report-output');
             const loadingDiv = document.getElementById('ai-loading');
             const errorDiv = document.getElementById('ai-error');
             const generateBtn = document.getElementById('generate-ai-report-btn');
 
-            // 1. Ambil data dari formulir
             const iklScore = document.getElementById('final-ikl-score').textContent;
             const totalFailedScore = document.getElementById('total-score-value').textContent;
             const catatanAkhir = document.getElementById('catatan_akhir').value.trim();
-            const sppgName = document.getElementById('nama_sppg').value.trim() || 'SPPG (Tidak Bernama)';
+            const sppgName = document.getElementById('nama_sppg').value.trim() || 'SPPG';
 
-            // 2. Persiapan UI
-            outputDiv.textContent = '';
-            errorDiv.classList.add('hidden');
-            loadingDiv.classList.remove('hidden');
-            generateBtn.disabled = true;
+            outputDiv.textContent = ''; errorDiv.classList.add('hidden'); loadingDiv.classList.remove('hidden'); generateBtn.disabled = true;
 
-            // 3. Buat Prompt
-            const systemPrompt = `Anda adalah seorang ahli sanitasi dan higienitas pangan senior di Kementerian Kesehatan. Tugas Anda adalah menganalisis hasil Inspeksi Kesehatan Lingkungan (IKL) fasilitas pelayanan gizi. Berdasarkan data yang diberikan, buatlah analisis dan rekomendasi yang sangat ringkas, profesional, dan terstruktur dalam format Markdown.
-
-Struktur output yang harus Anda hasilkan adalah:
-
+            const systemPrompt = `Anda adalah seorang ahli sanitasi. Analisis hasil IKL berikut. Format Markdown.
 ### Ringkasan Temuan Kritis (Maks 3 poin)
-* [Analisis kondisi berdasarkan skor total dan catatan manual]
-* [Poin kritis lainnya yang mungkin muncul dari total skor yang tidak terpenuhi (Total Nilai Tidak Terpenuhi)]
+* [Analisis]
+### Rekomendasi Perbaikan (Maks 5 langkah)
+1. [Langkah]`;
 
-### Rekomendasi Perbaikan (Maks 5 langkah, fokus pada tindakan segera)
-1.  [Langkah perbaikan spesifik, terukur, dan segera]
-2.  [Langkah perbaikan spesifik]
-3.  [Langkah perbaikan spesifik]
-4.  ...
-`;
-
-            const userQuery = `Nama Fasilitas: ${sppgName}
-Skor IKL Akhir: ${iklScore}
-Total Nilai Tidak Terpenuhi (dari maks 315): ${totalFailedScore}
-Catatan Kualitatif dari Pemeriksa: "${catatanAkhir || 'Tidak ada catatan manual tambahan dari pemeriksa.'}"
-
-Mohon buatkan analisis dan rekomendasi di atas.`;
-
-            // 4. Panggil Gemini API
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-            };
+            const userQuery = `Fasilitas: ${sppgName}, Skor: ${iklScore}, Nilai Kurang: ${totalFailedScore}, Catatan: "${catatanAkhir}"`;
+            const payload = { contents: [{ parts: [{ text: userQuery }] }], systemInstruction: { parts: [{ text: systemPrompt }] } };
 
             try {
-                const response = await fetchWithExponentialBackoff(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
+                const response = await fetchWithExponentialBackoff(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 const result = await response.json();
                 const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-
-                if (text) {
-                    outputDiv.textContent = text;
-                } else {
-                    outputDiv.textContent = "Gagal menghasilkan laporan. Respon API tidak valid.";
-                    errorDiv.classList.remove('hidden');
-                }
+                if (text) { outputDiv.textContent = text; } 
+                else { outputDiv.textContent = "Gagal. Respon tidak valid."; errorDiv.classList.remove('hidden'); }
             } catch (error) {
-                console.error("Gemini API Error:", error);
-                outputDiv.textContent = "Gagal menghubungi server AI. Pastikan Anda terhubung ke internet.";
-                errorDiv.classList.remove('hidden');
+                console.error("API Error:", error); outputDiv.textContent = "Gagal koneksi."; errorDiv.classList.remove('hidden');
             } finally {
-                loadingDiv.classList.add('hidden');
-                generateBtn.disabled = false;
+                loadingDiv.classList.add('hidden'); generateBtn.disabled = false;
             }
         }
-
-
-        // --- INISIALISASI ---
-
-        // Jalankan fungsi saat DOM selesai dimuat
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Render semua kriteria dan persyaratan
-            renderCriteriaTable();
-            renderSpecialRequirements();
-
-            // 2. Set status formulir ke default (kosong / NA / Tidak)
-            initializeFormState(); 
-
-            // 3. Tambahkan listener 'input' dan 'change' ke semua input umum agar form tetap terisi
-            document.querySelectorAll('#form-content input:not([type="radio"]), #form-content textarea').forEach(input => {
-                input.addEventListener('input', calculateScore); 
-            });
-
-
-            // 4. Tambahkan listener untuk tombol lokasi
-            document.getElementById('get-location-btn').addEventListener('click', getLocation);
-            
-            // 5. Tambahkan listener untuk tombol ekspor PDF
-            document.getElementById('export-pdf-btn').addEventListener('click', exportToPDF);
-
-            // 6. Tambahkan listener untuk tombol Generate AI Report
-            document.getElementById('generate-ai-report-btn').addEventListener('click', generateReport);
-            
-            // 7. Set input lat/lon sebagai readonly
-            document.getElementById('latitude').setAttribute('readonly', 'true');
-            document.getElementById('longitude').setAttribute('readonly', 'true');
-        });
     </script>
 </body>
 </html>
