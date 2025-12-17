@@ -125,12 +125,15 @@
         
         /* Fixed Score Bar - Material Bottom App Bar/Prominent Bar */
         #fixed-score-bar {
-            /* Add pronounced shadow and more rounding on top */
-            border-top-left-radius: 28px;
-            border-top-right-radius: 28px;
+            /* Hanya menyisakan bayangan (KEPT) */
             box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.2); /* Stronger shadow */
             background-color: #FBFBF9; /* Light surface color */
-            border-top: 4px solid #779D89; /* Material accent on top */
+            
+            /* Hapus border atas dan sudut membulat */
+            border-top: none; 
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            
             position: fixed; 
             bottom: 0; 
             left: 0; 
@@ -143,7 +146,6 @@
         /* Dark Mode Score Bar */
         .dark #fixed-score-bar {
             background-color: #212121; /* Darker surface in dark mode */
-            border-top-color: #457A57;
             color: #e2e8f0;
         }
 
@@ -170,16 +172,25 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
         }
         
-        /* Input Material Style */
+        /* Input Material Style (Diperbarui untuk memenuhi permintaan user) */
         .autosave-input {
-            /* Remove standard border, use underline style */
-            @apply border-b border-gray-400 p-2 rounded-t-lg bg-gray-100 dark:bg-gray-700 shadow-none;
-            border: none;
-            border-radius: 8px 8px 0 0;
+            /* Remove box shadow and ensure flat top corners */
+            box-shadow: none !important;
+            border-radius: 0 !important; 
+            outline: none !important;
+            
+            /* Override any existing border to just show the bottom line */
+            border: none !important;
+            border-bottom: 1px solid #9ca3af !important; /* Base border color (gray-400) */
+            
+            /* Apply Tailwind classes for structure and coloring */
+            @apply mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white bg-gray-100 dark:bg-gray-700;
             transition: border-bottom-color 0.2s, background-color 0.2s;
         }
         .autosave-input:focus {
-            @apply ring-0 border-b-2 border-kitchen-dark dark:border-kitchen-main shadow-md;
+            /* Focus style: Thick RED bottom border, NO ring, NO shadow */
+            border-bottom: 2px solid #cc3333 !important; /* Focus border color (score-red) */
+            @apply ring-0 shadow-none; 
         }
 
 
@@ -275,21 +286,21 @@
                         <!-- Input fields dengan styling dark mode -->
                         <label class="block">
                             <span class="text-sm font-medium text-gray-700 dark:text-gray-300">1. Nama SPPG</span>
-                            <input type="text" id="nama_sppg" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white">
+                            <input type="text" id="nama_sppg" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white">
                         </label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">2. Alamat</span><input type="text" id="alamat_sppg" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">3. Nama Pengelola</span><input type="text" id="nama_pengelola" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">4. Kontak Pengelola</span><input type="text" id="kontak_pengelola" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">5. Jumlah Porsi</span><input type="number" id="jumlah_porsi" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">6. Distribusi Pangan</span><input type="text" id="distribusi_pangan" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">7. Jumlah Total Penjamah Pangan</span><input type="number" id="total_penjamah" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">8. Jumlah Penjamah Pangan Terlatih</span><input type="number" id="penjamah_bersertifikat" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">9. Nama Pemeriksa</span><input type="text" id="nama_pemeriksa" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
-                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">10. Tanggal Pemeriksaan</span><input type="date" id="tanggal_pemeriksaan" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">2. Alamat</span><input type="text" id="alamat_sppg" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">3. Nama Pengelola</span><input type="text" id="nama_pengelola" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">4. Kontak Pengelola</span><input type="text" id="kontak_pengelola" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">5. Jumlah Porsi</span><input type="number" id="jumlah_porsi" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">6. Distribusi Pangan</span><input type="text" id="distribusi_pangan" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">7. Jumlah Total Penjamah Pangan</span><input type="number" id="total_penjamah" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">8. Jumlah Penjamah Pangan Terlatih</span><input type="number" id="penjamah_bersertifikat" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">9. Nama Pemeriksa</span><input type="text" id="nama_pemeriksa" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">10. Tanggal Pemeriksaan</span><input type="date" id="tanggal_pemeriksaan" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
 
                         <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-kitchen-main/30 dark:border-gray-500 pt-4 mt-4">
-                            <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Lintang (Latitude)</span><input type="text" id="latitude" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white" placeholder="-6.2088" readonly></label>
-                            <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Bujur (Longitude)</span><input type="text" id="longitude" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white" placeholder="106.8456" readonly></label>
+                            <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Lintang (Latitude)</span><input type="text" id="latitude" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white" placeholder="-6.2088" readonly></label>
+                            <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Bujur (Longitude)</span><input type="text" id="longitude" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white" placeholder="106.8456" readonly></label>
                             <!-- Tombol Dapatkan Lokasi -->
                             <button id="get-location-btn" class="mt-6 md:mt-1 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md text-sm">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9a2 2 0 100-4 2 2 0 000 4z"/></svg>
@@ -396,17 +407,17 @@
                 <div id="content-e" class="collapsible-content collapsed">
                     <label class="block mb-4">
                         <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Catatan dan saran</span>
-                        <textarea id="catatan_akhir" rows="4" class="autosave-input mt-1 block w-full shadow-sm p-2 text-sm text-gray-700 dark:text-white"></textarea>
+                        <textarea id="catatan_akhir" rows="4" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></textarea>
                     </label>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <p class="font-semibold text-gray-700 dark:text-gray-300 mb-2 text-sm">Petugas Pemeriksa</p>
-                            <input type="text" placeholder="" class="autosave-input block w-full shadow-sm p-2 mb-4 text-sm text-gray-700 dark:text-white" id="ttd_pemeriksa_nama">
+                            <input type="text" placeholder="" class="autosave-input block w-full p-2 mb-4 text-sm text-gray-700 dark:text-white" id="ttd_pemeriksa_nama">
                             <div class="border-b border-dashed border-gray-400 pt-12"><span class="text-xs text-gray-500 dark:text-gray-400">Tanda tangan</span></div>
                         </div>
                         <div>
                             <p class="font-semibold text-gray-700 dark:text-gray-300 mb-2 text-sm">Pengelola SPPG</p>
-                            <input type="text" placeholder="" class="autosave-input block w-full shadow-sm p-2 mb-4 text-sm text-gray-700 dark:text-white" id="ttd_pengelola_nama">
+                            <input type="text" placeholder="" class="autosave-input block w-full p-2 mb-4 text-sm text-gray-700 dark:text-white" id="ttd_pengelola_nama">
                             <div class="border-b border-dashed border-gray-400 pt-12"><span class="text-xs text-gray-500 dark:text-gray-400">Tanda tangan</span></div>
                         </div>
                     </div>
@@ -446,7 +457,7 @@
     </div>
 
     <!-- Bagian C: Total Skor dan Hasil (Fixed/Sticky Bottom - Material Bottom App Bar) -->
-    <div id="fixed-score-bar" class="p-4 md:p-6 border-t dark:border-gray-600">
+    <div id="fixed-score-bar" class="p-4 md:p-6">
         
         <!-- FAB Toggle Button (Central Action Button) -->
         <button id="score-toggle-btn" onclick="toggleScoreBar()" class="text-white flex items-center justify-center">
@@ -460,12 +471,13 @@
         <div id="score-content" class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 ease-in-out">
             
             <!-- Tombol Aksi (Kiri/Bawah pada mobile) -->
-            <div class="flex flex-col md:flex-row gap-2 w-full md:w-auto order-3 md:order-1">
-                <button id="reset-form-btn" class="flex-shrink-0 flex items-center justify-center bg-score-red hover:bg-score-red/90 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md whitespace-nowrap w-full md:w-auto text-sm">
+            <!-- PERUBAHAN: Menggunakan flex-row dan justify-between pada mobile dan mengatur lebar 1/2 untuk tombol -->
+            <div class="flex flex-row justify-between gap-2 w-full md:w-auto order-3 md:order-1">
+                <button id="reset-form-btn" class="flex-shrink-0 flex items-center justify-center bg-score-red hover:bg-score-red/90 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md whitespace-nowrap w-1/2 md:w-auto text-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     Reset
                 </button>
-                <button id="export-pdf-btn" class="flex-shrink-0 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg whitespace-nowrap w-full md:w-auto text-sm">
+                <button id="export-pdf-btn" class="flex-shrink-0 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg whitespace-nowrap w-1/2 md:w-auto text-sm">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Unduh
                 </button>
@@ -1137,7 +1149,7 @@
         function resetForm() {
             // Menggunakan modal custom untuk konfirmasi
             const confirmModal = document.createElement('div');
-            confirmModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            confirmModal.className = 'fixed inset-0 bg-black bg-opacity50 flex items-center justify-center z-50';
             confirmModal.innerHTML = `
                 <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full">
                     <h3 class="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">Konfirmasi Reset</h3>
