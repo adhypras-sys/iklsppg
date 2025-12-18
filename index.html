@@ -249,7 +249,8 @@
             <div id="autosave-status" class="mt-2 text-xs font-light italic opacity-80 h-4"></div>
 
             <button id="theme-toggle" class="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors focus:outline-none" title="Ganti Tema">
-                <svg id="icon-sun" class="w-6 h-6 text-yellow-300 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <!-- Ikon Matahari diperbarui menjadi text-white -->
+                <svg id="icon-sun" class="w-6 h-6 text-white hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 <svg id="icon-moon" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
             </button>
         </header>
@@ -567,7 +568,7 @@
             { no: 7, text: "Penyimpanan sampel arsip (bank sample) harian selama 2 x 24 jam di chiller." },
             { no: 8, text: "Tersedia perlengkapan P3K dan APAR" },
             { no: '9', text: "Tersedia dokumentasi atau rekaman:", isHeader: true, group: '9_doc' },
-            { no: '9.a', displayNo: 'a', text: "SPPG memiliki SOP di bawah ini (dapat ditunjukkan SOP dan rekaman daftar hadir sosialiasinya), yaitu:", isSubHeader: true, group: '9_doc' },
+            { no: '9.a', displayNo: 'a', text: "SPPG memiliki SOP di bawah ini (dapat ditunjukkan SOP dan rekaman daftar hadir sosialisasinya), yaitu:", isSubHeader: true, group: '9_doc' },
             { no: '9.a.1', text: "SOP sanitasi fasilitas dan ruangan", displayNo: 'a.1', group: '9_doc' },
             { no: '9.a.2', text: "SOP sanitasi peralatan", displayNo: 'a.2', group: '9_doc' },
             { no: '9.a.3', text: "SOP persiapan bahan pangan", displayNo: 'a.3', group: '9_doc' },
@@ -588,6 +589,7 @@
         const STORAGE_KEY = 'ikl_sppg_autosave_v1';
         const THEME_KEY = 'ikl_sppg_theme_v1';
         const SCORE_BAR_STATE_KEY = 'ikl_sppg_score_bar_state';
+        const apiKey = ""; // Diset oleh environment
         const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
         let isInternalUpdate = false;
 
@@ -749,10 +751,10 @@
                 } else if (req.isSubHeader) {
                     if (req.group) tr.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
                     const subHeaderNo = req.displayNo || '';
-                    // PERUBAHAN: Menggunakan font-normal untuk subheader "a" agar tidak tebal
+                    // PERUBAHAN: Menghilangkan kelas 'italic' agar teks subheader tegak
                     tr.innerHTML = `
                         <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-normal align-middle border-r border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">${subHeaderNo}</td>
-                        <td colspan="2" class="px-4 py-3 text-sm font-normal italic text-gray-600 dark:text-gray-300 align-middle">${req.text}</td>
+                        <td colspan="2" class="px-4 py-3 text-sm font-normal text-gray-600 dark:text-gray-300 align-middle">${req.text}</td>
                     `;
                 } else {
                     if (req.group) tr.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
@@ -781,8 +783,8 @@
                         cardDiv.innerHTML = `<div class="text-kitchen-dark dark:text-white">${displayNo}. ${req.text}</div>`;
                     }
                 } else if (req.isSubHeader) {
-                    // PERUBAHAN: Menggunakan font-normal untuk kartu mobile subheader
-                    cardDiv.className = `pl-4 py-2 text-sm font-normal italic text-gray-600 dark:text-gray-300`;
+                    // PERUBAHAN: Menghilangkan kelas 'italic' agar teks kartu mobile subheader tegak
+                    cardDiv.className = `pl-4 py-2 text-sm font-normal text-gray-600 dark:text-gray-300`;
                     if (req.group) cardDiv.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
                     cardDiv.innerHTML = (req.displayNo ? `${req.displayNo}. ` : '') + req.text;
                 } else {
@@ -938,6 +940,25 @@
             calculateScore();
         }
 
+        async function fetchWithExponentialBackoff(url, options, retries = 5) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url + apiKey, options);
+                    if (response.ok) return response;
+                    if (response.status === 429 || response.status >= 500) {
+                        const delay = Math.pow(2, i) * 1000;
+                        await new Promise(r => setTimeout(r, delay));
+                        continue;
+                    }
+                    throw new Error(`Request failed with status ${response.status}`);
+                } catch (e) {
+                    if (i === retries - 1) throw e;
+                    const delay = Math.pow(2, i) * 1000;
+                    await new Promise(r => setTimeout(r, delay));
+                }
+            }
+        }
+
         function resetForm() {
             if (confirm("Apakah Anda yakin ingin mereset semua formulir?")) {
                 localStorage.removeItem(STORAGE_KEY);
@@ -998,16 +1019,17 @@
             document.getElementById('generate-ai-report-btn').addEventListener('click', async () => {
                 const outputDiv = document.getElementById('ai-report-output');
                 const loadingDiv = document.getElementById('ai-loading');
-                outputDiv.textContent = ''; loadingDiv.classList.remove('hidden');
+                const errorDiv = document.getElementById('ai-error');
+                outputDiv.textContent = ''; loadingDiv.classList.remove('hidden'); errorDiv.classList.add('hidden');
                 const prompt = `Buat laporan ringkas inspeksi sanitasi SPPG dengan skor ${document.getElementById('final-ikl-score').textContent}. Fokus pada temuan kritis.`;
                 try {
-                    const res = await fetch(API_URL.replace("?key=", "") + apiKey, { 
+                    const res = await fetchWithExponentialBackoff(API_URL.replace("?key=", ""), { 
                         method: 'POST', headers: { 'Content-Type': 'application/json' }, 
                         body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) 
                     });
                     const result = await res.json();
-                    outputDiv.textContent = result.candidates?.[0]?.content?.parts?.[0]?.text || "Gagal memuat.";
-                } catch (e) { outputDiv.textContent = "Terjadi kesalahan."; }
+                    outputDiv.textContent = result.candidates?.[0]?.content?.[0]?.parts?.[0]?.text || "Gagal memuat.";
+                } catch (e) { errorDiv.classList.remove('hidden'); }
                 finally { loadingDiv.classList.add('hidden'); }
             });
 
