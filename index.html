@@ -568,7 +568,7 @@
             { no: 7, text: "Penyimpanan sampel arsip (bank sample) harian selama 2 x 24 jam di chiller." },
             { no: 8, text: "Tersedia perlengkapan P3K dan APAR" },
             { no: '9', text: "Tersedia dokumentasi atau rekaman:", isHeader: true, group: '9_doc' },
-            { no: '9.a', displayNo: 'a', text: "SPPG memiliki SOP di bawah ini (dapat ditunjukkan SOP dan rekaman daftar hadir sosialisasinya), yaitu:", isSubHeader: true, group: '9_doc' },
+            { no: '9.a', displayNo: 'a', text: "SPPG memiliki SOP di bawah ini (dapat ditunjukkan SOP dan rekaman daftar hadir sosialiasinya), yaitu:", isSubHeader: true, group: '9_doc' },
             { no: '9.a.1', text: "SOP sanitasi fasilitas dan ruangan", displayNo: 'a.1', group: '9_doc' },
             { no: '9.a.2', text: "SOP sanitasi peralatan", displayNo: 'a.2', group: '9_doc' },
             { no: '9.a.3', text: "SOP persiapan bahan pangan", displayNo: 'a.3', group: '9_doc' },
@@ -993,21 +993,22 @@
             loadFormData(); 
             isInternalUpdate = false;
             
-            // Logika Dapatkan Lokasi (Diperbarui dengan perubahan warna status)
+            // Logika Dapatkan Lokasi (Ikon dipulihkan di semua state)
             document.getElementById('get-location-btn').addEventListener('click', () => {
                 const btn = document.getElementById('get-location-btn');
                 const defaultClasses = ['bg-kitchen-dark', 'hover:bg-kitchen-dark/80'];
                 const errorClasses = ['bg-score-red', 'hover:bg-score-red/90'];
                 const successClasses = ['bg-score-green', 'hover:bg-score-green/90'];
+                
+                const pinIcon = `<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9a2 2 0 100-4 2 2 0 000 4z"/></svg>`;
 
                 btn.disabled = true; 
-                btn.textContent = "Memuat...";
+                btn.innerHTML = pinIcon + "Memuat...";
                 
-                // Kembalikan ke keadaan semula setelah delay
                 const resetBtn = (delay = 3000) => {
                     setTimeout(() => {
                         btn.disabled = false;
-                        btn.textContent = "Dapatkan Lokasi";
+                        btn.innerHTML = pinIcon + "Dapatkan Lokasi";
                         btn.classList.remove(...errorClasses, ...successClasses);
                         btn.classList.add(...defaultClasses);
                     }, delay);
@@ -1018,20 +1019,20 @@
                         document.getElementById('latitude').value = pos.coords.latitude.toFixed(6);
                         document.getElementById('longitude').value = pos.coords.longitude.toFixed(6);
                         
-                        btn.textContent = "Lokasi Diperoleh";
+                        btn.innerHTML = pinIcon + "Lokasi Diperoleh";
                         btn.classList.remove(...defaultClasses, ...errorClasses);
                         btn.classList.add(...successClasses);
                         
                         saveFormData();
                         resetBtn(2000);
                     }, () => {
-                        btn.textContent = "Gagal Mengambil Lokasi";
+                        btn.innerHTML = pinIcon + "Gagal Mengambil Lokasi";
                         btn.classList.remove(...defaultClasses, ...successClasses);
                         btn.classList.add(...errorClasses);
                         resetBtn(3500);
                     });
                 } else {
-                    btn.textContent = "Tidak Didukung Browser";
+                    btn.innerHTML = pinIcon + "Tidak Didukung Browser";
                     btn.classList.remove(...defaultClasses, ...successClasses);
                     btn.classList.add(...errorClasses);
                     resetBtn(3500);
