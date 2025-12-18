@@ -817,7 +817,7 @@
             iklScoreElement.classList.remove('text-ikl-green', 'text-ikl-red');
             iklScoreElement.classList.add(finalScoreColorClass);
             document.getElementById('total-score-value').textContent = totalScore;
-            document.getElementById('max-score-label').textContent = `Maksimum: ${maxScore}`; 
+            document.getElementById('max-score-label').textContent = `maksimum: ${maxScore}`; 
             iklScoreElement.textContent = iklScore.toFixed(2);
             iklStatusElement.classList.remove('text-score-green', 'text-score-red');
             iklStatusElement.textContent = iklStatusText;
@@ -922,7 +922,7 @@
 
         function initializeFormState() {
             calculatedMaxTotalScore = calculateMaxPossibleScore(); 
-            document.getElementById('max-score-label').textContent = `Maksimum: ${calculatedMaxTotalScore}`;
+            document.getElementById('max-score-label').textContent = `maksimum: ${calculatedMaxTotalScore}`;
             document.querySelectorAll('.score-input').forEach(input => {
                 if (input.value == "0") {
                     input.checked = true;
