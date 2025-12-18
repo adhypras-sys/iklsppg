@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="id" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instrumen IKL SPPG Interaktif</title>
+    <!-- Memuat Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Memuat Pustaka html2pdf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <!-- Konfigurasi Tailwind -->
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // Mengaktifkan mode gelap berbasis kelas
+            theme: {
+                extend: {
+                    colors: {
+                        'kitchen-main': '#779D89',
+                        'kitchen-dark': '#457A57',
+                        'kitchen-accent': '#C76E57',
+                        'kitchen-cream': '#FBFBF9',
+                        'score-red': '#cc3333',
+                        'score-green': '#457A57',
+                        
+                        // Warna khusus Dark Mode
+                        'dark-bg': '#121212',       /* Deep dark mode background */
+                        'dark-surface': '#212121',  /* Latar elemen/kartu gelap */
+                        'dark-border': '#4a5568',   /* Border abu-abu */
+                        'dark-text': '#e2e8f0',     /* Teks terang */
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Base body background subtle Material contrast */
+        body {
+            background-color: #f1f3f4; /* Light surface background */
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .dark body {
+            background-color: #121212; /* Deep dark mode background */
+            color: #e2e8f0;
+        }
+
+        /* --- ANIMASI GLOBAL DAN INTERAKSI MATERIAL YOU --- */
+        /* General transition for smooth UI changes */
+        * {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 200ms;
+        }
+        
+        /* Button Press Effect (Material Ripple-like) */
+        button {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform, filter; /* Optimization */
+        }
+        button:active:not(#score-toggle-btn) {
+            transform: scale(0.98); 
+            filter: brightness(0.9);
+        }
+
+        /* Collapsible Content Animation (max-height) */
+        .collapsible-content {
+            transition: max-height 0.4s cubic-bezier(0.2, 0, 0, 1), opacity 0.4s ease-in-out;
+            overflow: hidden;
+            opacity: 1;
+        }
+        .collapsible-content.collapsed {
+            max-height: 0 !important; 
+            opacity: 0;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+
+        /* Update main content container for elevated card look */
+        .app-container {
+            @apply shadow-xl rounded-3xl overflow-hidden; 
+        }
+
+        /* Update section cards for elevation */
+        section {
+            @apply shadow-lg rounded-2xl;
+        }
+        
+        /* --- STYLING MODE GELAP & TERANG --- */
+        
+        /* Custom Radio Colors */
+        .radio-ya { accent-color: #457A57; }
+        .radio-tidak { accent-color: #cc3333; }
+
+        /* Styling Score Label */
+        .score-input:checked + .score-label {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: scale(1.05);
+            border-color: #457A57;
+        }
+        
+        /* Default Label Style (Light Mode) */
+        .score-label {
+            transition: all 0.15s ease-in-out;
+            cursor: pointer;
+            @apply border border-gray-300 w-full text-center py-1.5 rounded-md text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 shadow-sm; 
+        }
+
+        /* Dark Mode Label Style */
+        .dark .score-label {
+            @apply border-gray-600 text-gray-300 hover:bg-gray-700 bg-gray-800 shadow-none;
+        }
+        
+        /* Styling Special Requirement Label (Consistent with score-label) */
+        .special-req-label {
+            transition: all 0.15s ease-in-out;
+            cursor: pointer;
+            flex-grow: 1; /* Make 'Ya' and 'Tidak' equally wide */
+            text-align: center;
+            @apply border border-gray-300 py-2 px-4 rounded-md font-medium bg-white hover:bg-gray-50 text-gray-700 text-sm shadow-sm;
+        }
+
+        /* Dark Mode Label Style for Special Req */
+        .dark .special-req-label {
+            @apply border-gray-600 text-gray-300 hover:bg-gray-700 bg-gray-800;
+        }
+
+        /* Hover Rows */
+        .criteria-row:hover { background-color: #FBFBF9; }
+        .dark .criteria-row:hover { background-color: #2d3748; }
+        
+        /* Sticky Elements */
+        .fixed-header { position: sticky; top: 0; z-index: 10; }
+        
+        /* Fixed Score Bar - Material Bottom App Bar/Prominent Bar */
+        #fixed-score-bar {
+            box-shadow: 0 -8px 20px rgba(0, 0, 0, 0.2); 
+            background-color: #FBFBF9; 
+            border-top: none; 
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+            position: fixed; 
+            bottom: 0; 
+            left: 0; 
+            right: 0; 
+            z-index: 20;
+            backdrop-filter: blur(5px);
+            transition: height 0.3s ease-in-out, padding 0.3s ease-in-out;
+        }
+
+        .dark #fixed-score-bar {
+            background-color: #212121; 
+            color: #e2e8f0;
+        }
+
+        #score-toggle-btn {
+            position: absolute;
+            top: -21px; 
+            right: 24px; 
+            left: auto; 
+            transform: none; 
+            width: 42px; 
+            height: 42px;
+            padding: 0;
+            border-radius: 50%;
+            z-index: 30; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); 
+            @apply bg-kitchen-accent hover:bg-kitchen-accent/80 transition-transform duration-100 ease-in-out; 
+            background-color: #C76E57; 
+        }
+        #score-toggle-btn:active {
+            transform: scale(0.9); 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Input Material Style */
+        .autosave-input {
+            box-shadow: none !important;
+            border-radius: 0 !important; 
+            outline: none !important;
+            border: none !important;
+            border-bottom: 1px solid #9ca3af !important; 
+            @apply mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white bg-gray-100 dark:bg-gray-700;
+            transition: border-bottom-color 0.2s, background-color 0.2s;
+        }
+        .autosave-input:focus {
+            border-bottom: 2px solid #cc3333 !important; 
+            @apply ring-0 shadow-none; 
+        }
+
+        .section-header {
+            cursor: pointer;
+            user-select: none;
+        }
+        .section-header:hover {
+            opacity: 0.8;
+        }
+
+        .criteria-header-row {
+            cursor: pointer;
+        }
+
+        /* RESPONSIVE LOGIC */
+        #inspection-table, #special-req-table { 
+            display: none; 
+        }
+        #inspection-cards, #special-req-cards { 
+            display: block; 
+        }
+        
+        @media (min-width: 768px) { 
+            #inspection-table, #special-req-table {
+                display: table;
+            }
+            #inspection-cards, #special-req-cards {
+                display: none;
+            }
+        }
+
+        @media print {
+            #fixed-score-bar, #export-btn-container, .no-print, #theme-toggle, #score-toggle-btn { display: none !important; }
+            body { margin: 0; padding: 0; background-color: white !important; color: black !important; }
+            .fixed-header { position: static !important; }
+            .criteria-group-item, #inspection-table, #special-req-table, .req-group-item { display: table-row !important; } 
+            #inspection-cards, #special-req-cards { display: none !important; } 
+            .criteria-row, section { page-break-inside: avoid !important; }
+            thead { display: table-header-group; }
+            .dark { color-scheme: light; } 
+            .collapsible-content { display: block !important; }
+            .section-icon { display: none !important; }
+        }
+        
+        .text-ikl-green { color: #457A57; } 
+        .text-ikl-red { color: #cc3333; } 
+    </style>
+</head>
+<body class="p-4 md:p-8 bg-[#f7f9fb] dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+    <div class="max-w-6xl mx-auto bg-white dark:bg-gray-800 app-container border dark:border-gray-700">
+        
+        <!-- Header Aplikasi -->
+        <header class="bg-kitchen-dark p-6 text-white text-center relative rounded-t-3xl">
+            <p class="text-lg md:text-xl font-bold tracking-widest opacity-90 mb-1">INSTRUMEN</p>
+            <h1 class="text-2xl md:text-3xl font-extrabold mb-2">INSPEKSI KESEHATAN LINGKUNGAN (IKL)</h1>
+            <h2 class="text-lg md:text-xl font-medium opacity-90">SATUAN PELAYANAN PEMENUHAN GIZI (SPPG)</h2>
+            <div id="autosave-status" class="mt-2 text-xs font-light italic opacity-80 h-4"></div>
+
+            <button id="theme-toggle" class="absolute top-4 right-4 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors focus:outline-none" title="Ganti Tema">
+                <svg id="icon-sun" class="w-6 h-6 text-yellow-300 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="icon-moon" class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </header>
+
+        <main class="p-6 md:p-8" id="form-content">
+            <!-- Bagian A -->
+            <section class="mb-8 shadow-none">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-a')">
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-white">A. Data Umum</h3>
+                    <svg id="icon-content-a" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+                
+                <div id="content-a" class="collapsible-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="block">
+                            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">1. Nama SPPG</span>
+                            <input type="text" id="nama_sppg" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white">
+                        </label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">2. Alamat</span><input type="text" id="alamat_sppg" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">3. Nama Pengelola</span><input type="text" id="nama_pengelola" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">4. Kontak Pengelola</span><input type="text" id="kontak_pengelola" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">5. Jumlah Porsi</span><input type="number" id="jumlah_porsi" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">6. Distribusi Pangan</span><input type="text" id="distribusi_pangan" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">7. Jumlah Total Penjamah Pangan</span><input type="number" id="total_penjamah" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">8. Jumlah Penjamah Pangan Terlatih</span><input type="number" id="penjamah_bersertifikat" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">9. Nama Pemeriksa</span><input type="text" id="nama_pemeriksa" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+                        <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">10. Tanggal Pemeriksaan</span><input type="date" id="tanggal_pemeriksaan" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></label>
+
+                        <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-kitchen-main/30 dark:border-gray-500 pt-4 mt-4">
+                            <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Lintang (Latitude)</span><input type="text" id="latitude" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white" placeholder="-6.2088" readonly></label>
+                            <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Bujur (Longitude)</span><input type="text" id="longitude" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white" placeholder="106.8456" readonly></label>
+                            <button id="get-location-btn" class="mt-6 md:mt-1 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md text-sm">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9a2 2 0 100-4 2 2 0 000 4z"/></svg>
+                                Dapatkan Lokasi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bagian B -->
+            <section class="mb-8">
+                <div class="flex justify-between items-center section-header border-b border-gray-300 dark:border-gray-600 pb-2 mb-4" onclick="toggleSection('content-b')">
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-white">B. Penilaian IKL</h3>
+                    <svg id="icon-content-b" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+                
+                <div id="content-b" class="collapsible-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="h-full p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm">
+                            <p class="font-bold text-sm mb-2 text-kitchen-dark dark:text-white border-b border-gray-200 dark:border-gray-600 pb-2">Keterangan Nilai:</p> 
+                            <div class="space-y-1 text-gray-600 dark:text-gray-300">
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">NA</span> = Not Applicable (tidak berlaku)</p>
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">1</span> = Minor (perlu perbaikan wajar)</p>
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">2</span> = Mayor (perlu perhatian serius)</p>
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">3</span> = Kritis (risiko kesehatan tinggi, perlu perbaikan segera)</p>
+                            </div>
+                        </div>
+                        
+                        <div id="area-legend" class="h-full p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm">
+                            <p class="font-bold text-sm mb-2 text-kitchen-dark dark:text-white border-b border-gray-200 dark:border-gray-600 pb-2">Keterangan Area:</p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-1 text-gray-600 dark:text-gray-300">
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">A</span> = Area luar bangunan</p>
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">B</span> = Area fasilitas karyawan</p>
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">C</span> = Area penerimaan bahan baku</p>
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">D</span> = Area penyimpanan</p>
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">E</span> = Area pengolahan pangan</p>
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">F</span> = Area pengemasan/pemorsian</p>
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">G</span> = Area loading produk jadi</p>
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">H</span> = Area pencucian peralatan</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table id="inspection-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600 rounded-lg overflow-hidden shadow-md">
+                            <thead class="bg-kitchen-dark text-white fixed-header">
+                                <tr>
+                                    <th class="w-10 px-2 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Nomor</th>
+                                    <th class="w-64 px-4 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Persyaratan</th>
+                                    <th colspan="8" class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider">Penilaian</th>
+                                </tr>
+                                <tr class="bg-kitchen-dark/80">
+                                    <th colspan="2" class="px-4 py-1 text-xs"></th>
+                                    <th class="px-2 py-1 text-xs font-bold">A</th>
+                                    <th class="px-2 py-1 text-xs font-bold">B</th>
+                                    <th class="px-2 py-1 text-xs font-bold">C</th>
+                                    <th class="px-2 py-1 text-xs font-bold">D</th>
+                                    <th class="px-2 py-1 text-xs font-bold">E</th>
+                                    <th class="px-2 py-1 text-xs font-bold">F</th>
+                                    <th class="px-2 py-1 text-xs font-bold">G</th>
+                                    <th class="px-2 py-1 text-xs font-bold">H</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inspection-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-200"></tbody>
+                        </table>
+                    </div>
+                    <div id="inspection-cards" class="space-y-3"></div>
+                </div>
+            </section>
+            
+            <!-- Bagian D -->
+            <section class="mt-8 shadow-none">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-d')">
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-white">D. Persyaratan Khusus</h3>
+                    <svg id="icon-content-d" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+
+                <div id="content-d" class="collapsible-content collapsed">
+                    <div class="overflow-x-auto">
+                        <table id="special-req-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600 rounded-lg overflow-hidden shadow-md">
+                            <thead class="bg-kitchen-dark text-white fixed-header">
+                                <tr>
+                                    <th class="w-10 px-2 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Nomor</th>
+                                    <th class="px-4 py-3 text-xs font-bold uppercase tracking-wider text-left align-middle">Uraian Persyaratan Khusus</th>
+                                    <th class="w-48 px-4 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Penilaian</th>
+                                </tr>
+                            </thead>
+                            <tbody id="special-req-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 text-gray-800 dark:text-gray-200"></tbody>
+                        </table>
+                    </div>
+                    <div id="special-req-cards" class="space-y-3"></div>
+                </div>
+            </section>
+
+            <!-- Bagian E -->
+            <section class="mt-8 shadow-none">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-e')">
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-white">E. Catatan dan Saran</h3>
+                    <svg id="icon-content-e" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+
+                <div id="content-e" class="collapsible-content collapsed">
+                    <label class="block mb-4">
+                        <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Catatan dan saran</span>
+                        <textarea id="catatan_akhir" rows="4" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white"></textarea>
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mb-2 text-sm">Petugas Pemeriksa</p>
+                            <input type="text" placeholder="" class="autosave-input block w-full p-2 mb-4 text-sm text-gray-700 dark:text-white" id="ttd_pemeriksa_nama">
+                            <div class="border-b border-dashed border-gray-400 pt-12"><span class="text-xs text-gray-500 dark:text-gray-400">Tanda tangan</span></div>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-700 dark:text-gray-300 mb-2 text-sm">Pengelola SPPG</p>
+                            <input type="text" placeholder="" class="autosave-input block w-full p-2 mb-4 text-sm text-gray-700 dark:text-white" id="ttd_pengelola_nama">
+                            <div class="border-b border-dashed border-gray-400 pt-12"><span class="text-xs text-gray-500 dark:text-gray-400">Tanda tangan</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Bagian F -->
+            <section class="mt-8 shadow-none">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-f')">
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-white flex items-center">F. Rekomendasi</h3>
+                    <svg id="icon-content-f" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+
+                <div id="content-f" class="collapsible-content collapsed">
+                    <div class="mb-4">
+                        <button id="generate-ai-report-btn" class="flex items-center justify-center bg-kitchen-accent hover:bg-kitchen-accent/90 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg text-base w-full md:w-auto">
+                            Buat Rekomendasi Menggunakan AI
+                        </button>
+                    </div>
+                    <div id="ai-report-output" class="min-h-[100px] p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap shadow-inner">
+                        Tekan tombol di atas untuk menghasilkan ringkasan temuan kritis dan langkah perbaikan yang direkomendasikan oleh Gemini AI.
+                    </div>
+                    <div id="ai-loading" class="hidden mt-2 text-center text-sm font-medium text-kitchen-dark dark:text-green-400">
+                        <svg class="animate-spin h-5 w-5 mr-3 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Gemini AI sedang menganalisis data...
+                    </div>
+                    <div id="ai-error" class="hidden mt-2 p-3 bg-score-red/20 text-score-red dark:text-red-300 rounded-md text-sm font-medium">
+                        Terjadi kesalahan saat menghubungi Gemini AI. Coba lagi atau periksa koneksi internet Anda.
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- C: Total Skor dan Hasil -->
+    <div id="fixed-score-bar" class="p-4 md:p-6">
+        <button id="score-toggle-btn" onclick="toggleScoreBar()" class="text-white flex items-center justify-center">
+            <svg id="score-toggle-icon" class="w-5 h-5 transition-transform duration-300 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"></path>
+            </svg>
+        </button>
+
+        <div id="score-content" class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 ease-in-out">
+            <div class="flex flex-row justify-between gap-2 w-full md:w-auto order-3 md:order-1">
+                <button id="reset-form-btn" class="flex-shrink-0 flex items-center justify-center bg-score-red hover:bg-score-red/90 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-md whitespace-nowrap w-1/2 md:w-auto text-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Reset
+                </button>
+                <button id="export-pdf-btn" class="flex-shrink-0 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-3 px-6 rounded-lg transition-colors shadow-lg whitespace-nowrap w-1/2 md:w-auto text-sm">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Unduh
+                </button>
+            </div>
+
+            <div class="flex-grow w-full md:w-auto order-1 md:order-2">
+                <h3 class="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">C. Nilai IKL</h3>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
+                    <div id="score-progress-bar" class="h-4 rounded-full transition-all duration-500" style="width: 100%;"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    <span>0%</span> <span>100%</span>
+                </div>
+            </div>
+            
+            <div class="flex-shrink-0 flex space-x-4 items-center order-2 md:order-3">
+                <div class="text-center">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Tidak Memenuhi Syarat</p>
+                    <p id="total-score-value" class="text-xl font-bold text-score-red mt-1">0</p>
+                    <p id="max-score-label" class="text-xs text-gray-500 dark:text-gray-400">Maksimum: -</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Nilai Final IKL</p> 
+                    <p id="final-ikl-score" class="text-4xl font-extrabold transition-colors duration-500 text-ikl-green">100.00</p>
+                    <p id="ikl-status" class="text-xs font-semibold mt-1"></p> 
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const CRITERIA = [
+            { no: 1, text: "Halaman SPPG dalam kondisi bersih, tidak bersemak, dan tidak terdapat tanaman yang menempel langsung pada dinding bangunan pengolahan pangan.", areas: { A: 1, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
+            { no: 2, text: "Area parkir kendaraan jauh dari pintu masuk bangunan pengolahan pangan untuk mencegah kontaminasi asap kendaraan masuk ke ruang pengolahan pangan.", areas: { A: 1, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
+            { no: 3, text: "Bangunan SPPG dilengkapi dengan drainase pada bagian luar dengan kondisi bersih, tidak tersumbat atau meluap, dan memiliki grease trap/penangkap lemak.", areas: { A: 1, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
+            { no: 4, text: "Pintu masuk bahan pangan dan produk jadi dibuat secara terpisah", areas: { A: 1, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
+            { no: 5, text: "Area bebas banjir, jika tidak, maka terdapat pengendalian untuk mencegah kontaminasi terhadap pangan yang sedang ditangani", areas: { A: 2, B: 3, C: 3, D: 3, E: 3, F: 3, G: 3, H: 3 } },
+            { no: 6, text: "Area bebas dari polusi (contoh: pencemaran bau/asap/debu), dan jika tidak, maka terdapat pengendalian untuk mencegah kontaminasi terhadap pangan yang ditangani.", areas: { A: 1, B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 1 } },
+            { no: 7, text: "Bangunan / area memiliki ventilasi udara yang cukup.", areas: { A: 1, B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 } },
+            { no: '8', text: "Tempat penyimpanan atau loker karyawan", isHeader: true, group: '8' },
+            { no: '8a', text: "Tersedia ruang/area khusus untuk istirahat karyawan yang bersih dan bebas dari vektor atau binatang pembawa penyakit (semua siklus kehidupan) dan tanda-tanda keberadaannya.", areas: { A: 'NA', B: 1, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'a', group: '8' },
+            { no: '8b', text: "Tersedia area penyimpanan pakaian dan barang pribadi karyawan (loker) yang bersih dan cukup (pria dan wanita).", areas: { A: 'NA', B: 1, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'b', group: '8' },
+            { no: '8c', text: "Tempat penyimpanan (loker) dilengkapi dengan tata tertib penggunaan loker dan tidak digunakan sebagai tempat penyimpanan makanan dan peralatan pengolahan pangan", areas: { A: 'NA', B: 1, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'c', group: '8' },
+            { no: '9', text: "Toilet", isHeader: true, group: '9' },
+            { no: '9a', text: "Jumlah toilet cukup sesuai jumlah karyawan dan dibuat terpisah antara laki-laki dan perempuan", areas: { A: 'NA', B: 1, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'a', group: '9' },
+            { no: '9b', text: "Desain toilet kuat dengan permukaan halus dan mudah dibersihkan", areas: { A: 'NA', B: 2, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'b', group: '9' },
+            { no: '9c', text: "Pintu atau ventilasi toilet tidak membuka langsung ke area pengolahan pangan", areas: { A: 'NA', B: 2, C: 2, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'c', group: '9' },
+            { no: '9d', text: "Toilet dilengkapi dengan sabun, air mengalir, alat pengering tangan, tempat sampah, dan petunjuk mencuci tangan setelah dari toilet.", areas: { A: 'NA', B: 3, C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'd', group: '9' },
+            { no: '10', text: "Wastafel atau fasilitas cuci tangan", isHeader: true, group: '10' },
+            { no: '10a', text: "Jumlah wastafel/fasilitas cuci tangan cukup sesuai dengan jumlah karyawan dan posisi tempat cuci tangan mudah dijangkau di area dimana banyak kontak tangan penjamah dengan pangan", areas: { A: 'NA', B: 2, C: 2, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'a', group: '10' },
+            { no: '10b', text: "Desain kuat, mudah dibersihkan, dan dilengkapi dengan petunjuk cuci tangan", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 }, displayNo: 'b', group: '10' },
+            { no: '10c', text: "Dilengkapi dengan air mengalir, sabun cuci tangan, dan pengering tangan (bisa hand dryer atau tissue, tetapi tidak boleh kain serbet)", areas: { A: 'NA', B: 3, C: 3, D: 3, E: 3, F: 3, G: 3, H: 3 }, displayNo: 'c', group: '10' },
+            { no: 11, text: "Luas area cukup untuk memudahkan pergerakan bahan atau personil", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 } },
+            { no: 12, text: "Struktur bangunan (dinding, plafon, atau atap) tidak ada lubang / retakan yang menjadi potensi masuknya atau bersarangnya vektor atau binatang pembawa penyakit.", areas: { A: 1, B: 1, C: 1, D: 2, E: 2, F: 2, G: 1, H: 1 } },
+            { no: '13', text: "Lantai", isHeader: true, group: '13' },
+            { no: '13a', text: "Lantai bersih dan terawat (tidak rusak atau tidak retak/berlubang)", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 2, F: 2, G: 1, H: 1 }, displayNo: 'a', group: '13' },
+            { no: '13b', text: "Tidak terdapat genangan air", areas: { A: 1, B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'b', group: '13' },
+            { no: '13c', text: "Pertemuan lantai dan dinding tidak membentuk sudut mati (jika tidak demikian, maka harus dilakukan pembersihan secara rutin dan tidak ditemukan bukti visual kumpulan debu/kotoran)", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 }, displayNo: 'c', group: '13' },
+            { no: 14, text: "Pintu dalam kondisi bersih dan terawat (tidak berlubang dan dapat menutup sempurna)", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 } },
+            { no: 15, text: "Pencahayaan cukup terang dengan lampu tercover (jika lampu terbuat dari bahan mudah pecah) dan kondisi cover (jika ada) bersih dan terawat.", areas: { A: 'NA', B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 2 } },
+            { no: '16', text: "Langit-langit", isHeader: true, group: '16' },
+            { no: '16a', text: "Tinggi minimal 2.4 meter dari lantai", areas: { A: 'NA', B: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 }, displayNo: 'a', group: '16' },
+            { no: '16b', text: "Kondisi tertutup, bersih dan terawat (contoh: tidak ada jamur, debu, kotoran, sarang hama atau sawang)", areas: { A: 'NA', B: 1, C: 2, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'b', group: '16' },
+            { no: '16c', text: "Tidak ada kondensasi air", areas: { A: 'NA', B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 1 }, displayNo: 'c', group: '16' },
+            { no: '17', text: "Tempat sampah dan limbah", isHeader: true, group: '17' },
+            { no: '17a', text: "Tidak ada sampah berserakan", areas: { A: 1, B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'a', group: '17' },
+            { no: '17b', text: "Terdapat tempat sampah dalam kondisi tertutup, sampah tidak mengunung (frekuensi pembuangan minimal 1x24 jam) dan kondisi bersih", areas: { A: 1, B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'b', group: '17' },
+            { no: '18', text: "Vektor atau binatang pembawa penyakit", isHeader: true, group: '18' },
+            { no: '18a', text: "Bebas vektor atau binatang pembawa penyakit (semua tingkat siklus kehidupannya) dan tanda-tanda keberadaannya (contoh: kotoran atau bagian tubuh hama)", areas: { A: 1, B: 1, C: 2, D: 3, E: 3, F: 3, G: 3, H: 2 }, displayNo: 'a', group: '18' },
+            { no: '18b', text: "Terdapat jebakan hama yang ditempatkan pada posisi yang sesuai dan dalam kondisi terawat (tidak rusak, tidak berjamur, dan bersih).", areas: { A: 1, B: 1, C: 2, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'b', group: '18' },
+            { no: '18c', text: "Pengendalian tidak mengunakan bahan kimia (pestisida) di area dalam bangunan pengolahan pangan", areas: { A: 'NA', B: 1, C: 3, D: 3, E: 3, F: 3, G: 3, H: 3 }, displayNo: 'c', group: '18' },
+            { no: '18d', text: "JIKA ventilasi berupa bukaan (contoh: jendela/exhaust) yang terbuka keluar, maka terdapat kasa/tirai/plastik curtain anti serangga untuk mencegah masuknya vektor atau binatang pembawa penyakit. Kasa/tirai/plastik curtain dalam kondisi bersih dan terawat.", areas: { A: 1, B: 1, C: 2, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'd', group: '18' },
+            { no: '19', text: "Penyimpanan Bahan & Pangan Matang", isHeader: true, group: '19' },
+            { no: '19a', text: "Penyimpanan bahan baku, ingredien dan kemasan tidak langsung menyentuh lantai (contoh: menggunakan palet) dengan jarak minimal 15 cm dari lantai, 5 cm dari dinding, dan 60 cm dari langit-langit", areas: { A: 'NA', B: 1, C: 'NA', D: 1, E: 1, F: 1, G: 1, H: 'NA' }, displayNo: 'a', group: '19' },
+            { no: '19b', text: "Kemasan bekas bahan baku mentah tidak disimpan di area yang terdapat pangan matang", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 2, F: 2, G: 2, H: 'NA' }, displayNo: 'b', group: '19' },
+            { no: '19c', text: "Penyimpanan bahan mentah tidak menyatu dengan pangan matang (contoh di ruang penyimpanan, chiller atau freezer), dan penyimpanan bahan pangan (mentah atau matang) tidak menyatu dengan penyimpanan bahan kimia.", areas: { A: 'NA', B: 'NA', C: 3, D: 3, E: 3, F: 3, G: 3, H: 'NA' }, displayNo: 'c', group: '19' },
+            { no: '19d', text: "Bahan baku pangan dan ingredient dalam kondisi baik dan tidak busuk atau berlendir", areas: { A: 'NA', B: 'NA', C: 3, D: 3, E: 3, F: 3, G: 3, H: 'NA' }, displayNo: 'd', group: '19' },
+            { no: '19e', text: "Khusus untuk bahan baku olahan terkemas dalam kondisi baik (tidak kedaluwarsa, kemasan utuh/tidak bocor, dan memiliki izin edar dari instansi terkait)", areas: { A: 'NA', B: 'NA', C: 3, D: 3, E: 3, F: 3, G: 3, H: 'NA' }, displayNo: 'e', group: '19' },
+            { no: '19f', text: "Khusus untuk chiller atau freezer yang digunakan untuk menyimpan bahan pangan, ingredien, atau pangan siap saji, maka suhu penyimpanan harus sesuai (chiller 0-4°C dan freezer ≤(-15°C))", areas: { A: 'NA', B: 'NA', C: 'NA', D: 2, E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'f', group: '19' },
+            { no: '19g', text: "Bahan kimia disimpan pada area khusus dengan akses terbatas dan memiliki identitas yang jelas.", areas: { A: 'NA', B: 1, C: 1, D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'g', group: '19' },
+            { no: '19h', text: "Tidak ada pangan matang yang disimpan sementara di area luar bangunan pengolahan dalam kondisi terbuka.", areas: { A: 3, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'h', group: '19' },
+            { no: '19i', text: "Penyimpanan kemasan yang kontak pangan matang dalam kondisi bersih", areas: { A: 'NA', B: 'NA', C: 'NA', D: 3, E: 3, F: 3, G: 3, H: 3 }, displayNo: 'i', group: '19' },
+            { no: '20', text: "Personil", isHeader: true, group: '20' },
+            { no: '20a', text: "Personil sehat/tidak menunjukkan gejala penyakit", areas: { A: 'NA', B: 'NA', C: 1, D: 3, E: 3, F: 3, G: 3, H: 3 }, displayNo: 'a', group: '20' },
+            { no: '20b', text: "Personil menggunakan APD (celemek, masker, hairnet/penutup rambut) dengan lengkap dan benar", areas: { A: 'NA', B: 'NA', C: 'NA', D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'b', group: '20' },
+            { no: '20c', text: "Personil menggunakan pakaian kerja khusus selama berada di area pengolahan pangan", areas: { A: 'NA', B: 'NA', C: 'NA', D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'c', group: '20' },
+            { no: '20d', text: "Personil menerapkan personil higiene dengan benar", areas: { A: 'NA', B: 'NA', C: 'NA', D: 3, E: 3, F: 3, G: 3, H: 2 }, displayNo: 'd', group: '20' },
+            { no: '20e', text: "Luka ditutup dengan perban tahan air", areas: { A: 'NA', B: 'NA', C: 'NA', D: 3, E: 3, F: 3, G: 3, H: 3 }, displayNo: 'e', group: '20' },
+            { no: '20f', text: "Personil memiliki pemahaman mengenai prinsip higiene", areas: { A: 'NA', B: 'NA', C: 'NA', D: 2, E: 2, F: 2, G: 2, H: 2 }, displayNo: 'f', group: '20' },
+            { no: '21', text: "Peralatan & Kemasan Kontak Pangan", isHeader: true, group: '21' },
+            { no: '21a', text: "Dibuat dari bahan tara pangan dan kondisi terawat", areas: { A: 'NA', B: 'NA', C: 1, D: 2, E: 3, F: 3, G: 3, H: 'NA' }, displayNo: 'a', group: '21' },
+            { no: '21b', text: "Peralatan dalam kondisi terawat dan bersih", areas: { A: 'NA', B: 'NA', C: 1, D: 2, E: 3, F: 3, G: 3, H: 1 }, displayNo: 'b', group: '21' },
+            { no: '21c', text: "Kemasan pangan matang bersih dan terawat", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 3, G: 3, H: 'NA' }, displayNo: 'c', group: '21' },
+            { no: '22', text: "Proses pengolahan pangan", isHeader: true, group: '22' },
+            { no: '22a', text: "Proses thawing dilakukan dengan benar.", areas: { A: 'NA', B: 'NA', C: 'NA', D: 2, E: 'NA', F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'a', group: '22' },
+            { no: '22b', text: "Pangan dimasak sampai matang sempurna", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 3, F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'b', group: '22' },
+            { no: '22c', text: "Suhu inti pangan minimal 75°C", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 3, F: 'NA', G: 'NA', H: 'NA' }, displayNo: 'c', group: '22' },
+            { no: '23', text: "Proses pengangkutan pangan matang", isHeader: true, group: '23' },
+            { no: '23a', text: "Kondisi kendaraan pengangkutan bersih", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 2, H: 'NA' }, displayNo: 'a', group: '23' },
+            { no: '23b', text: "Kemasan tertutup sempurna dan pengangkutan sesuai suhu", areas: { A: 'NA', B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 3, H: 'NA' }, displayNo: 'b', group: '23' },
+        ];
+
+        const SPECIAL_REQUIREMENTS = [
+            { no: 1, text: "Pengelola/pemilik SPPG memiliki sertifikat pelatihan keamanan pangan siap saji" },
+            { no: 2, text: "Penjamah pangan yang bekerja di SPPG sudah memiliki sertifikat pelatihan keamanan pangan siap saji minimal 50%" },
+            { no: 3, text: "Pemeriksaan kesehatan secara berkala minimal 1 (satu) kali setahun." },
+            { no: 4, text: "Tersedia hasil analisa pengujian air (1 tahun terakhir)" },
+            { no: 5, text: "Tersedia laporan hasil pemeriksaan laboratorium sampel pangan (1 tahun terakhir)" },
+            { no: 6, text: "Tersedia dokumentasi pengawasan internal secara berkala (minimal 6 bulan sekali)" },
+            { no: 7, text: "Penyimpanan sampel arsip (bank sample) harian selama 2 x 24 jam di chiller." },
+            { no: 8, text: "Tersedia perlengkapan P3K dan APAR" },
+            { no: '9', text: "Tersedia dokumentasi atau rekaman:", isHeader: true, group: '9_doc' },
+            { no: '9.a', displayNo: 'a', text: "SPPG memiliki SOP di bawah ini (dapat ditunjukkan SOP dan rekaman daftar hadir sosialiasinya), yaitu:", isSubHeader: true, group: '9_doc' },
+            { no: '9.a.1', text: "SOP sanitasi fasilitas dan ruangan", displayNo: 'a.1', group: '9_doc' },
+            { no: '9.a.2', text: "SOP sanitasi peralatan", displayNo: 'a.2', group: '9_doc' },
+            { no: '9.a.3', text: "SOP persiapan bahan pangan", displayNo: 'a.3', group: '9_doc' },
+            { no: '9.a.4', text: "SOP pengolahan", displayNo: 'a.4', group: '9_doc' },
+            { no: '9.a.5', text: "SOP penyimpanan makanan dan sampel makanan", displayNo: 'a.5', group: '9_doc' },
+            { no: '9.a.6', text: "SOP keselamatan kerja", displayNo: 'a.6', group: '9_doc' },
+            { no: '9.a.7', text: "SOP higiene dan pemeriksaan kesehatan personil", displayNo: 'a.7', group: '9_doc' },
+            { no: '9.a.8', text: "SOP pemeliharaan peralatan dan bangunan", displayNo: 'a.8', group: '9_doc' },
+            { no: '9.a.9', text: "SOP pengendalian serangga, hewan pengerat, dan hewan peliharaan", displayNo: 'a.9', group: '9_doc' },
+            { no: '9.a.10', text: "SOP tindakan apabila terjadi keracunan makanan", displayNo: 'a.10', group: '9_doc' },
+            { no: '9.b', text: "Laporan hasil kalibrasi alat ukur tersedia", displayNo: 'b', group: '9_doc' },
+            { no: '9.c', text: "Rekaman monitoring suhu chiller dan freezer tersedia", displayNo: 'c', group: '9_doc' },
+            { no: '9.d', text: "Rekaman pembersihan fasilitas tersedia", displayNo: 'd', group: '9_doc' },
+        ];
+        
+        const AREAS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        let calculatedMaxTotalScore = 0; 
+        const STORAGE_KEY = 'ikl_sppg_autosave_v1';
+        const THEME_KEY = 'ikl_sppg_theme_v1';
+        const SCORE_BAR_STATE_KEY = 'ikl_sppg_score_bar_state';
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
+        let isInternalUpdate = false;
+
+        function toggleCriteriaGroup(groupNo) {
+            const tableRows = document.querySelectorAll(`#inspection-table .criteria-group-${groupNo}`);
+            const tableIcon = document.getElementById(`icon-group-table-${groupNo}`);
+            const cardDivs = document.querySelectorAll(`#inspection-cards .criteria-group-${groupNo}`);
+            const cardIcon = document.getElementById(`icon-group-card-${groupNo}`);
+            let isHidden = tableRows.length > 0 ? tableRows[0].classList.contains('hidden') : false;
+            tableRows.forEach(row => row.classList.toggle('hidden', !isHidden));
+            cardDivs.forEach(div => div.classList.toggle('hidden', !isHidden));
+            if (tableIcon) isHidden ? tableIcon.classList.add('rotate-180') : tableIcon.classList.remove('rotate-180');
+            if (cardIcon) isHidden ? cardIcon.classList.add('rotate-180') : cardIcon.classList.remove('rotate-180');
+        }
+        
+        function calculateMaxPossibleScore() {
+            let max = 0;
+            CRITERIA.forEach(crit => {
+                if (crit.isHeader) return;
+                Object.values(crit.areas).forEach(val => { if (val !== 'NA') max += parseInt(val, 10); });
+            });
+            return max;
+        }
+
+        function getMaxScore(areaScore) { return areaScore === 'NA' ? 0 : parseInt(areaScore, 10); }
+
+        function handleScoreChange(event) {
+            const currentInput = event.target;
+            const score = parseInt(currentInput.value, 10);
+            const name = currentInput.name;
+            document.querySelectorAll(`input[name="${name}"] + .score-label`).forEach(label => {
+                label.classList.remove('bg-score-red', 'bg-score-green', 'text-white', 'font-semibold');
+                label.classList.add('font-medium'); 
+            });
+            const inputId = currentInput.id;
+            document.querySelectorAll(`label[for="${inputId}"]`).forEach(label => {
+                if (score > 0) {
+                    label.classList.add('bg-score-red', 'text-white', 'font-semibold');
+                    label.classList.remove('font-medium');
+                } else {
+                    label.classList.add('bg-score-green', 'text-white', 'font-semibold'); 
+                    label.classList.remove('font-medium');
+                }
+            });
+            calculateScore();
+            if (!isInternalUpdate) saveFormData(); 
+        }
+
+        function handleSpecialReqChange(event) {
+            const currentInput = event.target;
+            const value = currentInput.value;
+            const name = currentInput.name;
+            document.querySelectorAll(`input[name="${name}"][type="radio"] + .special-req-label`).forEach(label => {
+                label.classList.remove('bg-score-red', 'bg-score-green', 'text-white', 'font-semibold');
+                label.classList.add('font-medium'); 
+            });
+            const inputId = currentInput.id;
+            document.querySelectorAll(`label[for="${inputId}"]`).forEach(label => {
+                if (value === 'Tidak') {
+                    label.classList.add('bg-score-red', 'text-white', 'font-semibold');
+                    label.classList.remove('font-medium');
+                } else if (value === 'Ya') {
+                    label.classList.add('bg-score-green', 'text-white', 'font-semibold'); 
+                    label.classList.remove('font-medium');
+                }
+            });
+            if (!isInternalUpdate) saveFormData();
+        }
+        
+        function getRadioOptionsHTML(crit, area, isCard = false) {
+            const maxScore = getMaxScore(crit.areas[area]);
+            const inputName = `crit-${crit.no}-${area}`;
+            if (crit.areas[area] === 'NA') return `<span class="text-xs text-gray-500 dark:text-gray-500 font-medium">NA</span>`;
+            const scoreOptions = ['NA'];
+            for (let i = 1; i <= maxScore; i++) scoreOptions.push(i);
+            const optionsHTML = scoreOptions.map(val => {
+                const numericValue = val === 'NA' ? 0 : val;
+                const inputId = `${inputName}-${val}`;
+                const isChecked = (val === 'NA' || val === 0);
+                const compactClasses = isCard ? 'py-1' : '';
+                return `<input type="radio" id="${inputId}" name="${inputName}" value="${numericValue}" class="score-input hidden" ${isChecked ? 'checked' : ''}><label for="${inputId}" class="score-label ${compactClasses}">${val}</label>`;
+            }).join('');
+            return isCard ? `<div class="flex flex-col space-y-1">${optionsHTML}</div>` : `<div class="flex flex-col space-y-1.5">${optionsHTML}</div>`;
+        }
+        
+        function renderCriteriaTable() {
+            const body = document.getElementById('inspection-body');
+            const cardContainer = document.getElementById('inspection-cards');
+            body.innerHTML = ''; cardContainer.innerHTML = '';
+            CRITERIA.forEach((crit) => {
+                const isCollapsibleGroup = ['8', '9', '10', '13', '16', '17', '18', '19', '20', '21', '22', '23'].includes(crit.no);
+                const tableRow = document.createElement('tr');
+                tableRow.className = 'criteria-row border-b hover:bg-kitchen-cream dark:hover:bg-gray-700 transition-colors border-gray-200 dark:border-gray-700';
+                if (crit.isHeader) {
+                    tableRow.classList.add('bg-kitchen-main/10', 'dark:bg-gray-600', 'criteria-header-row'); 
+                    if (isCollapsibleGroup) {
+                         tableRow.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
+                         const iconSvg = `<svg id="icon-group-table-${crit.no}" class="w-6 h-6 ml-2 transition-transform duration-200 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
+                         tableRow.innerHTML = `
+                            <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-bold align-middle text-kitchen-dark dark:text-white border-r border-gray-200 dark:border-gray-600">${crit.no}</td>
+                            <td colspan="9" class="px-4 py-3 align-middle">
+                                <div class="flex items-center justify-between w-full text-sm font-bold text-kitchen-dark dark:text-white"><span>${crit.text}</span>${iconSvg}</div>
+                            </td>`;
+                    } else {
+                        tableRow.innerHTML = `
+                            <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-bold align-middle text-kitchen-dark dark:text-white border-r border-gray-200 dark:border-gray-600">${crit.no}</td>
+                            <td colspan="9" class="px-4 py-3 text-sm font-bold text-kitchen-dark dark:text-white align-middle"><div class="w-full">${crit.text}</div></td>`;
+                    }
+                    body.appendChild(tableRow);
+                    const cardHeader = document.createElement('div');
+                    cardHeader.className = `p-3 bg-kitchen-main/10 dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 font-bold mt-4 criteria-header-row`;
+                    cardHeader.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
+                    const cardIconSvg = `<svg id="icon-group-card-${crit.no}" class="w-6 h-6 ml-2 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
+                    cardHeader.innerHTML = `<div class="flex justify-between items-center"><span class="text-kitchen-dark dark:text-white">${crit.no}. ${crit.text}</span>${isCollapsibleGroup ? cardIconSvg : ''}</div>`;
+                    cardContainer.appendChild(cardHeader);
+                } else {
+                    const displayNo = crit.displayNo || crit.no;
+                    if (crit.group) tableRow.classList.add(`criteria-group-${crit.group}`, 'criteria-group-item', 'hidden'); 
+                    tableRow.innerHTML += `<td class="px-2 py-3 whitespace-nowrap text-center text-sm font-medium align-middle text-gray-700 dark:text-gray-300">${displayNo}</td><td class="${crit.displayNo ? "pl-8" : "px-4"} py-3 text-sm text-gray-700 dark:text-gray-300 align-middle">${crit.text}</td>`;
+                    AREAS.forEach(area => {
+                        const cell = document.createElement('td');
+                        cell.className = 'px-1 py-1 whitespace-nowrap text-center w-12 align-top'; 
+                        cell.innerHTML = getRadioOptionsHTML(crit, area, false);
+                        tableRow.appendChild(cell);
+                    });
+                    body.appendChild(tableRow);
+                    const cardItem = document.createElement('div');
+                    cardItem.className = `p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 criteria-group-item`;
+                    if (crit.group) cardItem.classList.add(`criteria-group-${crit.group}`, 'hidden'); 
+                    let cardScores = '';
+                    AREAS.forEach(area => {
+                        if (getMaxScore(crit.areas[area]) > 0 || crit.areas[area] === 'NA') {
+                            cardScores += `<div class="flex flex-col space-y-1 text-center flex-grow"><p class="text-xs font-bold text-gray-700 dark:text-gray-300">${area}</p>${getRadioOptionsHTML(crit, area, true)}</div>`;
+                        }
+                    });
+                    cardItem.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-8 text-sm font-bold text-kitchen-dark dark:text-kitchen-main">${displayNo}.</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${crit.text}</div></div><div class="pt-3 pb-2"><div class="flex space-x-0.5 justify-around">${cardScores}</div></div>`;
+                    cardContainer.appendChild(cardItem);
+                }
+            });
+        }
+
+        function renderSpecialRequirements() {
+            const tbody = document.getElementById('special-req-body');
+            const cardContainer = document.getElementById('special-req-cards');
+            tbody.innerHTML = ''; cardContainer.innerHTML = '';
+            SPECIAL_REQUIREMENTS.forEach((req) => {
+                const displayNo = req.displayNo || req.no;
+                const tr = document.createElement('tr');
+                tr.className = 'criteria-row border-b hover:bg-kitchen-cream dark:hover:bg-gray-700 transition-colors border-gray-200 dark:border-gray-700';
+                if (req.isHeader) {
+                    tr.classList.add('bg-kitchen-main/10', 'dark:bg-gray-600', 'criteria-header-row');
+                    if (req.group) {
+                         tr.setAttribute('onclick', `toggleSpecialReqGroup('${req.group}')`);
+                         const iconSvg = `<svg id="icon-req-group-table-${req.group}" class="w-6 h-6 ml-2 transition-transform duration-200 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
+                         tr.innerHTML = `<td class="px-2 py-3 whitespace-nowrap text-center text-sm font-bold align-middle text-kitchen-dark dark:text-white border-r border-gray-200 dark:border-gray-600">${displayNo}</td><td colspan="2" class="px-4 py-3 align-middle"><div class="flex items-center justify-between w-full text-sm font-bold text-kitchen-dark dark:text-white"><span>${req.text}</span>${iconSvg}</div></td>`;
+                    } else {
+                        tr.innerHTML = `<td class="px-2 py-3 whitespace-nowrap text-center text-sm font-bold align-middle text-kitchen-dark dark:text-white border-r border-gray-200 dark:border-gray-600">${displayNo}</td><td colspan="2" class="px-4 py-3 text-sm font-bold text-kitchen-dark dark:text-white align-middle">${req.text}</td>`;
+                    }
+                } else if (req.isSubHeader) {
+                    if (req.group) tr.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
+                    const subHeaderNo = req.displayNo || '';
+                    // PERUBAHAN: Menggunakan font-normal untuk subheader "a" agar tidak tebal
+                    tr.innerHTML = `
+                        <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-normal align-middle border-r border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">${subHeaderNo}</td>
+                        <td colspan="2" class="px-4 py-3 text-sm font-normal italic text-gray-600 dark:text-gray-300 align-middle">${req.text}</td>
+                    `;
+                } else {
+                    if (req.group) tr.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
+                    tr.innerHTML = `
+                        <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-medium align-middle text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600">${displayNo}</td>
+                        <td class="${(req.no > 8 && req.displayNo && req.displayNo.length > 1) ? "pl-8" : "px-4"} py-3 text-sm text-gray-700 dark:text-gray-300 align-middle">${req.text}</td>
+                        <td class="px-4 py-3 align-middle text-center w-48">
+                            <div class="flex space-x-2 justify-center">
+                                <input type="radio" id="req-table-${req.no}-Ya" name="req-${req.no}" value="Ya" class="special-req-input hidden">
+                                <label for="req-table-${req.no}-Ya" class="special-req-label text-sm py-1.5">Ya</label>
+                                <input type="radio" id="req-table-${req.no}-Tidak" name="req-${req.no}" value="Tidak" class="special-req-input hidden" checked>
+                                <label for="req-table-${req.no}-Tidak" class="special-req-label text-sm py-1.5">Tidak</label>
+                            </div>
+                        </td>`;
+                }
+                tbody.appendChild(tr);
+
+                const cardDiv = document.createElement('div');
+                if (req.isHeader) {
+                    cardDiv.className = `p-3 bg-kitchen-main/10 dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 font-bold mt-4 criteria-header-row`;
+                    if (req.group) {
+                        cardDiv.setAttribute('onclick', `toggleSpecialReqGroup('${req.group}')`);
+                        const cardIconSvg = `<svg id="icon-req-group-card-${req.group}" class="w-6 h-6 ml-2 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
+                        cardDiv.innerHTML = `<div class="flex justify-between items-center"><span class="text-kitchen-dark dark:text-white">${displayNo}. ${req.text}</span>${cardIconSvg}</div>`;
+                    } else {
+                        cardDiv.innerHTML = `<div class="text-kitchen-dark dark:text-white">${displayNo}. ${req.text}</div>`;
+                    }
+                } else if (req.isSubHeader) {
+                    // PERUBAHAN: Menggunakan font-normal untuk kartu mobile subheader
+                    cardDiv.className = `pl-4 py-2 text-sm font-normal italic text-gray-600 dark:text-gray-300`;
+                    if (req.group) cardDiv.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
+                    cardDiv.innerHTML = (req.displayNo ? `${req.displayNo}. ` : '') + req.text;
+                } else {
+                    cardDiv.className = `p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700`;
+                    if (req.group) cardDiv.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
+                    cardDiv.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-12 text-sm font-bold text-gray-700 dark:text-gray-300">${displayNo}</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div></div><div class="flex space-x-2 pt-2"><input type="radio" id="req-card-${req.no}-Ya" name="req-${req.no}" value="Ya" class="special-req-input hidden"><label for="req-card-${req.no}-Ya" class="special-req-label text-sm py-2">Ya</label><input type="radio" id="req-card-${req.no}-Tidak" name="req-${req.no}" value="Tidak" class="special-req-input hidden" checked><label for="req-card-${req.no}-Tidak" class="special-req-label text-sm py-2">Tidak</label></div>`;
+                }
+                cardContainer.appendChild(cardDiv);
+            });
+            toggleSpecialReqGroup('9_doc', true);
+        }
+
+        function calculateScore() {
+            const scores = document.querySelectorAll('.score-input:checked');
+            let totalScore = 0;
+            scores.forEach(input => {
+                const value = parseInt(input.value, 10);
+                if (!isNaN(value) && value > 0) totalScore += value;
+            });
+            const maxScore = calculateMaxPossibleScore();
+            let iklScore = maxScore > 0 ? 100 - ((totalScore / maxScore) * 100) : 100;
+            iklScore = Math.max(0, Math.min(100, iklScore));
+            const iklScoreElement = document.getElementById('final-ikl-score');
+            const progressBar = document.getElementById('score-progress-bar');
+            const iklStatusElement = document.getElementById('ikl-status');
+            let iklStatusText, finalScoreColorClass, progressColorClass, iklStatusColorClass;
+            if (iklScore >= 80) {
+                finalScoreColorClass = 'text-ikl-green'; progressColorClass = 'bg-score-green'; iklStatusText = 'MEMENUHI SYARAT'; iklStatusColorClass = 'text-score-green';
+            } else {
+                finalScoreColorClass = 'text-ikl-red'; progressColorClass = 'bg-score-red'; iklStatusText = 'TIDAK MEMENUHI SYARAT'; iklStatusColorClass = 'text-score-red';
+            }
+            iklScoreElement.classList.remove('text-ikl-green', 'text-ikl-red');
+            iklScoreElement.classList.add(finalScoreColorClass);
+            document.getElementById('total-score-value').textContent = totalScore;
+            document.getElementById('max-score-label').textContent = `Maksimum: ${maxScore}`; 
+            iklScoreElement.textContent = iklScore.toFixed(2);
+            iklStatusElement.classList.remove('text-score-green', 'text-score-red');
+            iklStatusElement.textContent = iklStatusText;
+            iklStatusElement.classList.add(iklStatusColorClass);
+            progressBar.style.width = `${iklScore}%`;
+            progressBar.classList.remove('bg-score-green', 'bg-score-red');
+            progressBar.classList.add(progressColorClass);
+        }
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem(THEME_KEY);
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+                document.getElementById('icon-moon').classList.add('hidden');
+                document.getElementById('icon-sun').classList.remove('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+            document.getElementById('icon-moon').classList.toggle('hidden', isDark);
+            document.getElementById('icon-sun').classList.toggle('hidden', !isDark);
+        }
+        
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const icon = document.getElementById('icon-' + sectionId);
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                content.style.maxHeight = content.scrollHeight + "px"; 
+                icon.classList.add('rotate-180');
+                setTimeout(() => { content.style.maxHeight = 'none'; }, 400);
+            } else {
+                content.style.maxHeight = content.scrollHeight + "px"; 
+                requestAnimationFrame(() => {
+                    content.classList.add('collapsed');
+                    content.style.maxHeight = '0';
+                });
+                icon.classList.remove('rotate-180');
+            }
+        }
+
+        function toggleScoreBar() {
+            const content = document.getElementById('score-content');
+            const icon = document.getElementById('score-toggle-icon');
+            const isHidden = content.classList.contains('hidden');
+            if (isHidden) {
+                content.classList.remove('hidden');
+                icon.classList.add('rotate-180');
+                localStorage.setItem(SCORE_BAR_STATE_KEY, 'visible');
+                document.body.style.marginBottom = '12rem'; 
+            } else {
+                content.classList.add('hidden');
+                icon.classList.remove('rotate-180');
+                localStorage.setItem(SCORE_BAR_STATE_KEY, 'hidden');
+                document.body.style.marginBottom = '4rem'; 
+            }
+        }
+        
+        function saveFormData() {
+            if (isInternalUpdate) return;
+            const formData = { textInputs: {}, radioInputs: {} };
+            document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea').forEach(input => {
+                formData.textInputs[input.id] = input.value;
+            });
+            document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
+                formData.radioInputs[input.name] = input.value;
+            });
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+            const statusDiv = document.getElementById('autosave-status');
+            statusDiv.textContent = 'Tersimpan otomatis';
+            setTimeout(() => { statusDiv.textContent = ''; }, 2000);
+        }
+
+        function loadFormData() {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (!savedData) return;
+            try {
+                const formData = JSON.parse(savedData);
+                if (formData.textInputs) {
+                    for (const [id, value] of Object.entries(formData.textInputs)) {
+                        const input = document.getElementById(id);
+                        if (input) input.value = value;
+                    }
+                }
+                if (formData.radioInputs) {
+                    for (const [name, value] of Object.entries(formData.radioInputs)) {
+                        const radios = document.querySelectorAll(`input[name="${name}"]`);
+                        radios.forEach(radio => {
+                            if (radio.value == value) {
+                                radio.checked = true;
+                                radio.dispatchEvent(new Event('change', { bubbles: true }));
+                            }
+                        });
+                    }
+                }
+            } catch (e) { console.error("Error loading autosave data", e); }
+        }
+
+        function initializeFormState() {
+            calculatedMaxTotalScore = calculateMaxPossibleScore(); 
+            document.getElementById('max-score-label').textContent = `Maksimum: ${calculatedMaxTotalScore}`;
+            document.querySelectorAll('.score-input').forEach(input => {
+                if (input.value == "0") {
+                    input.checked = true;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+            document.querySelectorAll('.special-req-input').forEach(input => {
+                if (input.value === 'Tidak') {
+                    input.checked = true;
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+            calculateScore();
+        }
+
+        function resetForm() {
+            if (confirm("Apakah Anda yakin ingin mereset semua formulir?")) {
+                localStorage.removeItem(STORAGE_KEY);
+                isInternalUpdate = true;
+                document.querySelectorAll('input:not([type="radio"]), textarea').forEach(i => i.value = '');
+                initializeFormState();
+                isInternalUpdate = false;
+                window.scrollTo(0, 0);
+            }
+        }
+
+        function toggleSpecialReqGroup(groupNo, forceHide = false) {
+            const tableRows = document.querySelectorAll(`#special-req-table .req-group-${groupNo}`);
+            const tableIcon = document.getElementById(`icon-req-group-table-${groupNo}`);
+            const cardDivs = document.querySelectorAll(`#special-req-cards .req-group-${groupNo}`);
+            const cardIcon = document.getElementById(`icon-req-group-card-${groupNo}`);
+            let isHidden = tableRows.length > 0 ? tableRows[0].classList.contains('hidden') : false;
+            if (forceHide && !isHidden) isHidden = false; 
+            tableRows.forEach(row => row.classList.toggle('hidden', !isHidden));
+            cardDivs.forEach(div => div.classList.toggle('hidden', !isHidden));
+            if (tableIcon) isHidden ? tableIcon.classList.add('rotate-180') : tableIcon.classList.remove('rotate-180');
+            if (cardIcon) isHidden ? cardIcon.classList.add('rotate-180') : cardIcon.classList.remove('rotate-180');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme(); 
+            renderCriteriaTable();
+            renderSpecialRequirements();
+            document.querySelectorAll('.score-input').forEach(i => i.addEventListener('change', handleScoreChange));
+            document.querySelectorAll('.special-req-input').forEach(i => i.addEventListener('change', handleSpecialReqChange));
+            document.querySelectorAll('.autosave-input').forEach(i => i.addEventListener('input', saveFormData));
+            isInternalUpdate = true;
+            initializeFormState(); 
+            loadFormData(); 
+            isInternalUpdate = false;
+            
+            document.getElementById('get-location-btn').addEventListener('click', () => {
+                const btn = document.getElementById('get-location-btn');
+                btn.disabled = true; btn.textContent = "Memuat...";
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(pos => {
+                        document.getElementById('latitude').value = pos.coords.latitude.toFixed(6);
+                        document.getElementById('longitude').value = pos.coords.longitude.toFixed(6);
+                        btn.disabled = false; btn.textContent = "Lokasi Diperoleh";
+                        saveFormData();
+                    }, () => { btn.disabled = false; btn.textContent = "Gagal"; });
+                }
+            });
+            
+            document.getElementById('export-pdf-btn').addEventListener('click', () => {
+                const namaSppg = document.getElementById('nama_sppg').value || 'SPPG';
+                const opt = { margin: 0.5, filename: `IKL_${namaSppg}.pdf`, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+                const element = document.body.cloneNode(true);
+                element.querySelectorAll('.no-print, #fixed-score-bar, #theme-toggle').forEach(el => el.remove());
+                html2pdf().set(opt).from(element).save();
+            });
+
+            document.getElementById('generate-ai-report-btn').addEventListener('click', async () => {
+                const outputDiv = document.getElementById('ai-report-output');
+                const loadingDiv = document.getElementById('ai-loading');
+                outputDiv.textContent = ''; loadingDiv.classList.remove('hidden');
+                const prompt = `Buat laporan ringkas inspeksi sanitasi SPPG dengan skor ${document.getElementById('final-ikl-score').textContent}. Fokus pada temuan kritis.`;
+                try {
+                    const res = await fetch(API_URL.replace("?key=", "") + apiKey, { 
+                        method: 'POST', headers: { 'Content-Type': 'application/json' }, 
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) 
+                    });
+                    const result = await res.json();
+                    outputDiv.textContent = result.candidates?.[0]?.content?.parts?.[0]?.text || "Gagal memuat.";
+                } catch (e) { outputDiv.textContent = "Terjadi kesalahan."; }
+                finally { loadingDiv.classList.add('hidden'); }
+            });
+
+            document.getElementById('reset-form-btn').addEventListener('click', resetForm);
+            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        });
+    </script>
+</body>
+</html>
