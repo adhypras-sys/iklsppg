@@ -284,7 +284,7 @@
                         <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-kitchen-main/30 dark:border-gray-500 pt-4 mt-4">
                             <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Lintang (Latitude)</span><input type="text" id="latitude" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white" placeholder="-6.2088" readonly></label>
                             <label class="block"><span class="text-sm font-medium text-gray-700 dark:text-gray-300">Bujur (Longitude)</span><input type="text" id="longitude" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-700 dark:text-white" placeholder="106.8456" readonly></label>
-                            <button id="get-location-btn" class="mt-6 md:mt-1 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md text-sm">
+                            <button id="get-location-btn" class="mt-6 md:mt-1 flex items-center justify-center bg-kitchen-dark hover:bg-kitchen-dark/80 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 shadow-md text-sm">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9a2 2 0 100-4 2 2 0 000 4z"/></svg>
                                 Dapatkan Lokasi
                             </button>
@@ -323,7 +323,7 @@
                                 <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">D</span> = Area penyimpanan</p>
                                 <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">E</span> = Area pengolahan pangan</p>
                                 <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">F</span> = Area pengemasan/pemorsian</p>
-                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">G</span> = Area loading produk jadi</p>
+                                <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">G</span> = Area pemuatan produk</p>
                                 <p class="text-xs"><span class="font-bold text-gray-800 dark:text-gray-200">H</span> = Area pencucian peralatan</p>
                             </div>
                         </div>
@@ -371,7 +371,7 @@
                             <thead class="bg-kitchen-dark text-white fixed-header">
                                 <tr>
                                     <th class="w-10 px-2 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Nomor</th>
-                                    <th class="px-4 py-3 text-xs font-bold uppercase tracking-wider text-left align-middle">Uraian Persyaratan Khusus</th>
+                                    <th class="px-4 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Persyaratan Khusus</th>
                                     <th class="w-48 px-4 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Penilaian</th>
                                 </tr>
                             </thead>
@@ -385,7 +385,7 @@
             <!-- Bagian E -->
             <section class="mt-8 shadow-none">
                 <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-e')">
-                    <h3 class="text-lg font-bold text-gray-700 dark:text-white">E. Catatan dan Saran</h3>
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-white">E. Catatan dan Pengesahan</h3>
                     <svg id="icon-content-e" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
                     </svg>
@@ -751,7 +751,6 @@
                 } else if (req.isSubHeader) {
                     if (req.group) tr.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
                     const subHeaderNo = req.displayNo || '';
-                    // PERUBAHAN: Menghilangkan kelas 'italic' agar teks subheader tegak
                     tr.innerHTML = `
                         <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-normal align-middle border-r border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">${subHeaderNo}</td>
                         <td colspan="2" class="px-4 py-3 text-sm font-normal text-gray-600 dark:text-gray-300 align-middle">${req.text}</td>
@@ -783,7 +782,6 @@
                         cardDiv.innerHTML = `<div class="text-kitchen-dark dark:text-white">${displayNo}. ${req.text}</div>`;
                     }
                 } else if (req.isSubHeader) {
-                    // PERUBAHAN: Menghilangkan kelas 'italic' agar teks kartu mobile subheader tegak
                     cardDiv.className = `pl-4 py-2 text-sm font-normal text-gray-600 dark:text-gray-300`;
                     if (req.group) cardDiv.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
                     cardDiv.innerHTML = (req.displayNo ? `${req.displayNo}. ` : '') + req.text;
@@ -995,16 +993,48 @@
             loadFormData(); 
             isInternalUpdate = false;
             
+            // Logika Dapatkan Lokasi (Diperbarui dengan perubahan warna status)
             document.getElementById('get-location-btn').addEventListener('click', () => {
                 const btn = document.getElementById('get-location-btn');
-                btn.disabled = true; btn.textContent = "Memuat...";
+                const defaultClasses = ['bg-kitchen-dark', 'hover:bg-kitchen-dark/80'];
+                const errorClasses = ['bg-score-red', 'hover:bg-score-red/90'];
+                const successClasses = ['bg-score-green', 'hover:bg-score-green/90'];
+
+                btn.disabled = true; 
+                btn.textContent = "Memuat...";
+                
+                // Kembalikan ke keadaan semula setelah delay
+                const resetBtn = (delay = 3000) => {
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.textContent = "Dapatkan Lokasi";
+                        btn.classList.remove(...errorClasses, ...successClasses);
+                        btn.classList.add(...defaultClasses);
+                    }, delay);
+                };
+
                 if (navigator.geolocation) {
                     navigator.geolocation.getCurrentPosition(pos => {
                         document.getElementById('latitude').value = pos.coords.latitude.toFixed(6);
                         document.getElementById('longitude').value = pos.coords.longitude.toFixed(6);
-                        btn.disabled = false; btn.textContent = "Lokasi Diperoleh";
+                        
+                        btn.textContent = "Lokasi Diperoleh";
+                        btn.classList.remove(...defaultClasses, ...errorClasses);
+                        btn.classList.add(...successClasses);
+                        
                         saveFormData();
-                    }, () => { btn.disabled = false; btn.textContent = "Gagal"; });
+                        resetBtn(2000);
+                    }, () => {
+                        btn.textContent = "Gagal Mengambil Lokasi";
+                        btn.classList.remove(...defaultClasses, ...successClasses);
+                        btn.classList.add(...errorClasses);
+                        resetBtn(3500);
+                    });
+                } else {
+                    btn.textContent = "Tidak Didukung Browser";
+                    btn.classList.remove(...defaultClasses, ...successClasses);
+                    btn.classList.add(...errorClasses);
+                    resetBtn(3500);
                 }
             });
             
