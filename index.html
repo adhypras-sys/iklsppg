@@ -412,33 +412,8 @@
                 </div>
             </section>
             
-            <!-- Bagian F -->
-            <section class="mt-8 shadow-none">
-                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-f')">
-                    <h3 class="text-lg font-bold text-gray-700 dark:text-white flex items-center">F. Rekomendasi</h3>
-                    <svg id="icon-content-f" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
-                    </svg>
-                </div>
+            <!-- Bagian F telah dihapus sesuai permintaan -->
 
-                <div id="content-f" class="collapsible-content collapsed">
-                    <div class="mb-4">
-                        <button id="generate-ai-report-btn" class="flex items-center justify-center bg-kitchen-accent hover:bg-kitchen-accent/90 text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg text-base w-full md:w-auto">
-                            Buat Rekomendasi Menggunakan AI
-                        </button>
-                    </div>
-                    <div id="ai-report-output" class="min-h-[100px] p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap shadow-inner">
-                        Tekan tombol di atas untuk menghasilkan ringkasan temuan kritis dan langkah perbaikan yang direkomendasikan oleh Gemini AI.
-                    </div>
-                    <div id="ai-loading" class="hidden mt-2 text-center text-sm font-medium text-kitchen-dark dark:text-green-400">
-                        <svg class="animate-spin h-5 w-5 mr-3 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Gemini AI sedang menganalisis data...
-                    </div>
-                    <div id="ai-error" class="hidden mt-2 p-3 bg-score-red/20 text-score-red dark:text-red-300 rounded-md text-sm font-medium">
-                        Terjadi kesalahan saat menghubungi Gemini AI. Coba lagi atau periksa koneksi internet Anda.
-                    </div>
-                </div>
-            </section>
         </main>
     </div>
 
@@ -590,8 +565,7 @@
         const STORAGE_KEY = 'ikl_sppg_autosave_v1';
         const THEME_KEY = 'ikl_sppg_theme_v1';
         const SCORE_BAR_STATE_KEY = 'ikl_sppg_score_bar_state';
-        const apiKey = ""; // Diset oleh environment
-        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
+        // Variabel API AI dihapus
         let isInternalUpdate = false;
 
         function toggleCriteriaGroup(groupNo) {
@@ -619,22 +593,47 @@
 
         function handleScoreChange(event) {
             const currentInput = event.target;
-            const score = parseInt(currentInput.value, 10);
-            const name = currentInput.name;
-            document.querySelectorAll(`input[name="${name}"] + .score-label`).forEach(label => {
-                label.classList.remove('bg-score-red', 'bg-score-green', 'text-white', 'font-semibold');
-                label.classList.add('font-medium'); 
-            });
-            const inputId = currentInput.id;
-            document.querySelectorAll(`label[for="${inputId}"]`).forEach(label => {
-                if (score > 0) {
-                    label.classList.add('bg-score-red', 'text-white', 'font-semibold');
-                    label.classList.remove('font-medium');
-                } else {
-                    label.classList.add('bg-score-green', 'text-white', 'font-semibold'); 
-                    label.classList.remove('font-medium');
+            const value = currentInput.value;
+            
+            // 1. Determine names
+            const currentName = currentInput.name;
+            const isMobile = currentName.endsWith('_mobile');
+            const partnerName = isMobile ? currentName.replace('_mobile', '') : `${currentName}_mobile`;
+            
+            // 2. Sync State (Check the other one if exists)
+            const partnerInput = document.querySelector(`input[name="${partnerName}"][value="${value}"]`);
+            if (partnerInput && !partnerInput.checked) partnerInput.checked = true;
+
+            // 3. Update Visuals for BOTH (Current and Partner)
+            [currentInput, partnerInput].forEach(input => {
+                if (!input) return;
+                const name = input.name;
+                const id = input.id;
+                const score = parseInt(value, 10);
+                
+                // Reset labels for this group
+                document.querySelectorAll(`input[name="${name}"] + .score-label`).forEach(label => {
+                    label.classList.remove('bg-score-red', 'bg-score-green', 'text-white', 'font-semibold');
+                    label.classList.add('font-medium'); 
+                });
+                
+                // Highlight selected label based on checked input in the group
+                const checkedInput = document.querySelector(`input[name="${name}"]:checked`);
+                if(checkedInput) {
+                    const inputId = checkedInput.id;
+                    const val = parseInt(checkedInput.value, 10);
+                    document.querySelectorAll(`label[for="${inputId}"]`).forEach(label => {
+                        if (val > 0) {
+                            label.classList.add('bg-score-red', 'text-white', 'font-semibold');
+                            label.classList.remove('font-medium');
+                        } else {
+                            label.classList.add('bg-score-green', 'text-white', 'font-semibold'); 
+                            label.classList.remove('font-medium');
+                        }
+                    });
                 }
             });
+
             calculateScore();
             if (!isInternalUpdate) saveFormData(); 
         }
@@ -642,27 +641,53 @@
         function handleSpecialReqChange(event) {
             const currentInput = event.target;
             const value = currentInput.value;
-            const name = currentInput.name;
-            document.querySelectorAll(`input[name="${name}"][type="radio"] + .special-req-label`).forEach(label => {
-                label.classList.remove('bg-score-red', 'bg-score-green', 'text-white', 'font-semibold');
-                label.classList.add('font-medium'); 
-            });
-            const inputId = currentInput.id;
-            document.querySelectorAll(`label[for="${inputId}"]`).forEach(label => {
-                if (value === 'Tidak') {
-                    label.classList.add('bg-score-red', 'text-white', 'font-semibold');
-                    label.classList.remove('font-medium');
-                } else if (value === 'Ya') {
-                    label.classList.add('bg-score-green', 'text-white', 'font-semibold'); 
-                    label.classList.remove('font-medium');
+            
+            // 1. Determine names
+            const currentName = currentInput.name;
+            const isMobile = currentName.endsWith('_mobile');
+            const partnerName = isMobile ? currentName.replace('_mobile', '') : `${currentName}_mobile`;
+            
+            // 2. Sync State (Check the other one)
+            const partnerInput = document.querySelector(`input[name="${partnerName}"][value="${value}"]`);
+            if (partnerInput && !partnerInput.checked) partnerInput.checked = true;
+
+            // 3. Update Visuals for BOTH (Current and Partner)
+            [currentInput, partnerInput].forEach(input => {
+                if (!input) return;
+                const name = input.name;
+                const id = input.id;
+                
+                // Reset labels for this group
+                document.querySelectorAll(`input[name="${name}"][type="radio"] + .special-req-label`).forEach(label => {
+                    label.classList.remove('bg-score-red', 'bg-score-green', 'text-white', 'font-semibold');
+                    label.classList.add('font-medium'); 
+                });
+                
+                // Highlight selected label
+                const checkedInput = document.querySelector(`input[name="${name}"]:checked`);
+                if(checkedInput) {
+                     const inputId = checkedInput.id;
+                     const val = checkedInput.value;
+                     document.querySelectorAll(`label[for="${inputId}"]`).forEach(label => {
+                        if (val === 'Tidak') {
+                            label.classList.add('bg-score-red', 'text-white', 'font-semibold');
+                            label.classList.remove('font-medium');
+                        } else if (val === 'Ya') {
+                            label.classList.add('bg-score-green', 'text-white', 'font-semibold'); 
+                            label.classList.remove('font-medium');
+                        }
+                    });
                 }
             });
+
             if (!isInternalUpdate) saveFormData();
         }
         
         function getRadioOptionsHTML(crit, area, isCard = false) {
             const maxScore = getMaxScore(crit.areas[area]);
-            const inputName = `crit-${crit.no}-${area}`;
+            // FIX: Added _mobile suffix for card view to prevent name collision with table view
+            const inputName = isCard ? `crit-${crit.no}-${area}_mobile` : `crit-${crit.no}-${area}`;
+            
             if (crit.areas[area] === 'NA') return `<span class="text-xs text-gray-500 dark:text-gray-500 font-medium">NA</span>`;
             const scoreOptions = ['NA'];
             for (let i = 1; i <= maxScore; i++) scoreOptions.push(i);
@@ -789,7 +814,8 @@
                 } else {
                     cardDiv.className = `p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700`;
                     if (req.group) cardDiv.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
-                    cardDiv.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-12 text-sm font-bold text-gray-700 dark:text-gray-300">${displayNo}</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div></div><div class="flex space-x-2 pt-2"><input type="radio" id="req-card-${req.no}-Ya" name="req-${req.no}" value="Ya" class="special-req-input hidden"><label for="req-card-${req.no}-Ya" class="special-req-label text-sm py-2">Ya</label><input type="radio" id="req-card-${req.no}-Tidak" name="req-${req.no}" value="Tidak" class="special-req-input hidden" checked><label for="req-card-${req.no}-Tidak" class="special-req-label text-sm py-2">Tidak</label></div>`;
+                    // FIX: Added _mobile suffix to name attribute here
+                    cardDiv.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-12 text-sm font-bold text-gray-700 dark:text-gray-300">${displayNo}</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div></div><div class="flex space-x-2 pt-2"><input type="radio" id="req-card-${req.no}-Ya" name="req-${req.no}_mobile" value="Ya" class="special-req-input hidden"><label for="req-card-${req.no}-Ya" class="special-req-label text-sm py-2">Ya</label><input type="radio" id="req-card-${req.no}-Tidak" name="req-${req.no}_mobile" value="Tidak" class="special-req-input hidden" checked><label for="req-card-${req.no}-Tidak" class="special-req-label text-sm py-2">Tidak</label></div>`;
                 }
                 cardContainer.appendChild(cardDiv);
             });
@@ -797,7 +823,8 @@
         }
 
         function calculateScore() {
-            const scores = document.querySelectorAll('.score-input:checked');
+            // FIX: Exclude mobile duplicate inputs from score calculation to avoid double counting
+            const scores = document.querySelectorAll('.score-input:checked:not([name*="_mobile"])');
             let totalScore = 0;
             scores.forEach(input => {
                 const value = parseInt(input.value, 10);
@@ -887,6 +914,7 @@
             document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea').forEach(input => {
                 formData.textInputs[input.id] = input.value;
             });
+            // Save both standard and _mobile inputs so state is preserved across reloads
             document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
                 formData.radioInputs[input.name] = input.value;
             });
@@ -913,6 +941,7 @@
                         radios.forEach(radio => {
                             if (radio.value == value) {
                                 radio.checked = true;
+                                // Dispatch change to trigger sync logic, although we are loading both sets anyway
                                 radio.dispatchEvent(new Event('change', { bubbles: true }));
                             }
                         });
@@ -939,24 +968,7 @@
             calculateScore();
         }
 
-        async function fetchWithExponentialBackoff(url, options, retries = 5) {
-            for (let i = 0; i < retries; i++) {
-                try {
-                    const response = await fetch(url + apiKey, options);
-                    if (response.ok) return response;
-                    if (response.status === 429 || response.status >= 500) {
-                        const delay = Math.pow(2, i) * 1000;
-                        await new Promise(r => setTimeout(r, delay));
-                        continue;
-                    }
-                    throw new Error(`Request failed with status ${response.status}`);
-                } catch (e) {
-                    if (i === retries - 1) throw e;
-                    const delay = Math.pow(2, i) * 1000;
-                    await new Promise(r => setTimeout(r, delay));
-                }
-            }
-        }
+        // Fungsi fetchWithExponentialBackoff dihapus karena fitur AI dihilangkan
 
         function resetForm() {
             if (confirm("Apakah Anda yakin ingin mereset semua formulir?")) {
@@ -1048,22 +1060,7 @@
                 html2pdf().set(opt).from(element).save();
             });
 
-            document.getElementById('generate-ai-report-btn').addEventListener('click', async () => {
-                const outputDiv = document.getElementById('ai-report-output');
-                const loadingDiv = document.getElementById('ai-loading');
-                const errorDiv = document.getElementById('ai-error');
-                outputDiv.textContent = ''; loadingDiv.classList.remove('hidden'); errorDiv.classList.add('hidden');
-                const prompt = `Buat laporan ringkas inspeksi sanitasi SPPG dengan skor ${document.getElementById('final-ikl-score').textContent}. Fokus pada temuan kritis.`;
-                try {
-                    const res = await fetchWithExponentialBackoff(API_URL.replace("?key=", ""), { 
-                        method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }) 
-                    });
-                    const result = await res.json();
-                    outputDiv.textContent = result.candidates?.[0]?.content?.[0]?.parts?.[0]?.text || "Gagal memuat.";
-                } catch (e) { errorDiv.classList.remove('hidden'); }
-                finally { loadingDiv.classList.add('hidden'); }
-            });
+            // Event listener untuk generate AI report dihapus
 
             document.getElementById('reset-form-btn').addEventListener('click', resetForm);
             document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
