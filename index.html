@@ -1052,15 +1052,202 @@
                 }
             });
             
+            // --- FITUR UNDUH PDF BARU (GENERATOR LAPORAN FORMAL) ---
             document.getElementById('export-pdf-btn').addEventListener('click', () => {
-                const namaSppg = document.getElementById('nama_sppg').value || 'SPPG';
-                const opt = { margin: 0.5, filename: `IKL_${namaSppg}.pdf`, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
-                const element = document.body.cloneNode(true);
-                element.querySelectorAll('.no-print, #fixed-score-bar, #theme-toggle').forEach(el => el.remove());
-                html2pdf().set(opt).from(element).save();
-            });
+                const btn = document.getElementById('export-pdf-btn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Memproses...';
+                btn.disabled = true;
 
-            // Event listener untuk generate AI report dihapus
+                // Helper functions
+                const getText = (id) => document.getElementById(id).value || '-';
+                const getRadioVal = (name) => {
+                    const el = document.querySelector(`input[name="${name}"]:checked`);
+                    return el ? el.value : '-';
+                };
+
+                // 1. Bangun Struktur HTML untuk Laporan
+                let reportContent = `
+                <div style="font-family: 'Times New Roman', serif; color: #000; width: 100%; box-sizing: border-box;">
+                    <style>
+                        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+                        th, td { border: 1px solid #000; padding: 4px; font-size: 10pt; vertical-align: top; }
+                        th { background-color: #f0f0f0; font-weight: bold; text-align: center; }
+                        /* Kunci agar baris tidak terpotong, tapi tabel boleh memanjang */
+                        tr { page-break-inside: avoid; }
+                        /* Header tabel muncul lagi di halaman baru */
+                        thead { display: table-header-group; }
+                        .section-header { background-color: #e0e0e0; border: 1px solid #000; padding: 5px 10px; margin-top: 15px; margin-bottom: 5px; font-weight: bold; font-size: 11pt; }
+                        .text-center { text-align: center; }
+                        .bold { font-weight: bold; }
+                        .italic { font-style: italic; }
+                    </style>
+
+                    <div style="text-align: center; margin-bottom: 20px; border-bottom: 3px double #000; padding-bottom: 10px;">
+                        <h2 style="margin: 0; font-size: 14pt; font-weight: bold; text-transform: uppercase;">Laporan Inspeksi Kesehatan Lingkungan</h2>
+                        <h3 style="margin: 5px 0 0 0; font-size: 12pt; font-weight: bold;">Satuan Pelayanan Pemenuhan Gizi (SPPG)</h3>
+                    </div>
+
+                    <!-- BAGIAN A -->
+                    <div class="section-header">A. DATA UMUM</div>
+                    <table style="border: none;">
+                        <tr style="border: none;"><td style="width: 35%; border: none; padding: 2px;">1. Nama SPPG</td><td style="width: 2%; border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;" class="bold">${getText('nama_sppg')}</td></tr>
+                        <tr style="border: none;"><td style="border: none; padding: 2px;">2. Alamat</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('alamat_sppg')}</td></tr>
+                        <tr style="border: none;"><td style="border: none; padding: 2px;">3. Pengelola</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('nama_pengelola')} (${getText('kontak_pengelola')})</td></tr>
+                        <tr style="border: none;"><td style="border: none; padding: 2px;">4. Jumlah Porsi / Distribusi</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('jumlah_porsi')} Porsi / ${getText('distribusi_pangan')}</td></tr>
+                        <tr style="border: none;"><td style="border: none; padding: 2px;">5. Total Penjamah (Terlatih)</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('total_penjamah')} orang (${getText('penjamah_bersertifikat')} terlatih)</td></tr>
+                        <tr style="border: none;"><td style="border: none; padding: 2px;">6. Tanggal Pemeriksaan</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('tanggal_pemeriksaan')}</td></tr>
+                        <tr style="border: none;"><td style="border: none; padding: 2px;">7. Koordinat</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('latitude')}, ${getText('longitude')}</td></tr>
+                    </table>
+
+                    <!-- BAGIAN B -->
+                    <div class="section-header">B. HASIL PENILAIAN</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">No</th>
+                                <th style="width: 40%;">Uraian Persyaratan</th>
+                                <th style="width: 6%;">A</th>
+                                <th style="width: 6%;">B</th>
+                                <th style="width: 6%;">C</th>
+                                <th style="width: 6%;">D</th>
+                                <th style="width: 6%;">E</th>
+                                <th style="width: 6%;">F</th>
+                                <th style="width: 6%;">G</th>
+                                <th style="width: 6%;">H</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                
+                // Loop Criteria
+                CRITERIA.forEach(crit => {
+                    if(crit.isHeader) {
+                        reportContent += `<tr style="background-color: #f9f9f9;"><td colspan="10" class="bold" style="background-color: #f0f0f0;">${crit.no}. ${crit.text}</td></tr>`;
+                    } else {
+                        reportContent += `<tr>
+                            <td class="text-center">${crit.displayNo || crit.no}</td>
+                            <td>${crit.text}</td>`;
+                        
+                        ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].forEach(area => {
+                            let val = getRadioVal(`crit-${crit.no}-${area}`);
+                            let displayVal = val;
+                            if (crit.areas[area] === 'NA') {
+                                displayVal = '<span style="color:#ccc; font-size:8pt;">NA</span>';
+                            } else if (val === '0' || val === '-') {
+                                displayVal = '-';
+                            } else {
+                                displayVal = parseInt(val) > 0 ? `<span class="bold">${val}</span>` : val;
+                            }
+                            reportContent += `<td class="text-center">${displayVal}</td>`;
+                        });
+                        reportContent += `</tr>`;
+                    }
+                });
+
+                reportContent += `
+                        </tbody>
+                    </table>
+                    <p style="font-size: 8pt; margin-top: 0; margin-bottom: 10px; font-style: italic;">* Keterangan Area: A=Luar, B=Fasilitas, C=Penerimaan, D=Penyimpanan, E=Pengolahan, F=Pengemasan, G=Pemuatan, H=Pencucian</p>
+
+                    <!-- BAGIAN C -->
+                    <div class="section-header">C. PERSYARATAN KHUSUS</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 5%;">No</th>
+                                <th>Uraian Persyaratan Khusus</th>
+                                <th style="width: 15%;">Hasil</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+                
+                // Loop Special Req
+                SPECIAL_REQUIREMENTS.forEach(req => {
+                    if (req.isHeader) {
+                        reportContent += `<tr style="background-color: #f9f9f9;"><td colspan="3" class="bold" style="background-color: #f0f0f0;">${req.displayNo || req.no}. ${req.text}</td></tr>`;
+                    } else if (req.isSubHeader) {
+                        reportContent += `<tr><td class="text-center">${req.displayNo || ''}</td><td colspan="2" class="italic">${req.text}</td></tr>`;
+                    } else {
+                        const val = getRadioVal(`req-${req.no}`);
+                        const displayVal = val === 'Tidak' ? `<span class="bold">${val}</span>` : val;
+                        reportContent += `<tr>
+                            <td class="text-center">${req.displayNo || req.no}</td>
+                            <td>${req.text}</td>
+                            <td class="text-center">${displayVal}</td>
+                        </tr>`;
+                    }
+                });
+
+                reportContent += `
+                        </tbody>
+                    </table>
+
+                    <!-- BAGIAN D -->
+                    <div style="page-break-inside: avoid;">
+                        <div class="section-header">D. KESIMPULAN & PENGESAHAN</div>
+                        <div style="border: 1px solid #000; padding: 10px;">
+                            <table style="border: none; margin-bottom: 0;">
+                                <tr style="border: none;">
+                                    <td style="width: 25%; border: none; font-weight: bold;">Nilai Akhir IKL</td>
+                                    <td style="width: 2%; border: none;">:</td>
+                                    <td style="border: none; font-size: 12pt; font-weight: bold;">${document.getElementById('final-ikl-score').textContent}</td>
+                                </tr>
+                                <tr style="border: none;">
+                                    <td style="border: none; font-weight: bold;">Status IKL</td>
+                                    <td style="border: none;">:</td>
+                                    <td style="border: none; font-weight: bold; text-transform: uppercase;">${document.getElementById('ikl-status').textContent}</td>
+                                </tr>
+                                <tr style="border: none;">
+                                    <td style="border: none; font-weight: bold; vertical-align: top;">Catatan / Saran</td>
+                                    <td style="border: none; vertical-align: top;">:</td>
+                                    <td style="border: none; vertical-align: top;">${getText('catatan_akhir')}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div style="margin-top: 30px;">
+                            <table style="border: none; width: 100%;">
+                                <tr style="border: none;">
+                                    <td style="width: 50%; text-align: center; border: none;">
+                                        <p style="margin-bottom: 60px;">Mengetahui,<br>Pengelola SPPG</p>
+                                        <p style="text-decoration: underline; font-weight: bold;">${getText('ttd_pengelola_nama')}</p>
+                                    </td>
+                                    <td style="width: 50%; text-align: center; border: none;">
+                                        <p style="margin-bottom: 60px;">Petugas Pemeriksa</p>
+                                        <p style="text-decoration: underline; font-weight: bold;">${getText('ttd_pemeriksa_nama')}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>`;
+
+                // 2. Buat Elemen
+                const element = document.createElement('div');
+                element.innerHTML = reportContent;
+
+                // 3. Konfigurasi html2pdf yang LEBIH STABIL
+                const opt = {
+                    margin:       [0.5, 0.5, 0.5, 0.5], // Margin seragam
+                    filename:     `Laporan_IKL_${getText('nama_sppg').replace(/\s+/g, '_')}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
+                    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
+                    // Hapus 'avoid-all' agar tidak memicu halaman kosong jika konten padat
+                    pagebreak:    { mode: 'css' } 
+                };
+
+                // 4. Generate
+                html2pdf().set(opt).from(element).save().then(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }).catch(err => {
+                    console.error(err);
+                    alert('Terjadi kesalahan saat membuat PDF.');
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                });
+            });
 
             document.getElementById('reset-form-btn').addEventListener('click', resetForm);
             document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
