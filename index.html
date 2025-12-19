@@ -457,6 +457,8 @@
             </div>
             
             <div class="flex-shrink-0 flex space-x-4 items-center order-2 md:order-3">
+                <!-- Bagian "tidak sesuai" yang lama di sini TELAH DIHAPUS dan dipindah ke atas -->
+                
                 <div class="text-center">
                     <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Nilai Final IKL</p> 
                     <p id="final-ikl-score" class="text-4xl font-extrabold transition-colors duration-500 text-ikl-green">100.00</p>
@@ -805,15 +807,14 @@
                     `;
                 } else {
                     if (req.group) tr.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
-                    // UPDATE: 'checked' dipindahkan ke input dengan value="Ya"
                     tr.innerHTML = `
                         <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-medium align-middle text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600">${displayNo}</td>
                         <td class="${(req.no > 8 && req.displayNo && req.displayNo.length > 1) ? "pl-8" : "px-4"} py-3 text-sm text-gray-700 dark:text-gray-300 align-middle">${req.text}</td>
                         <td class="px-4 py-3 align-middle text-center w-48">
                             <div class="flex space-x-2 justify-center">
-                                <input type="radio" id="req-table-${req.no}-Ya" name="req-${req.no}" value="Ya" class="special-req-input hidden" checked>
+                                <input type="radio" id="req-table-${req.no}-Ya" name="req-${req.no}" value="Ya" class="special-req-input hidden">
                                 <label for="req-table-${req.no}-Ya" class="special-req-label text-sm py-1.5">Ya</label>
-                                <input type="radio" id="req-table-${req.no}-Tidak" name="req-${req.no}" value="Tidak" class="special-req-input hidden">
+                                <input type="radio" id="req-table-${req.no}-Tidak" name="req-${req.no}" value="Tidak" class="special-req-input hidden" checked>
                                 <label for="req-table-${req.no}-Tidak" class="special-req-label text-sm py-1.5">Tidak</label>
                             </div>
                         </td>`;
@@ -837,8 +838,8 @@
                 } else {
                     cardDiv.className = `p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700`;
                     if (req.group) cardDiv.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
-                    // UPDATE: 'checked' dipindahkan ke input dengan value="Ya" (Mobile View)
-                    cardDiv.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-12 text-sm font-bold text-gray-700 dark:text-gray-300">${displayNo}</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div></div><div class="flex space-x-2 pt-2"><input type="radio" id="req-card-${req.no}-Ya" name="req-${req.no}_mobile" value="Ya" class="special-req-input hidden" checked><label for="req-card-${req.no}-Ya" class="special-req-label text-sm py-2">Ya</label><input type="radio" id="req-card-${req.no}-Tidak" name="req-${req.no}_mobile" value="Tidak" class="special-req-input hidden"><label for="req-card-${req.no}-Tidak" class="special-req-label text-sm py-2">Tidak</label></div>`;
+                    // FIX: Added _mobile suffix to name attribute here
+                    cardDiv.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-12 text-sm font-bold text-gray-700 dark:text-gray-300">${displayNo}</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div></div><div class="flex space-x-2 pt-2"><input type="radio" id="req-card-${req.no}-Ya" name="req-${req.no}_mobile" value="Ya" class="special-req-input hidden"><label for="req-card-${req.no}-Ya" class="special-req-label text-sm py-2">Ya</label><input type="radio" id="req-card-${req.no}-Tidak" name="req-${req.no}_mobile" value="Tidak" class="special-req-input hidden" checked><label for="req-card-${req.no}-Tidak" class="special-req-label text-sm py-2">Tidak</label></div>`;
                 }
                 cardContainer.appendChild(cardDiv);
             });
@@ -846,75 +847,36 @@
         }
 
         function calculateScore() {
+            // FIX: Exclude mobile duplicate inputs from score calculation to avoid double counting
+            const scores = document.querySelectorAll('.score-input:checked:not([name*="_mobile"])');
             let totalScore = 0;
-            
-            // REVISI METODE PERHITUNGAN: 
-            // Iterasi berdasarkan DATA STRUKTUR (CRITERIA) bukan elemen DOM
-            // Ini menjamin konsistensi 100% dan mencegah double counting atau missing inputs
-            
-            CRITERIA.forEach(crit => {
-                if (crit.isHeader) return; // Lewati header
-                
-                AREAS.forEach(area => {
-                    // Cek apakah area ini 'applicable' (bukan NA secara definisi)
-                    if (crit.areas[area] !== 'NA') {
-                        // Ambil nama input versi Desktop (Master)
-                        // Logika sinkronisasi memastikan jika mobile dicentang, desktop juga dicentang
-                        const inputName = `crit-${crit.no}-${area}`;
-                        
-                        // Cari input yang checked
-                        const checkedInput = document.querySelector(`input[name="${inputName}"]:checked`);
-                        
-                        if (checkedInput) {
-                            const val = parseInt(checkedInput.value, 10);
-                            // Tambahkan ke total skor HANYA jika nilainya angka valid > 0
-                            // (Nilai 0 berarti "NA" pilihan user atau kepatuhan, tidak menambah penalti)
-                            if (!isNaN(val) && val > 0) {
-                                totalScore += val;
-                            }
-                        }
-                    }
-                });
+            scores.forEach(input => {
+                const value = parseInt(input.value, 10);
+                if (!isNaN(value) && value > 0) totalScore += value;
             });
-
-            // Gunakan calculatedMaxTotalScore yang dihitung statis saat inisialisasi
-            const maxScore = calculatedMaxTotalScore;
-            
-            // Rumus IKL: 100 - (Total Penalti / Max Penalti * 100)
+            const maxScore = calculateMaxPossibleScore();
             let iklScore = maxScore > 0 ? 100 - ((totalScore / maxScore) * 100) : 100;
-            
-            // Clamp nilai antara 0 dan 100
             iklScore = Math.max(0, Math.min(100, iklScore));
-            
-            // Update UI
             const iklScoreElement = document.getElementById('final-ikl-score');
             const progressBar = document.getElementById('score-progress-bar');
             const iklStatusElement = document.getElementById('ikl-status');
-            
             let iklStatusText, finalScoreColorClass, progressColorClass, iklStatusColorClass;
-            
             if (iklScore >= 80) {
-                finalScoreColorClass = 'text-ikl-green'; 
-                progressColorClass = 'bg-score-green'; 
-                iklStatusText = 'MEMENUHI SYARAT'; 
-                iklStatusColorClass = 'text-score-green';
+                finalScoreColorClass = 'text-ikl-green'; progressColorClass = 'bg-score-green'; iklStatusText = 'MEMENUHI SYARAT'; iklStatusColorClass = 'text-score-green';
             } else {
-                finalScoreColorClass = 'text-ikl-red'; 
-                progressColorClass = 'bg-score-red'; 
-                iklStatusText = 'TIDAK MEMENUHI SYARAT'; 
-                iklStatusColorClass = 'text-score-red';
+                finalScoreColorClass = 'text-ikl-red'; progressColorClass = 'bg-score-red'; iklStatusText = 'TIDAK MEMENUHI SYARAT'; iklStatusColorClass = 'text-score-red';
             }
-            
-            iklScoreElement.className = `text-4xl font-extrabold transition-colors duration-500 ${finalScoreColorClass}`;
+            iklScoreElement.classList.remove('text-ikl-green', 'text-ikl-red');
+            iklScoreElement.classList.add(finalScoreColorClass);
             document.getElementById('total-score-value').textContent = totalScore;
             document.getElementById('max-score-label').textContent = `maksimum: ${maxScore}`; 
             iklScoreElement.textContent = iklScore.toFixed(2);
-            
-            iklStatusElement.className = `text-xs font-semibold mt-1 ${iklStatusColorClass}`;
+            iklStatusElement.classList.remove('text-score-green', 'text-score-red');
             iklStatusElement.textContent = iklStatusText;
-            
+            iklStatusElement.classList.add(iklStatusColorClass);
             progressBar.style.width = `${iklScore}%`;
-            progressBar.className = `h-4 rounded-full transition-all duration-500 ${progressColorClass}`;
+            progressBar.classList.remove('bg-score-green', 'bg-score-red');
+            progressBar.classList.add(progressColorClass);
         }
 
         function initTheme() {
@@ -1027,14 +989,15 @@
                 }
             });
             document.querySelectorAll('.special-req-input').forEach(input => {
-                // UPDATE: Set default ke 'Ya'
-                if (input.value === 'Ya') {
+                if (input.value === 'Tidak') {
                     input.checked = true;
                     input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             });
-            // Tidak perlu panggil calculateScore di sini, akan dipanggil di akhir load
+            calculateScore();
         }
+
+        // Fungsi fetchWithExponentialBackoff dihapus karena fitur AI dihilangkan
 
         function resetForm() {
             if (confirm("Apakah Anda yakin ingin mereset semua formulir?")) {
@@ -1056,6 +1019,11 @@
             const cardDivs = document.querySelectorAll(`#special-req-cards .req-group-${groupNo}`);
             const cardIcon = document.getElementById(`icon-req-group-card-${groupNo}`);
             let isHidden = tableRows.length > 0 ? tableRows[0].classList.contains('hidden') : false;
+            
+            // Logic change: Apply forceHide only if explicit. Otherwise toggle.
+            // But to support saving, we need consistent state.
+            // If this function is called with forceHide=true (initial load), we set hidden.
+            // If called by click (forceHide default false), we toggle.
             
             let newHiddenState;
             if (forceHide) {
@@ -1145,19 +1113,12 @@
             document.querySelectorAll('.score-input').forEach(i => i.addEventListener('change', handleScoreChange));
             document.querySelectorAll('.special-req-input').forEach(i => i.addEventListener('change', handleSpecialReqChange));
             document.querySelectorAll('.autosave-input').forEach(i => i.addEventListener('input', saveFormData));
-            
-            // Urutan Inisialisasi Kritis
             isInternalUpdate = true;
             initializeFormState(); 
             loadFormData(); 
+            // Load UI State at the end to apply preserved settings
             loadUIState();
-            
-            // HITUNG ULANG FINAL SETELAH SEMUA DATA DIMUAT
-            // Ini memastikan skor yang ditampilkan adalah hasil dari state terakhir yang benar
-            setTimeout(() => {
-                calculateScore();
-                isInternalUpdate = false;
-            }, 100);
+            isInternalUpdate = false;
             
             // Logika Dapatkan Lokasi (Ikon dipulihkan di semua state)
             document.getElementById('get-location-btn').addEventListener('click', () => {
