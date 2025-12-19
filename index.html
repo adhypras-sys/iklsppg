@@ -723,107 +723,60 @@
             return isCard ? `<div class="flex flex-col space-y-1">${optionsHTML}</div>` : `<div class="flex flex-col space-y-1.5">${optionsHTML}</div>`;
         }
         
-        // --- PERFORMANCE OPTIMIZATION: CHUNKED RENDERING ---
-        // Fungsi ini memecah rendering tabel menjadi potongan-potongan kecil (chunks)
-        // menggunakan requestAnimationFrame agar tidak memblokir UI browser saat refresh/load.
         function renderCriteriaTable() {
             const body = document.getElementById('inspection-body');
             const cardContainer = document.getElementById('inspection-cards');
-            
-            // Bersihkan konten lama segera
-            body.innerHTML = ''; 
-            cardContainer.innerHTML = '';
-            
-            // Konfigurasi Chunk
-            const CHUNK_SIZE = 5; // Jumlah baris per frame (semakin kecil semakin responsif)
-            let currentIndex = 0;
-            const totalCriteria = CRITERIA.length;
-
-            function renderChunk() {
-                const fragmentBody = document.createDocumentFragment();
-                const fragmentCards = document.createDocumentFragment();
-                const limit = Math.min(currentIndex + CHUNK_SIZE, totalCriteria);
-
-                for (let i = currentIndex; i < limit; i++) {
-                    const crit = CRITERIA[i];
-                    const isCollapsibleGroup = ['8', '9', '10', '13', '16', '17', '18', '19', '20', '21', '22', '23'].includes(crit.no);
-                    
-                    // --- 1. RENDER ROW (TABLE) ---
-                    const tableRow = document.createElement('tr');
-                    tableRow.className = 'criteria-row border-b hover:bg-kitchen-cream dark:hover:bg-gray-700 transition-colors border-gray-200 dark:border-gray-700';
-                    
-                    if (crit.isHeader) {
-                        tableRow.classList.add('bg-kitchen-main/10', 'dark:bg-gray-600', 'criteria-header-row'); 
-                        if (isCollapsibleGroup) {
-                            tableRow.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
-                            const iconSvg = `<svg id="icon-group-table-${crit.no}" class="w-6 h-6 ml-2 transition-transform duration-200 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
-                            tableRow.innerHTML = `
-                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-bold align-middle text-kitchen-dark dark:text-white border-r border-gray-200 dark:border-gray-600">${crit.no}</td>
-                                <td colspan="9" class="px-4 py-3 align-middle">
-                                    <div class="flex items-center justify-between w-full text-sm font-bold text-kitchen-dark dark:text-white"><span>${crit.text}</span>${iconSvg}</div>
-                                </td>`;
-                        } else {
-                            tableRow.innerHTML = `
-                                <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-bold align-middle text-kitchen-dark dark:text-white border-r border-gray-200 dark:border-gray-600">${crit.no}</td>
-                                <td colspan="9" class="px-4 py-3 text-sm font-bold text-kitchen-dark dark:text-white align-middle"><div class="w-full">${crit.text}</div></td>`;
-                        }
-                        fragmentBody.appendChild(tableRow); // Append to table chunk
-
-                        // --- 2. RENDER HEADER (CARD) ---
-                        const cardHeader = document.createElement('div');
-                        cardHeader.className = `p-3 bg-kitchen-main/10 dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 font-bold mt-4 criteria-header-row`;
-                        cardHeader.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
-                        const cardIconSvg = `<svg id="icon-group-card-${crit.no}" class="w-6 h-6 ml-2 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
-                        cardHeader.innerHTML = `<div class="flex justify-between items-center"><span class="text-kitchen-dark dark:text-white">${crit.no}. ${crit.text}</span>${isCollapsibleGroup ? cardIconSvg : ''}</div>`;
-                        fragmentCards.appendChild(cardHeader); // Append to card chunk
-
+            body.innerHTML = ''; cardContainer.innerHTML = '';
+            CRITERIA.forEach((crit) => {
+                const isCollapsibleGroup = ['8', '9', '10', '13', '16', '17', '18', '19', '20', '21', '22', '23'].includes(crit.no);
+                const tableRow = document.createElement('tr');
+                tableRow.className = 'criteria-row border-b hover:bg-kitchen-cream dark:hover:bg-gray-700 transition-colors border-gray-200 dark:border-gray-700';
+                if (crit.isHeader) {
+                    tableRow.classList.add('bg-kitchen-main/10', 'dark:bg-gray-600', 'criteria-header-row'); 
+                    if (isCollapsibleGroup) {
+                         tableRow.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
+                         const iconSvg = `<svg id="icon-group-table-${crit.no}" class="w-6 h-6 ml-2 transition-transform duration-200 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
+                         tableRow.innerHTML = `
+                            <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-bold align-middle text-kitchen-dark dark:text-white border-r border-gray-200 dark:border-gray-600">${crit.no}</td>
+                            <td colspan="9" class="px-4 py-3 align-middle">
+                                <div class="flex items-center justify-between w-full text-sm font-bold text-kitchen-dark dark:text-white"><span>${crit.text}</span>${iconSvg}</div>
+                            </td>`;
                     } else {
-                        // Data Row
-                        const displayNo = crit.displayNo || crit.no;
-                        if (crit.group) tableRow.classList.add(`criteria-group-${crit.group}`, 'criteria-group-item', 'hidden'); 
-                        
-                        tableRow.innerHTML += `<td class="px-2 py-3 whitespace-nowrap text-center text-sm font-medium align-middle text-gray-700 dark:text-gray-300">${displayNo}</td><td class="${crit.displayNo ? "pl-8" : "px-4"} py-3 text-sm text-gray-700 dark:text-gray-300 align-middle">${crit.text}</td>`;
-                        
-                        AREAS.forEach(area => {
-                            const cell = document.createElement('td');
-                            cell.className = 'px-1 py-1 whitespace-nowrap text-center w-12 align-top'; 
-                            cell.innerHTML = getRadioOptionsHTML(crit, area, false);
-                            tableRow.appendChild(cell);
-                        });
-                        fragmentBody.appendChild(tableRow); // Append to table chunk
-
-                        // Card Item
-                        const cardItem = document.createElement('div');
-                        cardItem.className = `p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 criteria-group-item`;
-                        if (crit.group) cardItem.classList.add(`criteria-group-${crit.group}`, 'hidden'); 
-                        
-                        let cardScores = '';
-                        AREAS.forEach(area => {
-                            if (getMaxScore(crit.areas[area]) > 0 || crit.areas[area] === 'NA') {
-                                cardScores += `<div class="flex flex-col space-y-1 text-center flex-grow"><p class="text-xs font-bold text-gray-700 dark:text-gray-300">${area}</p>${getRadioOptionsHTML(crit, area, true)}</div>`;
-                            }
-                        });
-                        cardItem.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-8 text-sm font-bold text-kitchen-dark dark:text-kitchen-main">${displayNo}.</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${crit.text}</div></div><div class="pt-3 pb-2"><div class="flex space-x-0.5 justify-around">${cardScores}</div></div>`;
-                        fragmentCards.appendChild(cardItem); // Append to card chunk
+                        tableRow.innerHTML = `
+                            <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-bold align-middle text-kitchen-dark dark:text-white border-r border-gray-200 dark:border-gray-600">${crit.no}</td>
+                            <td colspan="9" class="px-4 py-3 text-sm font-bold text-kitchen-dark dark:text-white align-middle"><div class="w-full">${crit.text}</div></td>`;
                     }
-                }
-
-                // Tempelkan Chunk ke DOM
-                body.appendChild(fragmentBody);
-                cardContainer.appendChild(fragmentCards);
-
-                // Lanjut ke chunk berikutnya
-                currentIndex += CHUNK_SIZE;
-                if (currentIndex < totalCriteria) {
-                    requestAnimationFrame(renderChunk);
+                    body.appendChild(tableRow);
+                    const cardHeader = document.createElement('div');
+                    cardHeader.className = `p-3 bg-kitchen-main/10 dark:bg-gray-600 rounded-lg border border-gray-200 dark:border-gray-600 font-bold mt-4 criteria-header-row`;
+                    cardHeader.setAttribute('onclick', `toggleCriteriaGroup('${crit.no}')`);
+                    const cardIconSvg = `<svg id="icon-group-card-${crit.no}" class="w-6 h-6 ml-2 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" /></svg>`;
+                    cardHeader.innerHTML = `<div class="flex justify-between items-center"><span class="text-kitchen-dark dark:text-white">${crit.no}. ${crit.text}</span>${isCollapsibleGroup ? cardIconSvg : ''}</div>`;
+                    cardContainer.appendChild(cardHeader);
                 } else {
-                    // Selesai rendering, pastikan event listener dan state di-refresh jika perlu
-                    // (Event delegation menangani event listener, jadi aman)
+                    const displayNo = crit.displayNo || crit.no;
+                    if (crit.group) tableRow.classList.add(`criteria-group-${crit.group}`, 'criteria-group-item', 'hidden'); 
+                    tableRow.innerHTML += `<td class="px-2 py-3 whitespace-nowrap text-center text-sm font-medium align-middle text-gray-700 dark:text-gray-300">${displayNo}</td><td class="${crit.displayNo ? "pl-8" : "px-4"} py-3 text-sm text-gray-700 dark:text-gray-300 align-middle">${crit.text}</td>`;
+                    AREAS.forEach(area => {
+                        const cell = document.createElement('td');
+                        cell.className = 'px-1 py-1 whitespace-nowrap text-center w-12 align-top'; 
+                        cell.innerHTML = getRadioOptionsHTML(crit, area, false);
+                        tableRow.appendChild(cell);
+                    });
+                    body.appendChild(tableRow);
+                    const cardItem = document.createElement('div');
+                    cardItem.className = `p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 criteria-group-item`;
+                    if (crit.group) cardItem.classList.add(`criteria-group-${crit.group}`, 'hidden'); 
+                    let cardScores = '';
+                    AREAS.forEach(area => {
+                        if (getMaxScore(crit.areas[area]) > 0 || crit.areas[area] === 'NA') {
+                            cardScores += `<div class="flex flex-col space-y-1 text-center flex-grow"><p class="text-xs font-bold text-gray-700 dark:text-gray-300">${area}</p>${getRadioOptionsHTML(crit, area, true)}</div>`;
+                        }
+                    });
+                    cardItem.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-8 text-sm font-bold text-kitchen-dark dark:text-kitchen-main">${displayNo}.</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${crit.text}</div></div><div class="pt-3 pb-2"><div class="flex space-x-0.5 justify-around">${cardScores}</div></div>`;
+                    cardContainer.appendChild(cardItem);
                 }
-            }
-
-            // Mulai render chunk pertama
-            requestAnimationFrame(renderChunk);
+            });
         }
 
         function renderSpecialRequirements() {
@@ -1187,23 +1140,12 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initTheme(); 
-            // Render dengan Chunking (untuk performa)
             renderCriteriaTable();
             renderSpecialRequirements();
+            document.querySelectorAll('.score-input').forEach(i => i.addEventListener('change', handleScoreChange));
+            document.querySelectorAll('.special-req-input').forEach(i => i.addEventListener('change', handleSpecialReqChange));
+            document.querySelectorAll('.autosave-input').forEach(i => i.addEventListener('input', saveFormData));
             
-            // Event Listeners (Delegation lebih efisien untuk elemen dinamis)
-            // Namun, karena renderCriteriaTable menggunakan chunking (async),
-            // kita gunakan event delegation di 'form-content' untuk memastikan semua elemen tertangkap.
-            
-            const formContent = document.getElementById('form-content');
-            formContent.addEventListener('change', (e) => {
-                if (e.target.matches('.score-input')) handleScoreChange(e);
-                if (e.target.matches('.special-req-input')) handleSpecialReqChange(e);
-            });
-            formContent.addEventListener('input', (e) => {
-                if (e.target.matches('.autosave-input')) saveFormData();
-            });
-
             // Urutan Inisialisasi Kritis
             isInternalUpdate = true;
             initializeFormState(); 
@@ -1211,10 +1153,11 @@
             loadUIState();
             
             // HITUNG ULANG FINAL SETELAH SEMUA DATA DIMUAT
+            // Ini memastikan skor yang ditampilkan adalah hasil dari state terakhir yang benar
             setTimeout(() => {
                 calculateScore();
                 isInternalUpdate = false;
-            }, 300); // Beri sedikit waktu agar rendering chunk selesai
+            }, 100);
             
             // Logika Dapatkan Lokasi (Ikon dipulihkan di semua state)
             document.getElementById('get-location-btn').addEventListener('click', () => {
@@ -1262,7 +1205,7 @@
                 }
             });
             
-            // --- FITUR UNDUH PDF ---
+            // --- FITUR UNDUH PDF BARU (GENERATOR LAPORAN FORMAL) ---
             document.getElementById('export-pdf-btn').addEventListener('click', () => {
                 const btn = document.getElementById('export-pdf-btn');
                 const originalText = btn.innerHTML;
@@ -1283,7 +1226,9 @@
                         table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
                         th, td { border: 1px solid #000; padding: 4px; font-size: 10pt; vertical-align: top; }
                         th { background-color: #f0f0f0; font-weight: bold; text-align: center; }
+                        /* Kunci agar baris tidak terpotong, tapi tabel boleh memanjang */
                         tr { page-break-inside: avoid; }
+                        /* Header tabel muncul lagi di halaman baru */
                         thead { display: table-header-group; }
                         .section-header { background-color: #e0e0e0; border: 1px solid #000; padding: 5px 10px; margin-top: 15px; margin-bottom: 5px; font-weight: bold; font-size: 11pt; }
                         .text-center { text-align: center; }
@@ -1327,6 +1272,7 @@
                         </thead>
                         <tbody>`;
                 
+                // Loop Criteria
                 CRITERIA.forEach(crit => {
                     if(crit.isHeader) {
                         reportContent += `<tr style="background-color: #f9f9f9;"><td colspan="10" class="bold" style="background-color: #f0f0f0;">${crit.no}. ${crit.text}</td></tr>`;
@@ -1368,6 +1314,7 @@
                         </thead>
                         <tbody>`;
                 
+                // Loop Special Req
                 SPECIAL_REQUIREMENTS.forEach(req => {
                     if (req.isHeader) {
                         reportContent += `<tr style="background-color: #f9f9f9;"><td colspan="3" class="bold" style="background-color: #f0f0f0;">${req.displayNo || req.no}. ${req.text}</td></tr>`;
@@ -1428,18 +1375,22 @@
                     </div>
                 </div>`;
 
+                // 2. Buat Elemen
                 const element = document.createElement('div');
                 element.innerHTML = reportContent;
 
+                // 3. Konfigurasi html2pdf yang LEBIH STABIL
                 const opt = {
-                    margin:       [0.5, 0.5, 0.5, 0.5],
+                    margin:       [0.5, 0.5, 0.5, 0.5], // Margin seragam
                     filename:     `Laporan_IKL_${getText('nama_sppg').replace(/\s+/g, '_')}.pdf`,
                     image:        { type: 'jpeg', quality: 0.98 },
                     html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
                     jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
+                    // Hapus 'avoid-all' agar tidak memicu halaman kosong jika konten padat
                     pagebreak:    { mode: 'css' } 
                 };
 
+                // 4. Generate
                 html2pdf().set(opt).from(element).save().then(() => {
                     btn.innerHTML = originalText;
                     btn.disabled = false;
