@@ -565,19 +565,37 @@
         const STORAGE_KEY = 'ikl_sppg_autosave_v1';
         const THEME_KEY = 'ikl_sppg_theme_v1';
         const SCORE_BAR_STATE_KEY = 'ikl_sppg_score_bar_state';
+        const UI_STATE_KEY = 'ikl_sppg_ui_state_v1';
+        
         // Variabel API AI dihapus
         let isInternalUpdate = false;
+
+        function saveUIState(type, id, state) {
+            let uiState = JSON.parse(localStorage.getItem(UI_STATE_KEY) || '{"sections":{}, "criteriaGroups":{}, "specialReqGroups":{}}');
+            if (!uiState[type]) uiState[type] = {};
+            uiState[type][id] = state;
+            localStorage.setItem(UI_STATE_KEY, JSON.stringify(uiState));
+        }
 
         function toggleCriteriaGroup(groupNo) {
             const tableRows = document.querySelectorAll(`#inspection-table .criteria-group-${groupNo}`);
             const tableIcon = document.getElementById(`icon-group-table-${groupNo}`);
             const cardDivs = document.querySelectorAll(`#inspection-cards .criteria-group-${groupNo}`);
             const cardIcon = document.getElementById(`icon-group-card-${groupNo}`);
+            
+            // Determine current state (if first row is hidden, it means it is currently hidden)
             let isHidden = tableRows.length > 0 ? tableRows[0].classList.contains('hidden') : false;
+            
+            // Toggle
             tableRows.forEach(row => row.classList.toggle('hidden', !isHidden));
             cardDivs.forEach(div => div.classList.toggle('hidden', !isHidden));
+            
+            // Icon rotation logic: isHidden=true means we are SHOWING it now -> rotate
             if (tableIcon) isHidden ? tableIcon.classList.add('rotate-180') : tableIcon.classList.remove('rotate-180');
             if (cardIcon) isHidden ? cardIcon.classList.add('rotate-180') : cardIcon.classList.remove('rotate-180');
+
+            // Save new state (!isHidden because isHidden was the OLD state)
+            saveUIState('criteriaGroups', groupNo, !isHidden);
         }
         
         function calculateMaxPossibleScore() {
@@ -876,11 +894,14 @@
         function toggleSection(sectionId) {
             const content = document.getElementById(sectionId);
             const icon = document.getElementById('icon-' + sectionId);
+            let isCollapsedNow = false;
+
             if (content.classList.contains('collapsed')) {
                 content.classList.remove('collapsed');
                 content.style.maxHeight = content.scrollHeight + "px"; 
                 icon.classList.add('rotate-180');
                 setTimeout(() => { content.style.maxHeight = 'none'; }, 400);
+                isCollapsedNow = false;
             } else {
                 content.style.maxHeight = content.scrollHeight + "px"; 
                 requestAnimationFrame(() => {
@@ -888,7 +909,9 @@
                     content.style.maxHeight = '0';
                 });
                 icon.classList.remove('rotate-180');
+                isCollapsedNow = true;
             }
+            saveUIState('sections', sectionId, isCollapsedNow);
         }
 
         function toggleScoreBar() {
@@ -973,11 +996,14 @@
         function resetForm() {
             if (confirm("Apakah Anda yakin ingin mereset semua formulir?")) {
                 localStorage.removeItem(STORAGE_KEY);
+                // Also reset UI states to default
+                localStorage.removeItem(UI_STATE_KEY);
+                
                 isInternalUpdate = true;
                 document.querySelectorAll('input:not([type="radio"]), textarea').forEach(i => i.value = '');
                 initializeFormState();
                 isInternalUpdate = false;
-                window.scrollTo(0, 0);
+                window.location.reload(); // Reload to reset UI states visually
             }
         }
 
@@ -987,11 +1013,91 @@
             const cardDivs = document.querySelectorAll(`#special-req-cards .req-group-${groupNo}`);
             const cardIcon = document.getElementById(`icon-req-group-card-${groupNo}`);
             let isHidden = tableRows.length > 0 ? tableRows[0].classList.contains('hidden') : false;
-            if (forceHide && !isHidden) isHidden = false; 
-            tableRows.forEach(row => row.classList.toggle('hidden', !isHidden));
-            cardDivs.forEach(div => div.classList.toggle('hidden', !isHidden));
-            if (tableIcon) isHidden ? tableIcon.classList.add('rotate-180') : tableIcon.classList.remove('rotate-180');
-            if (cardIcon) isHidden ? cardIcon.classList.add('rotate-180') : cardIcon.classList.remove('rotate-180');
+            
+            // Logic change: Apply forceHide only if explicit. Otherwise toggle.
+            // But to support saving, we need consistent state.
+            // If this function is called with forceHide=true (initial load), we set hidden.
+            // If called by click (forceHide default false), we toggle.
+            
+            let newHiddenState;
+            if (forceHide) {
+                newHiddenState = true;
+            } else {
+                newHiddenState = !isHidden;
+            }
+
+            tableRows.forEach(row => row.classList.toggle('hidden', newHiddenState));
+            cardDivs.forEach(div => div.classList.toggle('hidden', newHiddenState));
+            
+            // Icon rotation: hidden=true -> no rotate. hidden=false -> rotate
+            if (tableIcon) newHiddenState ? tableIcon.classList.remove('rotate-180') : tableIcon.classList.add('rotate-180');
+            if (cardIcon) newHiddenState ? cardIcon.classList.remove('rotate-180') : cardIcon.classList.add('rotate-180');
+            
+            // Only save if it wasn't a forced initialization (to avoid overwriting saved state on load before we restore it)
+            if (!forceHide) {
+                saveUIState('specialReqGroups', groupNo, !newHiddenState); // Save "isExpanded" which is !hidden
+            }
+        }
+
+        function loadUIState() {
+            const uiState = JSON.parse(localStorage.getItem(UI_STATE_KEY));
+            if (!uiState) return;
+
+            // Restore Main Sections
+            if (uiState.sections) {
+                Object.keys(uiState.sections).forEach(sectionId => {
+                    const content = document.getElementById(sectionId);
+                    const icon = document.getElementById('icon-' + sectionId);
+                    if (!content) return;
+                    
+                    const isCollapsed = uiState.sections[sectionId];
+                    if (isCollapsed) {
+                        content.classList.add('collapsed');
+                        content.style.maxHeight = '0';
+                        if (icon) icon.classList.remove('rotate-180');
+                    } else {
+                        content.classList.remove('collapsed');
+                        content.style.maxHeight = 'none';
+                        if (icon) icon.classList.add('rotate-180');
+                    }
+                });
+            }
+
+            // Restore Criteria Groups
+            if (uiState.criteriaGroups) {
+                Object.keys(uiState.criteriaGroups).forEach(groupNo => {
+                    const isExpanded = uiState.criteriaGroups[groupNo];
+                    const tableRows = document.querySelectorAll(`#inspection-table .criteria-group-${groupNo}`);
+                    const cardDivs = document.querySelectorAll(`#inspection-cards .criteria-group-${groupNo}`);
+                    const tableIcon = document.getElementById(`icon-group-table-${groupNo}`);
+                    const cardIcon = document.getElementById(`icon-group-card-${groupNo}`);
+                    
+                    const isHidden = !isExpanded;
+                    tableRows.forEach(row => row.classList.toggle('hidden', isHidden));
+                    cardDivs.forEach(div => div.classList.toggle('hidden', isHidden));
+                    
+                    if (tableIcon) isHidden ? tableIcon.classList.remove('rotate-180') : tableIcon.classList.add('rotate-180');
+                    if (cardIcon) isHidden ? cardIcon.classList.remove('rotate-180') : cardIcon.classList.add('rotate-180');
+                });
+            }
+
+            // Restore Special Req Groups
+            if (uiState.specialReqGroups) {
+                Object.keys(uiState.specialReqGroups).forEach(groupNo => {
+                    const isExpanded = uiState.specialReqGroups[groupNo];
+                    const tableRows = document.querySelectorAll(`#special-req-table .req-group-${groupNo}`);
+                    const cardDivs = document.querySelectorAll(`#special-req-cards .req-group-${groupNo}`);
+                    const tableIcon = document.getElementById(`icon-req-group-table-${groupNo}`);
+                    const cardIcon = document.getElementById(`icon-req-group-card-${groupNo}`);
+
+                    const isHidden = !isExpanded;
+                    tableRows.forEach(row => row.classList.toggle('hidden', isHidden));
+                    cardDivs.forEach(div => div.classList.toggle('hidden', isHidden));
+
+                    if (tableIcon) isHidden ? tableIcon.classList.remove('rotate-180') : tableIcon.classList.add('rotate-180');
+                    if (cardIcon) isHidden ? cardIcon.classList.remove('rotate-180') : cardIcon.classList.add('rotate-180');
+                });
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -1004,6 +1110,8 @@
             isInternalUpdate = true;
             initializeFormState(); 
             loadFormData(); 
+            // Load UI State at the end to apply preserved settings
+            loadUIState();
             isInternalUpdate = false;
             
             // Logika Dapatkan Lokasi (Ikon dipulihkan di semua state)
