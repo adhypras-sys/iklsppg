@@ -438,7 +438,16 @@
             </div>
 
             <div class="flex-grow w-full md:w-auto order-1 md:order-2">
-                <h3 class="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">C. Nilai IKL</h3>
+                <!-- Header Container yang diperbarui: Judul IKL di kiri, Info Ketidaksesuaian di kanan (di atas bar) -->
+                <div class="flex justify-between items-end mb-2">
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-gray-200">C. Nilai IKL</h3>
+                    <div class="text-right flex items-baseline gap-1">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">tidak sesuai</span>
+                        <span id="total-score-value" class="text-lg font-bold text-score-red mx-1">0</span>
+                        <span id="max-score-label" class="text-xs text-gray-500 dark:text-gray-400">maksimum: -</span>
+                    </div>
+                </div>
+
                 <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-4">
                     <div id="score-progress-bar" class="h-4 rounded-full transition-all duration-500" style="width: 100%;"></div>
                 </div>
@@ -448,11 +457,6 @@
             </div>
             
             <div class="flex-shrink-0 flex space-x-4 items-center order-2 md:order-3">
-                <div class="text-center">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">tidak sesuai</p>
-                    <p id="total-score-value" class="text-xl font-bold text-score-red mt-1">0</p>
-                    <p id="max-score-label" class="text-xs text-gray-500 dark:text-gray-400">maksimum: -</p>
-                </div>
                 <div class="text-center">
                     <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Nilai Final IKL</p> 
                     <p id="final-ikl-score" class="text-4xl font-extrabold transition-colors duration-500 text-ikl-green">100.00</p>
@@ -841,36 +845,75 @@
         }
 
         function calculateScore() {
-            // FIX: Exclude mobile duplicate inputs from score calculation to avoid double counting
-            const scores = document.querySelectorAll('.score-input:checked:not([name*="_mobile"])');
             let totalScore = 0;
-            scores.forEach(input => {
-                const value = parseInt(input.value, 10);
-                if (!isNaN(value) && value > 0) totalScore += value;
+            
+            // REVISI METODE PERHITUNGAN: 
+            // Iterasi berdasarkan DATA STRUKTUR (CRITERIA) bukan elemen DOM
+            // Ini menjamin konsistensi 100% dan mencegah double counting atau missing inputs
+            
+            CRITERIA.forEach(crit => {
+                if (crit.isHeader) return; // Lewati header
+                
+                AREAS.forEach(area => {
+                    // Cek apakah area ini 'applicable' (bukan NA secara definisi)
+                    if (crit.areas[area] !== 'NA') {
+                        // Ambil nama input versi Desktop (Master)
+                        // Logika sinkronisasi memastikan jika mobile dicentang, desktop juga dicentang
+                        const inputName = `crit-${crit.no}-${area}`;
+                        
+                        // Cari input yang checked
+                        const checkedInput = document.querySelector(`input[name="${inputName}"]:checked`);
+                        
+                        if (checkedInput) {
+                            const val = parseInt(checkedInput.value, 10);
+                            // Tambahkan ke total skor HANYA jika nilainya angka valid > 0
+                            // (Nilai 0 berarti "NA" pilihan user atau kepatuhan, tidak menambah penalti)
+                            if (!isNaN(val) && val > 0) {
+                                totalScore += val;
+                            }
+                        }
+                    }
+                });
             });
-            const maxScore = calculateMaxPossibleScore();
+
+            // Gunakan calculatedMaxTotalScore yang dihitung statis saat inisialisasi
+            const maxScore = calculatedMaxTotalScore;
+            
+            // Rumus IKL: 100 - (Total Penalti / Max Penalti * 100)
             let iklScore = maxScore > 0 ? 100 - ((totalScore / maxScore) * 100) : 100;
+            
+            // Clamp nilai antara 0 dan 100
             iklScore = Math.max(0, Math.min(100, iklScore));
+            
+            // Update UI
             const iklScoreElement = document.getElementById('final-ikl-score');
             const progressBar = document.getElementById('score-progress-bar');
             const iklStatusElement = document.getElementById('ikl-status');
+            
             let iklStatusText, finalScoreColorClass, progressColorClass, iklStatusColorClass;
+            
             if (iklScore >= 80) {
-                finalScoreColorClass = 'text-ikl-green'; progressColorClass = 'bg-score-green'; iklStatusText = 'MEMENUHI SYARAT'; iklStatusColorClass = 'text-score-green';
+                finalScoreColorClass = 'text-ikl-green'; 
+                progressColorClass = 'bg-score-green'; 
+                iklStatusText = 'MEMENUHI SYARAT'; 
+                iklStatusColorClass = 'text-score-green';
             } else {
-                finalScoreColorClass = 'text-ikl-red'; progressColorClass = 'bg-score-red'; iklStatusText = 'TIDAK MEMENUHI SYARAT'; iklStatusColorClass = 'text-score-red';
+                finalScoreColorClass = 'text-ikl-red'; 
+                progressColorClass = 'bg-score-red'; 
+                iklStatusText = 'TIDAK MEMENUHI SYARAT'; 
+                iklStatusColorClass = 'text-score-red';
             }
-            iklScoreElement.classList.remove('text-ikl-green', 'text-ikl-red');
-            iklScoreElement.classList.add(finalScoreColorClass);
+            
+            iklScoreElement.className = `text-4xl font-extrabold transition-colors duration-500 ${finalScoreColorClass}`;
             document.getElementById('total-score-value').textContent = totalScore;
             document.getElementById('max-score-label').textContent = `maksimum: ${maxScore}`; 
             iklScoreElement.textContent = iklScore.toFixed(2);
-            iklStatusElement.classList.remove('text-score-green', 'text-score-red');
+            
+            iklStatusElement.className = `text-xs font-semibold mt-1 ${iklStatusColorClass}`;
             iklStatusElement.textContent = iklStatusText;
-            iklStatusElement.classList.add(iklStatusColorClass);
+            
             progressBar.style.width = `${iklScore}%`;
-            progressBar.classList.remove('bg-score-green', 'bg-score-red');
-            progressBar.classList.add(progressColorClass);
+            progressBar.className = `h-4 rounded-full transition-all duration-500 ${progressColorClass}`;
         }
 
         function initTheme() {
@@ -988,10 +1031,8 @@
                     input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             });
-            calculateScore();
+            // Tidak perlu panggil calculateScore di sini, akan dipanggil di akhir load
         }
-
-        // Fungsi fetchWithExponentialBackoff dihapus karena fitur AI dihilangkan
 
         function resetForm() {
             if (confirm("Apakah Anda yakin ingin mereset semua formulir?")) {
@@ -1013,11 +1054,6 @@
             const cardDivs = document.querySelectorAll(`#special-req-cards .req-group-${groupNo}`);
             const cardIcon = document.getElementById(`icon-req-group-card-${groupNo}`);
             let isHidden = tableRows.length > 0 ? tableRows[0].classList.contains('hidden') : false;
-            
-            // Logic change: Apply forceHide only if explicit. Otherwise toggle.
-            // But to support saving, we need consistent state.
-            // If this function is called with forceHide=true (initial load), we set hidden.
-            // If called by click (forceHide default false), we toggle.
             
             let newHiddenState;
             if (forceHide) {
@@ -1107,12 +1143,19 @@
             document.querySelectorAll('.score-input').forEach(i => i.addEventListener('change', handleScoreChange));
             document.querySelectorAll('.special-req-input').forEach(i => i.addEventListener('change', handleSpecialReqChange));
             document.querySelectorAll('.autosave-input').forEach(i => i.addEventListener('input', saveFormData));
+            
+            // Urutan Inisialisasi Kritis
             isInternalUpdate = true;
             initializeFormState(); 
             loadFormData(); 
-            // Load UI State at the end to apply preserved settings
             loadUIState();
-            isInternalUpdate = false;
+            
+            // HITUNG ULANG FINAL SETELAH SEMUA DATA DIMUAT
+            // Ini memastikan skor yang ditampilkan adalah hasil dari state terakhir yang benar
+            setTimeout(() => {
+                calculateScore();
+                isInternalUpdate = false;
+            }, 100);
             
             // Logika Dapatkan Lokasi (Ikon dipulihkan di semua state)
             document.getElementById('get-location-btn').addEventListener('click', () => {
