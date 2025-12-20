@@ -240,6 +240,7 @@
             .criteria-group-item, #inspection-table, #special-req-table, .req-group-item { display: table-row !important; } 
             #inspection-cards, #special-req-cards { display: none !important; } 
             .criteria-row, section { page-break-inside: avoid !important; }
+            tr { page-break-inside: avoid !important; } /* Ensure TR page break avoidance */
             thead { display: table-header-group; }
             .dark { color-scheme: light; } 
             .collapsible-content { display: block !important; }
@@ -307,7 +308,7 @@
 
             <!-- Bagian B -->
             <section class="mb-8">
-                <div class="flex justify-between items-center section-header border-b border-gray-300 dark:border-gray-600 pb-2 mb-4" onclick="toggleSection('content-b')">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-b')">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white">B. Penilaian IKL</h3>
                     <svg id="icon-content-b" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
@@ -1258,6 +1259,14 @@
                         th { background-color: #f0f0f0; font-weight: bold; text-align: center; }
                         /* Kunci agar baris tidak terpotong, tapi tabel boleh memanjang */
                         tr { page-break-inside: avoid; }
+                        
+                        /* Aturan Media Print untuk html2pdf */
+                        @media print {
+                            tr { page-break-inside: avoid; }
+                            .section-card { page-break-inside: avoid; }
+                            thead { display: table-header-group; }
+                        }
+
                         /* Header tabel muncul lagi di halaman baru */
                         thead { display: table-header-group; }
                         .section-header { background-color: #e0e0e0; border: 1px solid #000; padding: 5px 10px; margin-top: 15px; margin-bottom: 5px; font-weight: bold; font-size: 11pt; }
@@ -1272,35 +1281,38 @@
                     </div>
 
                     <!-- BAGIAN A -->
-                    <div class="section-header">A. DATA UMUM</div>
-                    <table style="border: none;">
-                        <tr style="border: none;"><td style="width: 35%; border: none; padding: 2px;">1. Nama SPPG</td><td style="width: 2%; border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;" class="bold">${getText('nama_sppg')}</td></tr>
-                        <tr style="border: none;"><td style="border: none; padding: 2px;">2. Alamat</td><td style="width: 2%; border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('alamat_sppg')}</td></tr>
-                        <tr style="border: none;"><td style="border: none; padding: 2px;">3. Pengelola</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('nama_pengelola')} (${getText('kontak_pengelola')})</td></tr>
-                        <tr style="border: none;"><td style="border: none; padding: 2px;">4. Jumlah Porsi / Distribusi</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('jumlah_porsi')} Porsi / ${getText('distribusi_pangan')}</td></tr>
-                        <tr style="border: none;"><td style="border: none; padding: 2px;">5. Total Penjamah (Terlatih)</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('total_penjamah')} orang (${getText('penjamah_bersertifikat')} terlatih)</td></tr>
-                        <tr style="border: none;"><td style="border: none; padding: 2px;">6. Tanggal Pemeriksaan</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('tanggal_pemeriksaan')}</td></tr>
-                        <tr style="border: none;"><td style="border: none; padding: 2px;">7. Koordinat</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('latitude')}, ${getText('longitude')}</td></tr>
-                    </table>
+                    <div class="section-card">
+                        <div class="section-header">A. DATA UMUM</div>
+                        <table style="border: none;">
+                            <tr style="border: none;"><td style="width: 35%; border: none; padding: 2px;">1. Nama SPPG</td><td style="width: 2%; border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;" class="bold">${getText('nama_sppg')}</td></tr>
+                            <tr style="border: none;"><td style="border: none; padding: 2px;">2. Alamat</td><td style="width: 2%; border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('alamat_sppg')}</td></tr>
+                            <tr style="border: none;"><td style="border: none; padding: 2px;">3. Pengelola</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('nama_pengelola')} (${getText('kontak_pengelola')})</td></tr>
+                            <tr style="border: none;"><td style="border: none; padding: 2px;">4. Jumlah Porsi / Distribusi</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('jumlah_porsi')} Porsi / ${getText('distribusi_pangan')}</td></tr>
+                            <tr style="border: none;"><td style="border: none; padding: 2px;">5. Total Penjamah (Terlatih)</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('total_penjamah')} orang (${getText('penjamah_bersertifikat')} terlatih)</td></tr>
+                            <tr style="border: none;"><td style="border: none; padding: 2px;">6. Tanggal Pemeriksaan</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('tanggal_pemeriksaan')}</td></tr>
+                            <tr style="border: none;"><td style="border: none; padding: 2px;">7. Koordinat</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('latitude')}, ${getText('longitude')}</td></tr>
+                        </table>
+                    </div>
 
                     <!-- BAGIAN B -->
-                    <div class="section-header">B. HASIL PENILAIAN</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 5%;">No</th>
-                                <th style="width: 40%;">Uraian Persyaratan</th>
-                                <th style="width: 6%;">A</th>
-                                <th style="width: 6%;">B</th>
-                                <th style="width: 6%;">C</th>
-                                <th style="width: 6%;">D</th>
-                                <th style="width: 6%;">E</th>
-                                <th style="width: 6%;">F</th>
-                                <th style="width: 6%;">G</th>
-                                <th style="width: 6%;">H</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
+                    <div class="section-card">
+                        <div class="section-header">B. HASIL PENILAIAN</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">No</th>
+                                    <th style="width: 40%;">Uraian Persyaratan</th>
+                                    <th style="width: 6%;">A</th>
+                                    <th style="width: 6%;">B</th>
+                                    <th style="width: 6%;">C</th>
+                                    <th style="width: 6%;">D</th>
+                                    <th style="width: 6%;">E</th>
+                                    <th style="width: 6%;">F</th>
+                                    <th style="width: 6%;">G</th>
+                                    <th style="width: 6%;">H</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
                 
                 // Loop Criteria
                 CRITERIA.forEach(crit => {
@@ -1328,21 +1340,23 @@
                 });
 
                 reportContent += `
-                        </tbody>
-                    </table>
-                    <p style="font-size: 8pt; margin-top: 0; margin-bottom: 10px; font-style: italic;">* Keterangan Area: A=Luar, B=Fasilitas, C=Penerimaan, D=Penyimpanan, E=Pengolahan, F=Pengemasan, G=Pemuatan, H=Pencucian</p>
+                            </tbody>
+                        </table>
+                        <p style="font-size: 8pt; margin-top: 0; margin-bottom: 10px; font-style: italic;">* Keterangan Area: A=Luar, B=Fasilitas, C=Penerimaan, D=Penyimpanan, E=Pengolahan, F=Pengemasan, G=Pemuatan, H=Pencucian</p>
+                    </div>
 
                     <!-- BAGIAN C -->
-                    <div class="section-header">C. PERSYARATAN KHUSUS</div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="width: 5%;">No</th>
-                                <th>Uraian Persyaratan Khusus</th>
-                                <th style="width: 15%;">Hasil</th>
-                            </tr>
-                        </thead>
-                        <tbody>`;
+                    <div class="section-card">
+                        <div class="section-header">C. PERSYARATAN KHUSUS</div>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%;">No</th>
+                                    <th>Uraian Persyaratan Khusus</th>
+                                    <th style="width: 15%;">Hasil</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
                 
                 // Loop Special Req
                 SPECIAL_REQUIREMENTS.forEach(req => {
@@ -1362,11 +1376,12 @@
                 });
 
                 reportContent += `
-                        </tbody>
-                    </table>
+                            </tbody>
+                        </table>
+                    </div>
 
                     <!-- BAGIAN D -->
-                    <div style="page-break-inside: avoid;">
+                    <div class="section-card" style="page-break-inside: avoid;">
                         <div class="section-header">D. KESIMPULAN & PENGESAHAN</div>
                         <div style="border: 1px solid #000; padding: 10px;">
                             <table style="border: none; margin-bottom: 0;">
@@ -1417,7 +1432,7 @@
                     html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
                     jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
                     // Hapus 'avoid-all' agar tidak memicu halaman kosong jika konten padat
-                    pagebreak:    { mode: 'css' } 
+                    pagebreak:    { mode: ['css', 'legacy'] } 
                 };
 
                 // 4. Generate
