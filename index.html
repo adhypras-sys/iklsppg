@@ -72,12 +72,15 @@
             transition: max-height 0.4s cubic-bezier(0.2, 0, 0, 1), opacity 0.4s ease-in-out;
             overflow: hidden;
             opacity: 1;
+            /* OPTIMIZATION: Hint to browser to optimize rendering for these properties */
+            will-change: max-height, opacity;
         }
         .collapsible-content.collapsed {
             max-height: 0 !important; 
             opacity: 0;
             padding-top: 0 !important;
             padding-bottom: 0 !important;
+            /* Note: 'hidden' class logic handles display:none in JS now for performance */
         }
 
         /* Update main content container for elevated card look */
@@ -134,7 +137,13 @@
         .dark .criteria-row:hover { background-color: #2d3748; }
         
         /* Sticky Elements */
-        .fixed-header { position: sticky; top: 0; z-index: 10; }
+        .fixed-header { 
+            position: sticky; 
+            top: 0; 
+            z-index: 10; 
+            /* OPTIMIZATION: Keep sticky elements on their own layer */
+            will-change: transform;
+        }
         
         /* Fixed Score Bar - Material Bottom App Bar/Prominent Bar */
         #fixed-score-bar {
@@ -150,6 +159,8 @@
             z-index: 20;
             backdrop-filter: blur(5px);
             transition: height 0.3s ease-in-out, padding 0.3s ease-in-out;
+            /* OPTIMIZATION: Smoother animations for fixed elements */
+            will-change: transform; 
         }
 
         .dark #fixed-score-bar {
@@ -366,7 +377,7 @@
                     </svg>
                 </div>
 
-                <div id="content-d" class="collapsible-content collapsed">
+                <div id="content-d" class="collapsible-content collapsed hidden">
                     <div class="overflow-x-auto">
                         <table id="special-req-table" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600 rounded-lg overflow-hidden shadow-md">
                             <thead class="bg-kitchen-dark text-white fixed-header">
@@ -392,7 +403,7 @@
                     </svg>
                 </div>
 
-                <div id="content-e" class="collapsible-content collapsed">
+                <div id="content-e" class="collapsible-content collapsed hidden">
                     <label class="block mb-4">
                         <span class="text-sm font-bold text-gray-700 dark:text-gray-300">Catatan dan Saran</span>
                         <textarea id="catatan_akhir" rows="4" class="autosave-input mt-1 block w-full p-2 text-sm text-gray-900"></textarea>
@@ -469,6 +480,13 @@
     </div>
 
     <script>
+        // 1. Definisikan State Aplikasi Terpusat
+        const appState = {
+            scores: {},       // Menyimpan skor kriteria (format: 'crit-1-A': 0)
+            specialReqs: {},  // Menyimpan requirements khusus
+            metadata: {}      // Menyimpan input teks
+        };
+
         const CRITERIA = [
             { no: 1, text: "Halaman SPPG dalam kondisi bersih, tidak bersemak, dan tidak terdapat tanaman yang menempel langsung pada dinding bangunan pengolahan pangan.", areas: { A: 1, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
             { no: 2, text: "Area parkir kendaraan jauh dari pintu masuk bangunan pengolahan pangan untuk mencegah kontaminasi asap kendaraan masuk ke ruang pengolahan pangan.", areas: { A: 1, B: 'NA', C: 'NA', D: 'NA', E: 'NA', F: 'NA', G: 'NA', H: 'NA' } },
@@ -624,11 +642,17 @@
             const isMobile = currentName.endsWith('_mobile');
             const partnerName = isMobile ? currentName.replace('_mobile', '') : `${currentName}_mobile`;
             
-            // 2. Sync State (Check the other one if exists)
+            // 2. UPDATE APP STATE (Single Source of Truth)
+            // Normalisasi nama (hapus suffix _mobile) agar tidak ada duplikasi data di state
+            const cleanName = isMobile ? currentName.replace('_mobile', '') : currentName;
+            appState.scores[cleanName] = parseInt(value, 10);
+
+            // 3. Sync DOM State (Check the other input if exists)
             const partnerInput = document.querySelector(`input[name="${partnerName}"][value="${value}"]`);
             if (partnerInput && !partnerInput.checked) partnerInput.checked = true;
 
-            // 3. Update Visuals for BOTH (Current and Partner)
+            // 4. Update Visuals for BOTH (Current and Partner)
+            // Mempertahankan logika warna asli: Hijau jika value 0 (NA), Merah jika value > 0
             [currentInput, partnerInput].forEach(input => {
                 if (!input) return;
                 const name = input.name;
@@ -658,6 +682,7 @@
                 }
             });
 
+            // 5. Calculate Score using appState
             calculateScore();
             if (!isInternalUpdate) saveFormData(); 
         }
@@ -671,11 +696,15 @@
             const isMobile = currentName.endsWith('_mobile');
             const partnerName = isMobile ? currentName.replace('_mobile', '') : `${currentName}_mobile`;
             
-            // 2. Sync State (Check the other one)
+            // 2. UPDATE APP STATE
+            const cleanName = isMobile ? currentName.replace('_mobile', '') : currentName;
+            appState.specialReqs[cleanName] = value;
+
+            // 3. Sync State (Check the other one)
             const partnerInput = document.querySelector(`input[name="${partnerName}"][value="${value}"]`);
             if (partnerInput && !partnerInput.checked) partnerInput.checked = true;
 
-            // 3. Update Visuals for BOTH (Current and Partner)
+            // 4. Update Visuals for BOTH (Current and Partner)
             [currentInput, partnerInput].forEach(input => {
                 if (!input) return;
                 const name = input.name;
@@ -812,9 +841,9 @@
                         <td class="${(req.no > 8 && req.displayNo && req.displayNo.length > 1) ? "pl-8" : "px-4"} py-3 text-sm text-gray-700 dark:text-gray-300 align-middle">${req.text}</td>
                         <td class="px-4 py-3 align-middle text-center w-48">
                             <div class="flex space-x-2 justify-center">
-                                <input type="radio" id="req-table-${req.no}-Ya" name="req-${req.no}" value="Ya" class="special-req-input hidden">
+                                <input type="radio" id="req-table-${req.no}-Ya" name="req-${req.no}" value="Ya" class="special-req-input hidden" checked>
                                 <label for="req-table-${req.no}-Ya" class="special-req-label text-sm py-1.5">Ya</label>
-                                <input type="radio" id="req-table-${req.no}-Tidak" name="req-${req.no}" value="Tidak" class="special-req-input hidden" checked>
+                                <input type="radio" id="req-table-${req.no}-Tidak" name="req-${req.no}" value="Tidak" class="special-req-input hidden">
                                 <label for="req-table-${req.no}-Tidak" class="special-req-label text-sm py-1.5">Tidak</label>
                             </div>
                         </td>`;
@@ -839,7 +868,7 @@
                     cardDiv.className = `p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700`;
                     if (req.group) cardDiv.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
                     // FIX: Added _mobile suffix to name attribute here
-                    cardDiv.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-12 text-sm font-bold text-gray-700 dark:text-gray-300">${displayNo}</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div></div><div class="flex space-x-2 pt-2"><input type="radio" id="req-card-${req.no}-Ya" name="req-${req.no}_mobile" value="Ya" class="special-req-input hidden"><label for="req-card-${req.no}-Ya" class="special-req-label text-sm py-2">Ya</label><input type="radio" id="req-card-${req.no}-Tidak" name="req-${req.no}_mobile" value="Tidak" class="special-req-input hidden" checked><label for="req-card-${req.no}-Tidak" class="special-req-label text-sm py-2">Tidak</label></div>`;
+                    cardDiv.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-12 text-sm font-bold text-gray-700 dark:text-gray-300">${displayNo}</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div></div><div class="flex space-x-2 pt-2"><input type="radio" id="req-card-${req.no}-Ya" name="req-${req.no}_mobile" value="Ya" class="special-req-input hidden" checked><label for="req-card-${req.no}-Ya" class="special-req-label text-sm py-2">Ya</label><input type="radio" id="req-card-${req.no}-Tidak" name="req-${req.no}_mobile" value="Tidak" class="special-req-input hidden"><label for="req-card-${req.no}-Tidak" class="special-req-label text-sm py-2">Tidak</label></div>`;
                 }
                 cardContainer.appendChild(cardDiv);
             });
@@ -847,13 +876,25 @@
         }
 
         function calculateScore() {
-            // FIX: Exclude mobile duplicate inputs from score calculation to avoid double counting
-            const scores = document.querySelectorAll('.score-input:checked:not([name*="_mobile"])');
+            // REFAKTOR: Menggunakan appState alih-alih querySelectorAll
             let totalScore = 0;
-            scores.forEach(input => {
-                const value = parseInt(input.value, 10);
-                if (!isNaN(value) && value > 0) totalScore += value;
+            
+            // Loop data CRITERIA untuk memastikan urutan dan validitas key
+            CRITERIA.forEach(crit => {
+                if(crit.isHeader) return;
+                
+                AREAS.forEach(area => {
+                    const key = `crit-${crit.no}-${area}`;
+                    const scoreVal = appState.scores[key];
+                    
+                    // Logic: Score > 0 ditambahkan sebagai penalti (1, 2, 3)
+                    // Jika score 0 (NA) atau undefined, tidak menambah totalScore (tetap 0)
+                    if (scoreVal && scoreVal > 0) {
+                        totalScore += scoreVal;
+                    }
+                });
             });
+
             const maxScore = calculateMaxPossibleScore();
             let iklScore = maxScore > 0 ? 100 - ((totalScore / maxScore) * 100) : 100;
             iklScore = Math.max(0, Math.min(100, iklScore));
@@ -903,18 +944,35 @@
             let isCollapsedNow = false;
 
             if (content.classList.contains('collapsed')) {
-                content.classList.remove('collapsed');
-                content.style.maxHeight = content.scrollHeight + "px"; 
-                icon.classList.add('rotate-180');
-                setTimeout(() => { content.style.maxHeight = 'none'; }, 400);
+                // OPENING
+                // 1. Remove hidden first to allow calculating height
+                content.classList.remove('hidden');
+                
+                // 2. Use requestAnimationFrame to ensure browser registers the display change
+                requestAnimationFrame(() => {
+                    content.classList.remove('collapsed');
+                    content.style.maxHeight = content.scrollHeight + "px"; 
+                    icon.classList.add('rotate-180');
+                    setTimeout(() => { content.style.maxHeight = 'none'; }, 400);
+                });
                 isCollapsedNow = false;
             } else {
+                // CLOSING
+                // 1. Set explicit height for animation
                 content.style.maxHeight = content.scrollHeight + "px"; 
+                
                 requestAnimationFrame(() => {
                     content.classList.add('collapsed');
                     content.style.maxHeight = '0';
+                    icon.classList.remove('rotate-180');
+                    
+                    // 2. Add hidden class AFTER animation completes (400ms matches CSS)
+                    setTimeout(() => {
+                        if (content.classList.contains('collapsed')) {
+                            content.classList.add('hidden');
+                        }
+                    }, 400);
                 });
-                icon.classList.remove('rotate-180');
                 isCollapsedNow = true;
             }
             saveUIState('sections', sectionId, isCollapsedNow);
@@ -941,8 +999,11 @@
             if (isInternalUpdate) return;
             const formData = { textInputs: {}, radioInputs: {} };
             document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], textarea').forEach(input => {
-                formData.textInputs[input.id] = input.value;
+                const val = input.value;
+                formData.textInputs[input.id] = val;
+                appState.metadata[input.id] = val; // Sync metadata ke appState
             });
+            
             // Save both standard and _mobile inputs so state is preserved across reloads
             document.querySelectorAll('input[type="radio"]:checked').forEach(input => {
                 formData.radioInputs[input.name] = input.value;
@@ -961,7 +1022,10 @@
                 if (formData.textInputs) {
                     for (const [id, value] of Object.entries(formData.textInputs)) {
                         const input = document.getElementById(id);
-                        if (input) input.value = value;
+                        if (input) {
+                            input.value = value;
+                            appState.metadata[id] = value;
+                        }
                     }
                 }
                 if (formData.radioInputs) {
@@ -970,7 +1034,7 @@
                         radios.forEach(radio => {
                             if (radio.value == value) {
                                 radio.checked = true;
-                                // Dispatch change to trigger sync logic, although we are loading both sets anyway
+                                // Dispatch change to trigger sync logic
                                 radio.dispatchEvent(new Event('change', { bubbles: true }));
                             }
                         });
@@ -982,14 +1046,17 @@
         function initializeFormState() {
             calculatedMaxTotalScore = calculateMaxPossibleScore(); 
             document.getElementById('max-score-label').textContent = `maksimum: ${calculatedMaxTotalScore}`;
+            
+            // Inisialisasi default 'NA' (0) untuk input radio
             document.querySelectorAll('.score-input').forEach(input => {
                 if (input.value == "0") {
                     input.checked = true;
+                    // Memicu event change untuk mengisi appState secara otomatis
                     input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             });
             document.querySelectorAll('.special-req-input').forEach(input => {
-                if (input.value === 'Tidak') {
+                if (input.value === 'Ya') {
                     input.checked = true;
                     input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
@@ -1005,6 +1072,11 @@
                 // Also reset UI states to default
                 localStorage.removeItem(UI_STATE_KEY);
                 
+                // Clear App State
+                appState.scores = {};
+                appState.specialReqs = {};
+                appState.metadata = {};
+
                 isInternalUpdate = true;
                 document.querySelectorAll('input:not([type="radio"]), textarea').forEach(i => i.value = '');
                 initializeFormState();
@@ -1020,11 +1092,6 @@
             const cardIcon = document.getElementById(`icon-req-group-card-${groupNo}`);
             let isHidden = tableRows.length > 0 ? tableRows[0].classList.contains('hidden') : false;
             
-            // Logic change: Apply forceHide only if explicit. Otherwise toggle.
-            // But to support saving, we need consistent state.
-            // If this function is called with forceHide=true (initial load), we set hidden.
-            // If called by click (forceHide default false), we toggle.
-            
             let newHiddenState;
             if (forceHide) {
                 newHiddenState = true;
@@ -1039,9 +1106,9 @@
             if (tableIcon) newHiddenState ? tableIcon.classList.remove('rotate-180') : tableIcon.classList.add('rotate-180');
             if (cardIcon) newHiddenState ? cardIcon.classList.remove('rotate-180') : cardIcon.classList.add('rotate-180');
             
-            // Only save if it wasn't a forced initialization (to avoid overwriting saved state on load before we restore it)
+            // Only save if it wasn't a forced initialization
             if (!forceHide) {
-                saveUIState('specialReqGroups', groupNo, !newHiddenState); // Save "isExpanded" which is !hidden
+                saveUIState('specialReqGroups', groupNo, !newHiddenState); 
             }
         }
 
@@ -1059,10 +1126,12 @@
                     const isCollapsed = uiState.sections[sectionId];
                     if (isCollapsed) {
                         content.classList.add('collapsed');
+                        content.classList.add('hidden'); // Ensure it's hidden on load
                         content.style.maxHeight = '0';
                         if (icon) icon.classList.remove('rotate-180');
                     } else {
                         content.classList.remove('collapsed');
+                        content.classList.remove('hidden');
                         content.style.maxHeight = 'none';
                         if (icon) icon.classList.add('rotate-180');
                     }
@@ -1206,7 +1275,7 @@
                     <div class="section-header">A. DATA UMUM</div>
                     <table style="border: none;">
                         <tr style="border: none;"><td style="width: 35%; border: none; padding: 2px;">1. Nama SPPG</td><td style="width: 2%; border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;" class="bold">${getText('nama_sppg')}</td></tr>
-                        <tr style="border: none;"><td style="border: none; padding: 2px;">2. Alamat</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('alamat_sppg')}</td></tr>
+                        <tr style="border: none;"><td style="border: none; padding: 2px;">2. Alamat</td><td style="width: 2%; border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('alamat_sppg')}</td></tr>
                         <tr style="border: none;"><td style="border: none; padding: 2px;">3. Pengelola</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('nama_pengelola')} (${getText('kontak_pengelola')})</td></tr>
                         <tr style="border: none;"><td style="border: none; padding: 2px;">4. Jumlah Porsi / Distribusi</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('jumlah_porsi')} Porsi / ${getText('distribusi_pangan')}</td></tr>
                         <tr style="border: none;"><td style="border: none; padding: 2px;">5. Total Penjamah (Terlatih)</td><td style="border: none; padding: 2px;">:</td><td style="border: none; padding: 2px;">${getText('total_penjamah')} orang (${getText('penjamah_bersertifikat')} terlatih)</td></tr>
