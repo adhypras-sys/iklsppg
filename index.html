@@ -134,7 +134,8 @@
             box-shadow: 0 1px 1px rgba(0,0,0,0.05);
         }
 
-        .score-label:hover {
+        /* FIX HOVER LATENCY: Hanya terapkan hover jika input BELUM dicentang */
+        .score-input:not(:checked) + .score-label:hover {
             background-color: #F3F4F6; /* gray-100 */
             border-color: #9CA3AF;     /* gray-400 */
             color: #374151;            /* gray-700 */
@@ -146,7 +147,9 @@
             border-color: #4b5563;     /* border-gray-600 */
             color: #9ca3af;            /* text-gray-400 */
         }
-        .dark .score-label:hover {
+        
+        /* FIX HOVER LATENCY (DARK MODE): Hanya terapkan hover jika input BELUM dicentang */
+        .dark .score-input:not(:checked) + .score-label:hover {
             background-color: #374151; /* hover:bg-gray-700 */
             border-color: #6b7280;     /* hover:border-gray-500 */
             color: #e5e7eb;            /* hover:text-gray-200 */
@@ -189,7 +192,8 @@
             box-shadow: 0 1px 1px rgba(0,0,0,0.05);
         }
         
-        .special-req-label:hover {
+        /* FIX HOVER LATENCY: Hanya terapkan hover jika input BELUM dicentang */
+        .special-req-input:not(:checked) + .special-req-label:hover {
             background-color: #F3F4F6;
             border-color: #9CA3AF;
         }
@@ -200,7 +204,9 @@
             border-color: #4b5563;
             color: #9ca3af;
         }
-        .dark .special-req-label:hover {
+        
+        /* FIX HOVER LATENCY (DARK MODE): Hanya terapkan hover jika input BELUM dicentang */
+        .dark .special-req-input:not(:checked) + .special-req-label:hover {
             background-color: #374151;
             border-color: #6b7280;
         }
@@ -274,12 +280,38 @@
             @apply ring-0 shadow-none; 
         }
 
+        /* MODIFIKASI: Section Header Style */
         .section-header {
             cursor: pointer;
             user-select: none;
+            /* Tambahkan transisi background, HAPUS transisi opacity jika ada sebelumnya yang mengganggu */
+            transition: background-color 0.2s ease;
+            border-radius: 0.5rem; /* Rounded corners agar background terlihat rapi */
+            margin-left: -0.75rem; /* Negative margin kompensasi padding agar align teks tetap */
+            margin-right: -0.75rem;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem;
         }
+        
+        /* HAPUS: Opacity change pada hover */
+        /* .section-header:hover { opacity: 0.8; } */
+
+        /* TAMBAH: Subtle Background Change saat Hover/Dipilih */
         .section-header:hover {
-            opacity: 0.8;
+            background-color: rgba(0, 0, 0, 0.04); /* Abu-abu sangat tipis untuk Light Mode */
+        }
+        .dark .section-header:hover {
+            background-color: rgba(255, 255, 255, 0.05); /* Putih transparan tipis untuk Dark Mode */
+        }
+        
+        /* Optional: Active state click effect */
+        .section-header:active {
+            background-color: rgba(0, 0, 0, 0.08);
+        }
+        .dark .section-header:active {
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         .criteria-header-row {
@@ -341,7 +373,10 @@
         <main class="p-6 md:p-8" id="form-content">
             <!-- Bagian A -->
             <section class="mb-8 shadow-none">
-                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-a')">
+                <!-- UPDATE HTML: Hapus border-b dan padding lama karena sudah dihandle CSS .section-header yang baru -->
+                <!-- Class 'border-b' dipindah ke dalam style CSS atau disesuaikan agar tidak double border dengan background -->
+                <!-- Kita pertahankan border-b sebagai separator visual konten, tapi ubah padding/margin di CSS -->
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 mb-4" onclick="toggleSection('content-a')">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white">A. Data Umum</h3>
                     <svg id="icon-content-a" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
@@ -378,7 +413,7 @@
 
             <!-- Bagian B -->
             <section class="mb-8">
-                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-b')">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 mb-4" onclick="toggleSection('content-b')">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white">B. Penilaian IKL</h3>
                     <svg id="icon-content-b" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
@@ -441,7 +476,7 @@
             
             <!-- BAGIAN BARU C: ANALISIS DAN NILAI -->
             <section class="mb-8">
-                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-c-analysis')">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 mb-4" onclick="toggleSection('content-c-analysis')">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white">C. Analisis dan Nilai</h3>
                     <svg id="icon-content-c-analysis" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
@@ -536,7 +571,7 @@
             
             <!-- Bagian D -->
             <section class="mt-8 shadow-none">
-                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-d')">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 mb-4" onclick="toggleSection('content-d')">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white">D. Persyaratan Khusus</h3>
                     <svg id="icon-content-d" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
@@ -563,7 +598,7 @@
 
             <!-- Bagian E -->
             <section class="mt-8 shadow-none">
-                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-e')">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 mb-4" onclick="toggleSection('content-e')">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-white">E. Catatan dan Pengesahan</h3>
                     <svg id="icon-content-e" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
