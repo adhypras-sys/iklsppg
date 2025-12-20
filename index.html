@@ -107,10 +107,11 @@
         }
         
         /* Default Label Style (Light Mode) */
+        /* MODIFIKASI: Mengubah rounded-md menjadi rounded-xl agar sudut lebih halus */
         .score-label {
             transition: all 0.15s ease-in-out;
             cursor: pointer;
-            @apply border border-gray-300 w-full text-center py-1.5 rounded-md text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 shadow-sm; 
+            @apply border border-gray-300 w-full text-center py-1.5 rounded-xl text-sm font-medium bg-white hover:bg-gray-50 text-gray-700 shadow-sm; 
         }
 
         /* Dark Mode Label Style */
@@ -119,12 +120,13 @@
         }
         
         /* Styling Special Requirement Label (Consistent with score-label) */
+        /* MODIFIKASI: Mengubah rounded-md menjadi rounded-xl agar konsisten */
         .special-req-label {
             transition: all 0.15s ease-in-out;
             cursor: pointer;
             flex-grow: 1; /* Make 'Ya' and 'Tidak' equally wide */
             text-align: center;
-            @apply border border-gray-300 py-2 px-4 rounded-md font-medium bg-white hover:bg-gray-50 text-gray-700 text-sm shadow-sm;
+            @apply border border-gray-300 py-2 px-4 rounded-xl font-medium bg-white hover:bg-gray-50 text-gray-700 text-sm shadow-sm;
         }
 
         /* Dark Mode Label Style for Special Req */
@@ -347,7 +349,8 @@
                             <thead class="bg-kitchen-dark text-white fixed-header">
                                 <tr>
                                     <th class="w-10 px-2 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Nomor</th>
-                                    <th class="w-64 px-4 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Persyaratan</th>
+                                    <!-- Diperbarui: Padding dikurangi dari px-4 menjadi px-2 -->
+                                    <th class="w-64 px-2 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Persyaratan</th>
                                     <th colspan="8" class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider">Penilaian</th>
                                 </tr>
                                 <tr class="bg-kitchen-dark/80">
@@ -455,7 +458,8 @@
                             <thead class="bg-kitchen-dark text-white fixed-header">
                                 <tr>
                                     <th class="w-10 px-2 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Nomor</th>
-                                    <th class="px-4 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Persyaratan Khusus</th>
+                                    <!-- Diperbarui: Padding dikurangi dari px-4 menjadi px-2 -->
+                                    <th class="px-2 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Persyaratan Khusus</th>
                                     <th class="w-48 px-4 py-3 text-xs font-bold uppercase tracking-wider text-center align-middle">Penilaian</th>
                                 </tr>
                             </thead>
@@ -865,9 +869,13 @@
                     cardHeader.innerHTML = `<div class="flex justify-between items-center"><span class="text-kitchen-dark dark:text-white">${crit.no}. ${crit.text}</span>${isCollapsibleGroup ? cardIconSvg : ''}</div>`;
                     cardContainer.appendChild(cardHeader);
                 } else {
-                    const displayNo = crit.displayNo || crit.no;
+                    // MODIFIKASI: Gunakan crit.no agar nomor lengkap tampil (misal: 8a, bukan a) dan konsisten
+                    // Indentasi tetap menggunakan logika crit.displayNo
+                    const displayNo = crit.no; 
+                    
                     if (crit.group) tableRow.classList.add(`criteria-group-${crit.group}`, 'criteria-group-item', 'hidden'); 
-                    tableRow.innerHTML += `<td class="px-2 py-3 whitespace-nowrap text-center text-sm font-medium align-middle text-gray-700 dark:text-gray-300">${displayNo}</td><td class="${crit.displayNo ? "pl-8" : "px-4"} py-3 text-sm text-gray-700 dark:text-gray-300 align-middle">${crit.text}</td>`;
+                    // Diperbarui: Mengurangi padding kiri untuk item standar (px-4 -> px-2) dan sub-item (pl-8 -> pl-6)
+                    tableRow.innerHTML += `<td class="px-2 py-3 whitespace-nowrap text-center text-sm font-medium align-middle text-gray-700 dark:text-gray-300">${displayNo}</td><td class="${crit.displayNo ? "pl-6" : "px-2"} py-3 text-sm text-gray-700 dark:text-gray-300 align-middle">${crit.text}</td>`;
                     AREAS.forEach(area => {
                         const cell = document.createElement('td');
                         cell.className = 'px-1 py-1 whitespace-nowrap text-center w-12 align-top'; 
@@ -884,7 +892,9 @@
                             cardScores += `<div class="flex flex-col space-y-1 text-center flex-grow"><p class="text-xs font-bold text-gray-700 dark:text-gray-300">${area}</p>${getRadioOptionsHTML(crit, area, true)}</div>`;
                         }
                     });
-                    cardItem.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-8 text-sm font-bold text-kitchen-dark dark:text-kitchen-main">${displayNo}.</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${crit.text}</div></div><div class="pt-3 pb-2"><div class="flex space-x-0.5 justify-around">${cardScores}</div></div>`;
+                    // MODIFIKASI: Hapus titik setelah displayNo agar konsisten dengan tabel (misal: 8a, bukan 8a.)
+                    // UPDATE: Nomor dibuat hitam (text-black) dan tidak tebal (font-normal)
+                    cardItem.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-8 text-sm font-normal text-black dark:text-white">${displayNo}</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${crit.text}</div></div><div class="pt-3 pb-2"><div class="flex space-x-0.5 justify-around">${cardScores}</div></div>`;
                     cardContainer.appendChild(cardItem);
                 }
             });
@@ -895,7 +905,9 @@
             const cardContainer = document.getElementById('special-req-cards');
             tbody.innerHTML = ''; cardContainer.innerHTML = '';
             SPECIAL_REQUIREMENTS.forEach((req) => {
-                const displayNo = req.displayNo || req.no;
+                // MODIFIKASI: Gunakan req.no sebagai basis tampilan nomor untuk konsistensi penuh
+                const displayNo = req.no;
+                
                 const tr = document.createElement('tr');
                 tr.className = 'criteria-row border-b hover:bg-kitchen-cream dark:hover:bg-gray-700 transition-colors border-gray-200 dark:border-gray-700';
                 if (req.isHeader) {
@@ -909,16 +921,19 @@
                     }
                 } else if (req.isSubHeader) {
                     if (req.group) tr.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
-                    const subHeaderNo = req.displayNo || '';
+                    // MODIFIKASI: Gunakan req.no (misal 9.a) alih-alih subHeaderNo (misal a)
+                    // Diperbarui: Padding dikurangi dari px-4 menjadi px-2
                     tr.innerHTML = `
-                        <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-normal align-middle border-r border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">${subHeaderNo}</td>
-                        <td colspan="2" class="px-4 py-3 text-sm font-normal text-gray-600 dark:text-gray-300 align-middle">${req.text}</td>
+                        <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-normal align-middle border-r border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">${displayNo}</td>
+                        <td colspan="2" class="px-2 py-3 text-sm font-normal text-gray-600 dark:text-gray-300 align-middle">${req.text}</td>
                     `;
                 } else {
                     if (req.group) tr.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
+                    // MODIFIKASI: Gunakan displayNo (req.no)
+                    // Diperbarui: Padding dikurangi dari px-4 menjadi px-2, indentasi pl-8 menjadi pl-6
                     tr.innerHTML = `
                         <td class="px-2 py-3 whitespace-nowrap text-center text-sm font-medium align-middle text-gray-700 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600">${displayNo}</td>
-                        <td class="${(req.no > 8 && req.displayNo && req.displayNo.length > 1) ? "pl-8" : "px-4"} py-3 text-sm text-gray-700 dark:text-gray-300 align-middle">${req.text}</td>
+                        <td class="${(req.no > 8 && req.displayNo && req.displayNo.length > 1) ? "pl-6" : "px-2"} py-3 text-sm text-gray-700 dark:text-gray-300 align-middle">${req.text}</td>
                         <td class="px-4 py-3 align-middle text-center w-48">
                             <div class="flex space-x-2 justify-center">
                                 <input type="radio" id="req-table-${req.no}-Ya" name="req-${req.no}" value="Ya" class="special-req-input hidden" checked>
@@ -943,12 +958,15 @@
                 } else if (req.isSubHeader) {
                     cardDiv.className = `pl-4 py-2 text-sm font-normal text-gray-600 dark:text-gray-300`;
                     if (req.group) cardDiv.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
-                    cardDiv.innerHTML = (req.displayNo ? `${req.displayNo}. ` : '') + req.text;
+                    // MODIFIKASI: Gunakan req.no agar konsisten dengan tabel
+                    cardDiv.innerHTML = `${req.no} ${req.text}`;
                 } else {
                     cardDiv.className = `p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700`;
                     if (req.group) cardDiv.classList.add(`req-group-${req.group}`, 'req-group-item', 'hidden');
                     // FIX: Added _mobile suffix to name attribute here
-                    cardDiv.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-12 text-sm font-bold text-gray-700 dark:text-gray-300">${displayNo}</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div></div><div class="flex space-x-2 pt-2"><input type="radio" id="req-card-${req.no}-Ya" name="req-${req.no}_mobile" value="Ya" class="special-req-input hidden" checked><label for="req-card-${req.no}-Ya" class="special-req-label text-sm py-2">Ya</label><input type="radio" id="req-card-${req.no}-Tidak" name="req-${req.no}_mobile" value="Tidak" class="special-req-input hidden"><label for="req-card-${req.no}-Tidak" class="special-req-label text-sm py-2">Tidak</label></div>`;
+                    // MODIFIKASI: Gunakan displayNo (req.no)
+                    // UPDATE: Nomor dibuat hitam (text-black) dan tidak tebal (font-normal)
+                    cardDiv.innerHTML = `<div class="flex items-start mb-3 border-b border-dashed pb-2 dark:border-gray-700"><div class="flex-shrink-0 w-12 text-sm font-normal text-black dark:text-white">${displayNo}</div><div class="flex-grow text-sm text-gray-700 dark:text-gray-300">${req.text}</div></div><div class="flex space-x-2 pt-2"><input type="radio" id="req-card-${req.no}-Ya" name="req-${req.no}_mobile" value="Ya" class="special-req-input hidden" checked><label for="req-card-${req.no}-Ya" class="special-req-label text-sm py-2">Ya</label><input type="radio" id="req-card-${req.no}-Tidak" name="req-${req.no}_mobile" value="Tidak" class="special-req-input hidden"><label for="req-card-${req.no}-Tidak" class="special-req-label text-sm py-2">Tidak</label></div>`;
                 }
                 cardContainer.appendChild(cardDiv);
             });
@@ -1563,7 +1581,7 @@
                     html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
                     jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
                     // Hapus 'avoid-all' agar tidak memicu halaman kosong jika konten padat
-                    pagebreak:    { mode: ['css', 'legacy'] } 
+                    pagebreak:    { mode: 'css' } 
                 };
 
                 // 4. Generate
