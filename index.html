@@ -369,6 +369,77 @@
                 </div>
             </section>
             
+            <!-- BAGIAN BARU C: ANALISIS DAN NILAI -->
+            <section class="mb-8">
+                <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-c-analysis')">
+                    <h3 class="text-lg font-bold text-gray-700 dark:text-white">C. Analisis dan Nilai</h3>
+                    <svg id="icon-content-c-analysis" class="w-6 h-6 text-gray-500 dark:text-gray-300 transition-transform duration-200 section-icon rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </div>
+
+                <div id="content-c-analysis" class="collapsible-content">
+                    <!-- Grid Kategori Ketidaksesuaian -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <!-- Card Bangunan -->
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col items-center justify-center text-center">
+                            <h4 class="font-bold text-sm text-gray-600 dark:text-gray-400 mb-1 uppercase tracking-wide">Bangunan</h4>
+                            <p class="text-4xl font-extrabold text-score-red" id="count-bangunan">0</p>
+                            <p class="text-xs text-gray-500 mt-1">ketidaksesuaian</p>
+                        </div>
+                        
+                        <!-- Card Peralatan -->
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col items-center justify-center text-center">
+                            <h4 class="font-bold text-sm text-gray-600 dark:text-gray-400 mb-1 uppercase tracking-wide">Peralatan</h4>
+                            <p class="text-4xl font-extrabold text-score-red" id="count-peralatan">0</p>
+                            <p class="text-xs text-gray-500 mt-1">ketidaksesuaian</p>
+                        </div>
+
+                        <!-- Card Penjamah -->
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col items-center justify-center text-center">
+                            <h4 class="font-bold text-sm text-gray-600 dark:text-gray-400 mb-1 uppercase tracking-wide">Penjamah</h4>
+                            <p class="text-4xl font-extrabold text-score-red" id="count-penjamah">0</p>
+                            <p class="text-xs text-gray-500 mt-1">ketidaksesuaian</p>
+                        </div>
+
+                        <!-- Card Pengolahan -->
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm flex flex-col items-center justify-center text-center">
+                            <h4 class="font-bold text-sm text-gray-600 dark:text-gray-400 mb-1 uppercase tracking-wide">Pengolahan</h4>
+                            <p class="text-4xl font-extrabold text-score-red" id="count-pengolahan">0</p>
+                            <p class="text-xs text-gray-500 mt-1">ketidaksesuaian</p>
+                        </div>
+                    </div>
+
+                    <!-- Duplikasi Tampilan Nilai IKL (Embedded) -->
+                    <div class="bg-gray-50 dark:bg-gray-700/50 p-6 rounded-xl border border-gray-200 dark:border-gray-600">
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div class="flex-grow w-full">
+                                <div class="flex justify-between items-end mb-2">
+                                    <h3 class="text-lg font-bold text-gray-700 dark:text-gray-200">Nilai IKL</h3>
+                                    <div class="text-right flex items-baseline gap-1">
+                                        <span class="text-xs text-gray-500 dark:text-gray-400">total ketidaksesuaian</span>
+                                        <span id="embedded-total-score-value" class="text-lg font-bold text-score-red mx-1">0</span>
+                                        <span id="embedded-max-score-label" class="text-xs text-gray-500 dark:text-gray-400">maksimum: -</span>
+                                    </div>
+                                </div>
+                                <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-4">
+                                    <div id="embedded-score-progress-bar" class="h-4 rounded-full transition-all duration-500 bg-score-green" style="width: 100%;"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                    <span>0%</span> <span>100%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex-shrink-0 text-center w-full md:w-auto border-t md:border-t-0 md:border-l border-gray-300 dark:border-gray-600 pt-4 md:pt-0 md:pl-6">
+                                <p class="text-sm font-semibold text-gray-800 dark:text-gray-200">Nilai Final IKL</p> 
+                                <p id="embedded-final-ikl-score" class="text-4xl font-extrabold transition-colors duration-500 text-ikl-green">100.00</p>
+                                <p id="embedded-ikl-status" class="text-xs font-semibold mt-1 text-score-green">MEMENUHI SYARAT</p> 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
             <!-- Bagian D -->
             <section class="mt-8 shadow-none">
                 <div class="flex justify-between items-center section-header border-b border-kitchen-accent/50 pb-2 mb-4" onclick="toggleSection('content-d')">
@@ -454,7 +525,7 @@
                 <div class="flex justify-between items-end mb-2">
                     <h3 class="text-lg font-bold text-gray-700 dark:text-gray-200">C. Nilai IKL</h3>
                     <div class="text-right flex items-baseline gap-1">
-                        <span class="text-xs text-gray-500 dark:text-gray-400">tidak sesuai</span>
+                        <span class="text-xs text-gray-500 dark:text-gray-400">total ketidaksesuaian</span>
                         <span id="total-score-value" class="text-lg font-bold text-score-red mx-1">0</span>
                         <span id="max-score-label" class="text-xs text-gray-500 dark:text-gray-400">maksimum: -</span>
                     </div>
@@ -486,6 +557,14 @@
             scores: {},       // Menyimpan skor kriteria (format: 'crit-1-A': 0)
             specialReqs: {},  // Menyimpan requirements khusus
             metadata: {}      // Menyimpan input teks
+        };
+        
+        // Defines Category Groups for Analysis
+        const CATEGORY_GROUPS = {
+            Bangunan: ['1','2','3','4','5','6','7','8a','8b','8c','9a','9b','9c','9d','10a','10b','10c','11','12','13a','13b','13c','14','15','16a','16b','16c','17a','17b','18a','18b','18c','18d'],
+            Peralatan: ['21a','21b','21c'],
+            Penjamah: ['20a','20b','20c','20d','20e','20f'],
+            Pengolahan: ['19a','19b','19c','19d','19e','19f','19g','19h','19i','22a','22b','22c','23a','23b']
         };
 
         const CRITERIA = [
@@ -879,35 +958,72 @@
         function calculateScore() {
             // REFAKTOR: Menggunakan appState alih-alih querySelectorAll
             let totalScore = 0;
+            let counts = { Bangunan: 0, Peralatan: 0, Penjamah: 0, Pengolahan: 0 };
             
             // Loop data CRITERIA untuk memastikan urutan dan validitas key
             CRITERIA.forEach(crit => {
                 if(crit.isHeader) return;
                 
+                // FIXED: Gunakan String(crit.no) sebagai identifier unik yang konsisten dengan CATEGORY_GROUPS
+                // Sebelumnya menggunakan crit.displayNo menyebabkan bug pada sub-item (misal: '19a' terbaca 'a')
+                const criterionId = String(crit.no); 
+                
+                let currentCategory = null;
+                if (CATEGORY_GROUPS.Bangunan.includes(criterionId)) currentCategory = 'Bangunan';
+                else if (CATEGORY_GROUPS.Peralatan.includes(criterionId)) currentCategory = 'Peralatan';
+                else if (CATEGORY_GROUPS.Penjamah.includes(criterionId)) currentCategory = 'Penjamah';
+                else if (CATEGORY_GROUPS.Pengolahan.includes(criterionId)) currentCategory = 'Pengolahan';
+
                 AREAS.forEach(area => {
                     const key = `crit-${crit.no}-${area}`;
                     const scoreVal = appState.scores[key];
                     
                     // Logic: Score > 0 ditambahkan sebagai penalti (1, 2, 3)
-                    // Jika score 0 (NA) atau undefined, tidak menambah totalScore (tetap 0)
                     if (scoreVal && scoreVal > 0) {
                         totalScore += scoreVal;
+                        // Hitung jumlah item yang tidak sesuai per kategori
+                        if (currentCategory) counts[currentCategory]++;
                     }
                 });
             });
 
+            // Update Tampilan Count Kategori
+            document.getElementById('count-bangunan').textContent = counts.Bangunan;
+            document.getElementById('count-peralatan').textContent = counts.Peralatan;
+            document.getElementById('count-penjamah').textContent = counts.Penjamah;
+            document.getElementById('count-pengolahan').textContent = counts.Pengolahan;
+
             const maxScore = calculateMaxPossibleScore();
             let iklScore = maxScore > 0 ? 100 - ((totalScore / maxScore) * 100) : 100;
             iklScore = Math.max(0, Math.min(100, iklScore));
+            
+            // Elemen di Footer
             const iklScoreElement = document.getElementById('final-ikl-score');
             const progressBar = document.getElementById('score-progress-bar');
             const iklStatusElement = document.getElementById('ikl-status');
+            
+            // Elemen Embedded (Bagian C)
+            const embeddedTotalScore = document.getElementById('embedded-total-score-value');
+            const embeddedMaxScore = document.getElementById('embedded-max-score-label');
+            const embeddedFinalScore = document.getElementById('embedded-final-ikl-score');
+            const embeddedProgressBar = document.getElementById('embedded-score-progress-bar');
+            const embeddedStatus = document.getElementById('embedded-ikl-status');
+
             let iklStatusText, finalScoreColorClass, progressColorClass, iklStatusColorClass;
+            
             if (iklScore >= 80) {
-                finalScoreColorClass = 'text-ikl-green'; progressColorClass = 'bg-score-green'; iklStatusText = 'MEMENUHI SYARAT'; iklStatusColorClass = 'text-score-green';
+                finalScoreColorClass = 'text-ikl-green'; 
+                progressColorClass = 'bg-score-green'; 
+                iklStatusText = 'MEMENUHI SYARAT'; 
+                iklStatusColorClass = 'text-score-green';
             } else {
-                finalScoreColorClass = 'text-ikl-red'; progressColorClass = 'bg-score-red'; iklStatusText = 'TIDAK MEMENUHI SYARAT'; iklStatusColorClass = 'text-score-red';
+                finalScoreColorClass = 'text-ikl-red'; 
+                progressColorClass = 'bg-score-red'; 
+                iklStatusText = 'TIDAK MEMENUHI SYARAT'; 
+                iklStatusColorClass = 'text-score-red';
             }
+            
+            // Update Footer
             iklScoreElement.classList.remove('text-ikl-green', 'text-ikl-red');
             iklScoreElement.classList.add(finalScoreColorClass);
             document.getElementById('total-score-value').textContent = totalScore;
@@ -919,6 +1035,21 @@
             progressBar.style.width = `${iklScore}%`;
             progressBar.classList.remove('bg-score-green', 'bg-score-red');
             progressBar.classList.add(progressColorClass);
+
+            // Update Embedded Section C
+            embeddedTotalScore.textContent = totalScore;
+            embeddedMaxScore.textContent = `maksimum: ${maxScore}`;
+            embeddedFinalScore.textContent = iklScore.toFixed(2);
+            embeddedFinalScore.classList.remove('text-ikl-green', 'text-ikl-red');
+            embeddedFinalScore.classList.add(finalScoreColorClass);
+            
+            embeddedStatus.textContent = iklStatusText;
+            embeddedStatus.classList.remove('text-score-green', 'text-score-red');
+            embeddedStatus.classList.add(iklStatusColorClass);
+
+            embeddedProgressBar.style.width = `${iklScore}%`;
+            embeddedProgressBar.classList.remove('bg-score-green', 'bg-score-red');
+            embeddedProgressBar.classList.add(progressColorClass);
         }
 
         function initTheme() {
