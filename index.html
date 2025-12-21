@@ -273,8 +273,25 @@
             border: none !important;
             border-bottom: 1px solid #9ca3af !important; 
             @apply mt-1 block w-full p-2 text-sm text-gray-900 bg-gray-50;
-            transition: border-bottom-color 0.2s, background-color 0.2s;
+            transition: border-bottom-color 0.2s, background-color 0.2s, color 0.2s;
         }
+
+        /* MODIFIKASI CSS: Tampilan Input saat Mode Gelap (KONSISTEN DENGAN MODE TERANG) */
+        .dark .autosave-input {
+            background-color: rgba(255, 255, 255, 0.05) !important; /* Latar Belakang Transparan/Halus */
+            color: #F9FAFB !important;           /* Teks Terang (Gray-50) */
+            border-radius: 0 !important;         /* Radius 0 (Konsisten) */
+            border: none !important;             /* Hapus Border Box (Konsisten) */
+            border-bottom: 1px solid #6b7280 !important; /* Garis Bawah Abu-abu (Konsisten) */
+        }
+
+        /* Efek Fokus pada Mode Gelap */
+        .dark .autosave-input:focus {
+            background-color: rgba(255, 255, 255, 0.1) !important; /* Sedikit lebih terang saat fokus */
+            border-color: #C76E57 !important;     /* Aksen Oranye saat fokus */
+            border-bottom-width: 2px !important;
+        }
+
         .autosave-input:focus {
             border-bottom: 2px solid #cc3333 !important; 
             @apply ring-0 shadow-none; 
